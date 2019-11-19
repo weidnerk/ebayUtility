@@ -1,0 +1,12 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="eBayUtility.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="eBayUtility_WebReference_FindingService" Type="(Web Service URL)" Scope="Application">
+      <Value Profile="(Default)">https://svcs.ebay.com/services/search/FindingService/v1</Value>
+    </Setting>
+    <Setting Name="eBayUtility_WebReference1_Shopping" Type="(Web Service URL)" Scope="Application">
+      <Value Profile="(Default)">http://open.api.ebay.com/shopping</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>
