@@ -45,13 +45,16 @@ namespace eBayUtility
                 foreach (SearchItem searchItem in result.item)
                 {
                     var listing = new Listing();
-                    listing.Title = searchItem.title;
+                    var sellerListing = new SellerListing();
+
+                    sellerListing.Title = searchItem.title;
                     listing.ItemID = searchItem.itemId;
-                    listing.EbayUrl = searchItem.viewItemURL;
+                    sellerListing.EbayUrl = searchItem.viewItemURL;
                     listing.PrimaryCategoryID = searchItem.primaryCategory.categoryId;
                     listing.PrimaryCategoryName = searchItem.primaryCategory.categoryName;
-                    listing.SellerPrice = (decimal)searchItem.sellingStatus.currentPrice.Value;
-                    listing.Variation = searchItem.isMultiVariationListing;
+                    sellerListing.SellerPrice = (decimal)searchItem.sellingStatus.currentPrice.Value;
+                    sellerListing.Variation = searchItem.isMultiVariationListing;
+                    listing.SellerListing = sellerListing;
                     listings.Add(listing);
                 }
                 return listings;
@@ -68,7 +71,7 @@ namespace eBayUtility
         /// 
         /// </summary>
         /// <returns></returns>
-        public static ModelView ScanSeller(UserSettingsView settings, string seller, int daysBack, bool getTransactionHistory)
+        public static ModelView ScanSeller(UserSettingsView settings, string seller, int daysBack)
         {
             dsmodels.DataModelsDB db = new dsmodels.DataModelsDB();
             int notSold = 0;
@@ -98,7 +101,8 @@ namespace eBayUtility
                             currentPageNumber += 1;
                             response = GetCompletedItems(service, request, currentPageNumber);
                             result = response.searchResult;
-                            listings = MapSearchResultToListing(result);
+                            var listingsNewPage = MapSearchResultToListing(result);
+                            listings.AddRange(listingsNewPage);
                         }
                     }
                     var mv = new ModelView();
@@ -150,6 +154,11 @@ namespace eBayUtility
             return null;
         }
 
+        /// <summary>
+        /// See technique used in GetMPN()
+        /// </summary>
+        /// <param name="html"></param>
+        /// <returns></returns>
         public static List<OrderHistoryDetail> GetTransactionsFromPage(string html)
         {
             string dateSold = null;

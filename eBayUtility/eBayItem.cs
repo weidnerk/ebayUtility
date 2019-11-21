@@ -186,13 +186,13 @@ namespace Utility
                 StringCollection valueCol1 = new StringCollection();
                 StringCollection valueCol2 = new StringCollection();
 
-                if (!ItemSpecificExists(listing.ItemSpecifics, "Brand")) { 
+                if (!ItemSpecificExists(listing.SellerListing.ItemSpecifics, "Brand")) { 
                     nv1.Name = "Brand";
                     valueCol1.Add("Unbranded");
                     nv1.Value = valueCol1;
                     ItemSpecs.Add(nv1);
                 }
-                if (!ItemSpecificExists(listing.ItemSpecifics, "MPN"))
+                if (!ItemSpecificExists(listing.SellerListing.ItemSpecifics, "MPN"))
                 {
                     nv2.Name = "MPN";
                     valueCol2.Add("Does Not Apply");
@@ -200,7 +200,7 @@ namespace Utility
                     ItemSpecs.Add(nv2);
                 }
 
-                var revisedItemSpecs = ModifyItemSpecific(listing.ItemSpecifics);
+                var revisedItemSpecs = ModifyItemSpecific(listing.SellerListing.ItemSpecifics);
                 foreach (var i in revisedItemSpecs)
                 {
                     var n = AddItemSpecifics(i);

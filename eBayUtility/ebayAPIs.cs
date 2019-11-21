@@ -693,7 +693,7 @@ namespace eBayUtility
                         string n = i.Name;
                         string v = i.Value;
                         var specific = new ItemSpecific();
-                        specific.SellerItemId = itemId;
+                        specific.SellerItemID = itemId;
                         specific.ItemName = n;
                         specific.ItemValue = v;
                         itemSpecifics.Add(specific);
@@ -702,7 +702,8 @@ namespace eBayUtility
                     var a = r.Shipping;
 
                     var si = new Listing();
-                    si.ItemSpecifics = itemSpecifics.ToList();
+                    var sellerListing = new SellerListing();
+                    sellerListing.ItemSpecifics = itemSpecifics.ToList();
 
                     /*
                      * 10.07.2019
@@ -714,18 +715,19 @@ namespace eBayUtility
                     */
                     si.ItemID = itemId;
                     si.PictureUrl = DSUtil.ListToDelimited(list, ';');
-                    si.Title = r.Title.Value;
+                    sellerListing.Title = r.Title.Value;
                     si.Description = r.Description.Value;
-                    si.SellerPrice = Convert.ToDecimal(r.Price.Value);
-                    si.EbayUrl = r.ListingUrl.Value;
+                    sellerListing.SellerPrice = Convert.ToDecimal(r.Price.Value);
+                    sellerListing.EbayUrl = r.ListingUrl.Value;
                     si.PrimaryCategoryID = r.PrimaryCategoryID.Value;
                     si.PrimaryCategoryName = r.PrimaryCategoryName;
                     int x1 = Convert.ToInt32(r.Quantity.Value);
                     int x2 = Convert.ToInt32(r.QuantitySold.Value);
                     si.Qty = x1 - x2;   // available qty; https://forums.developer.ebay.com/questions/11293/how-to-get-item-quantity-available.html
-                    si.ListingStatus = r.ListingStatus.Value;
-                    si.Seller = r.Seller.Value;
+                    sellerListing.ListingStatus = r.ListingStatus.Value;
+                    sellerListing.Seller = r.Seller.Value;
                     //si.Qty = Convert.ToInt32(r.Quantity.Value);
+                    si.SellerListing = sellerListing;
                     return si;
                 }
             }
