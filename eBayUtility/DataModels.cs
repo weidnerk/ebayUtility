@@ -1,4 +1,5 @@
 ﻿using dsmodels;
+using eBayUtility.WebReference;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,5 +19,6 @@ namespace eBayUtility
         public int PercentTotalItemsProcesssed { get; set; }
         public int ReportNumber { get; set; }
         public int ItemCount { get; set; }
+        public List<SearchResult> SearchResult { get; set; }
     }
 }

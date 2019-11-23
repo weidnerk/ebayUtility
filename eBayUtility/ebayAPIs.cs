@@ -33,7 +33,7 @@ namespace eBayUtility
 
     public class ebayAPIs
     {
-        readonly static string _logfile = "scrape_log.txt";
+        readonly static string _logfile = "log.txt";
         dsmodels.DataModelsDB db = new dsmodels.DataModelsDB();
         DataModelsDB models = new DataModelsDB();
 

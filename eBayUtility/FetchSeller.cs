@@ -19,6 +19,7 @@ using Utility;
 
 namespace eBayUtility
 {
+
     public class Transaction
     {
         public string Price { get; set; }
@@ -28,7 +29,7 @@ namespace eBayUtility
 
     public static class FetchSeller
     {
-        readonly static string _logfile = "scrape_log.txt";
+        readonly static string _logfile = "log.txt";
 
         /// <summary>
         /// GetCompletedItems(service, request, currentPageNumber) returns a FindCompletedItemsResponse which has property, searchResult
@@ -61,7 +62,7 @@ namespace eBayUtility
             }
             catch (Exception exc)
             {
-                string msg = " StoreTransactionsManual " + exc.Message;
+                string msg = dsutil.DSUtil.ErrMsg("MapSearchResultToListing", exc);
                 dsutil.DSUtil.WriteFile(_logfile, msg, "");
                 return null;
             }
@@ -76,6 +77,7 @@ namespace eBayUtility
             dsmodels.DataModelsDB db = new dsmodels.DataModelsDB();
             int notSold = 0;
             var listings = new List<Listing>();
+            var searchResult = new List<SearchResult>();
             try
             {
                 CustomFindSold service = new CustomFindSold();
@@ -94,6 +96,7 @@ namespace eBayUtility
                     if (result != null && result.count > 0)
                     {
                         listings = MapSearchResultToListing(result);
+                        searchResult.Add(result);
 
                         // are there more pages of results?
                         for (var i = response.paginationOutput.pageNumber; i < response.paginationOutput.totalPages; i++)
@@ -101,12 +104,14 @@ namespace eBayUtility
                             currentPageNumber += 1;
                             response = GetCompletedItems(service, request, currentPageNumber);
                             result = response.searchResult;
+                            searchResult.Add(result);
                             var listingsNewPage = MapSearchResultToListing(result);
                             listings.AddRange(listingsNewPage);
                         }
                     }
                     var mv = new ModelView();
                     mv.Listings = listings;
+                    mv.SearchResult = searchResult;
 
                     int b = notSold;
                     return mv;
@@ -115,7 +120,7 @@ namespace eBayUtility
             }
             catch (Exception exc)
             {
-                string msg = " ScanSeller " + exc.Message;
+                string msg = dsutil.DSUtil.ErrMsg("ScanSeller", exc);
                 dsutil.DSUtil.WriteFile(_logfile, msg, settings.UserName);
                 return null;
             }
@@ -207,17 +212,58 @@ namespace eBayUtility
                                     break;
                             }
                         }
+                        var variations = new List<string>();
+                        var variationNode = secondTable.SelectNodes("//td[@class='variationContentValueFont']");
+                        if (variationNode != null)
+                        {
+                            AddVariations(variationNode, transactions);
+                        }
                     }
                 }
                 return transactions;
             }
             catch (Exception exc)
             {
-                string err = exc.Message;
+                string msg = dsutil.DSUtil.ErrMsg("GetTransactionsFromPage", exc);
+                dsutil.DSUtil.WriteFile(_logfile, msg, "");
                 return null;
             }
         }
-
+        private static void AddVariations(HtmlNodeCollection variationNode, List<OrderHistoryDetail> transactions)
+        {
+            try { 
+                var variations = new List<string>();
+                foreach (HtmlNode nodet in variationNode)
+                {
+                    var variation = nodet.InnerText;
+                    if (!string.IsNullOrEmpty(variation))
+                    {
+                        variations.Add(variation);
+                    }
+                }
+                if (variations.Count > 0)
+                {
+                    int variationCount = 0;
+                    foreach (var t in transactions)
+                    {
+                        string variation = variations[variationCount++];
+                        if (variation.Length > 50)  // not sure how long variation desription can be but db set at 50
+                        {
+                            t.Variation = variation.Substring(0, 50);
+                        }
+                        else
+                        {
+                            t.Variation = variation;
+                        }
+                    }
+                }
+            }
+            catch (Exception exc)
+            {
+                string msg = dsutil.DSUtil.ErrMsg("AddVariations", exc);
+                dsutil.DSUtil.WriteFile(_logfile, msg, "");
+            }
+        }
         /// <summary>
         /// This was written in lieu of GetItemTransactions not working anymore.
         /// 
