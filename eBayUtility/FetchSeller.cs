@@ -16,6 +16,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Utility;
+using wallib.Models;
 
 namespace eBayUtility
 {
@@ -30,7 +31,7 @@ namespace eBayUtility
     public static class FetchSeller
     {
         readonly static string _logfile = "log.txt";
-
+        static dsmodels.DataModelsDB models = new dsmodels.DataModelsDB();
         /// <summary>
         /// GetCompletedItems(service, request, currentPageNumber) returns a FindCompletedItemsResponse which has property, searchResult
         /// Iterate the seller's sold items, fetching sales history
@@ -164,7 +165,7 @@ namespace eBayUtility
         /// </summary>
         /// <param name="html"></param>
         /// <returns></returns>
-        public static List<OrderHistoryDetail> GetTransactionsFromPage(string html)
+        public static List<OrderHistoryDetail> GetTransactionsFromPage(string html, string itemID)
         {
             string dateSold = null;
             var transactions = new List<OrderHistoryDetail>();
@@ -216,7 +217,7 @@ namespace eBayUtility
                         var variationNode = secondTable.SelectNodes("//td[@class='variationContentValueFont']");
                         if (variationNode != null)
                         {
-                            AddVariations(variationNode, transactions);
+                            AddVariations(variationNode, transactions, itemID);
                         }
                     }
                 }
@@ -225,11 +226,11 @@ namespace eBayUtility
             catch (Exception exc)
             {
                 string msg = dsutil.DSUtil.ErrMsg("GetTransactionsFromPage", exc);
-                dsutil.DSUtil.WriteFile(_logfile, msg, "");
+                dsutil.DSUtil.WriteFile(_logfile, itemID + ": " + msg, "");
                 return null;
             }
         }
-        private static void AddVariations(HtmlNodeCollection variationNode, List<OrderHistoryDetail> transactions)
+        private static void AddVariations(HtmlNodeCollection variationNode, List<OrderHistoryDetail> transactions, string itemID)
         {
             try { 
                 var variations = new List<string>();
@@ -261,7 +262,7 @@ namespace eBayUtility
             catch (Exception exc)
             {
                 string msg = dsutil.DSUtil.ErrMsg("AddVariations", exc);
-                dsutil.DSUtil.WriteFile(_logfile, msg, "");
+                dsutil.DSUtil.WriteFile(_logfile, itemID + ": " + msg, "");
             }
         }
         /// <summary>
@@ -359,6 +360,57 @@ namespace eBayUtility
         //    }
         //    return result.searchResult.item;
         //}
+
+        public static ModelViewTimesSold FillMatch(UserSettingsView settings, int rptNumber, int minSold, int daysBack, int? minPrice, int? maxPrice, bool? activeStatusOnly, bool? nonVariation, string itemID)
+        {
+            DateTime ModTimeTo = DateTime.Now.ToUniversalTime();
+            DateTime ModTimeFrom = ModTimeTo.AddDays(-daysBack);
+
+            itemID = (itemID == "null") ? null : itemID;
+            var x = models.GetScanData(rptNumber, ModTimeFrom, settings.StoreID, itemID: itemID);
+
+            // filter by min and max price
+            if (minPrice.HasValue)
+            {
+                x = x.Where(p => p.Price >= minPrice);
+            }
+            if (maxPrice.HasValue)
+            {
+                x = x.Where(p => p.Price <= maxPrice);
+            }
+            x = x.Where(p => p.SoldQty >= minSold);
+            if (activeStatusOnly.HasValue)
+            {
+                if (activeStatusOnly.Value)
+                {
+                    x = x.Where(p => p.ListingStatus == "Active");
+                }
+            }
+            if (nonVariation.HasValue)
+            {
+                if (nonVariation.Value)
+                {
+                    x = x.Where(p => !p.IsMultiVariationListing.Value);
+                }
+            }
+
+            var mv = new ModelViewTimesSold();
+            mv.TimesSoldRpt = x.ToList();
+            foreach (var row in mv.TimesSoldRpt)
+            {
+                if (row.UPC != null)
+                {
+                    var response = wallib.wmUtility.SearchProdID(row.UPC);
+                    if (response.Count == 0)
+                    {
+                        response = wallib.wmUtility.SearchProdID(row.MPN);
+                    }
+                    // need to lookup OrderHistory record and store
+                    models.UpdateOrderHistory(rptNumber, row.ItemID, response);
+                }
+            }
+            return mv;
+        }
 
     }
 }
