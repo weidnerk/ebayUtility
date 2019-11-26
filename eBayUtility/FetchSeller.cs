@@ -398,15 +398,32 @@ namespace eBayUtility
             mv.TimesSoldRpt = x.ToList();
             foreach (var row in mv.TimesSoldRpt)
             {
+                /*
+                if (row.ItemID == "163893747127")
+                {
+                    int stop = 99;
+                }
+                */
+                WalmartSearchProdIDResponse response;
                 if (row.UPC != null)
                 {
-                    var response = wallib.wmUtility.SearchProdID(row.UPC);
+                    response = wallib.wmUtility.SearchProdID(row.UPC);
                     if (response.Count == 0)
                     {
-                        response = wallib.wmUtility.SearchProdID(row.MPN);
+                        if (row.MPN != null)
+                        {
+                            response = wallib.wmUtility.SearchProdID(row.MPN);
+                        }
                     }
-                    // need to lookup OrderHistory record and store
                     models.UpdateOrderHistory(rptNumber, row.ItemID, response);
+                }
+                else
+                {
+                    if (row.MPN != null)
+                    {
+                        response = wallib.wmUtility.SearchProdID(row.MPN);
+                        models.UpdateOrderHistory(rptNumber, row.ItemID, response);
+                    }
                 }
             }
             return mv;
