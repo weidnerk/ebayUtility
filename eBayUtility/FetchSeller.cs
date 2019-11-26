@@ -400,12 +400,12 @@ namespace eBayUtility
                 mv.TimesSoldRpt = x.ToList();
                 foreach (var row in mv.TimesSoldRpt)
                 {
-                    /*
-                    if (row.ItemID == "163893747127")
-                    {
-                        int stop = 99;
-                    }
-                    */
+
+                    //if (row.ItemID == "273973838208")
+                    //{
+                    //    int stop = 99;
+                    //}
+
                     WalmartSearchProdIDResponse response;
                     if (row.UPC != null)
                     {
@@ -421,6 +421,7 @@ namespace eBayUtility
                         {
                             var walitem = await wallib.wmUtility.GetDetail(response.URL);
                             response.SoldAndShippedByWalmart = walitem.FulfilledByWalmart;
+                            response.SupplierBrand = walitem.Brand;
                         }
                         models.UpdateOrderHistory(rptNumber, row.ItemID, response);
                     }
@@ -433,6 +434,7 @@ namespace eBayUtility
                             {
                                 var walitem = await wallib.wmUtility.GetDetail(response.URL);
                                 response.SoldAndShippedByWalmart = walitem.FulfilledByWalmart;
+                                response.SupplierBrand = walitem.Brand;
                             }
                             models.UpdateOrderHistory(rptNumber, row.ItemID, response);
                         }
