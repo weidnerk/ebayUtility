@@ -361,72 +361,91 @@ namespace eBayUtility
         //    return result.searchResult.item;
         //}
 
-        public static ModelViewTimesSold FillMatch(UserSettingsView settings, int rptNumber, int minSold, int daysBack, int? minPrice, int? maxPrice, bool? activeStatusOnly, bool? nonVariation, string itemID)
+        public static async Task<ModelViewTimesSold> FillMatch(UserSettingsView settings, int rptNumber, int minSold, int daysBack, int? minPrice, int? maxPrice, bool? activeStatusOnly, bool? nonVariation, string itemID)
         {
-            DateTime ModTimeTo = DateTime.Now.ToUniversalTime();
-            DateTime ModTimeFrom = ModTimeTo.AddDays(-daysBack);
+            try
+            {
+                DateTime ModTimeTo = DateTime.Now.ToUniversalTime();
+                DateTime ModTimeFrom = ModTimeTo.AddDays(-daysBack);
 
-            itemID = (itemID == "null") ? null : itemID;
-            var x = models.GetScanData(rptNumber, ModTimeFrom, settings.StoreID, itemID: itemID);
+                itemID = (itemID == "null") ? null : itemID;
+                var x = models.GetScanData(rptNumber, ModTimeFrom, settings.StoreID, itemID: itemID);
 
-            // filter by min and max price
-            if (minPrice.HasValue)
-            {
-                x = x.Where(p => p.Price >= minPrice);
-            }
-            if (maxPrice.HasValue)
-            {
-                x = x.Where(p => p.Price <= maxPrice);
-            }
-            x = x.Where(p => p.SoldQty >= minSold);
-            if (activeStatusOnly.HasValue)
-            {
-                if (activeStatusOnly.Value)
+                // filter by min and max price
+                if (minPrice.HasValue)
                 {
-                    x = x.Where(p => p.ListingStatus == "Active");
+                    x = x.Where(p => p.Price >= minPrice);
                 }
-            }
-            if (nonVariation.HasValue)
-            {
-                if (nonVariation.Value)
+                if (maxPrice.HasValue)
                 {
-                    x = x.Where(p => !p.IsMultiVariationListing.Value);
+                    x = x.Where(p => p.Price <= maxPrice);
                 }
-            }
+                x = x.Where(p => p.SoldQty >= minSold);
+                if (activeStatusOnly.HasValue)
+                {
+                    if (activeStatusOnly.Value)
+                    {
+                        x = x.Where(p => p.ListingStatus == "Active");
+                    }
+                }
+                if (nonVariation.HasValue)
+                {
+                    if (nonVariation.Value)
+                    {
+                        x = x.Where(p => !p.IsMultiVariationListing.Value);
+                    }
+                }
 
-            var mv = new ModelViewTimesSold();
-            mv.TimesSoldRpt = x.ToList();
-            foreach (var row in mv.TimesSoldRpt)
-            {
-                /*
-                if (row.ItemID == "163893747127")
+                var mv = new ModelViewTimesSold();
+                mv.TimesSoldRpt = x.ToList();
+                foreach (var row in mv.TimesSoldRpt)
                 {
-                    int stop = 99;
-                }
-                */
-                WalmartSearchProdIDResponse response;
-                if (row.UPC != null)
-                {
-                    response = wallib.wmUtility.SearchProdID(row.UPC);
-                    if (response.Count == 0)
+                    /*
+                    if (row.ItemID == "163893747127")
+                    {
+                        int stop = 99;
+                    }
+                    */
+                    WalmartSearchProdIDResponse response;
+                    if (row.UPC != null)
+                    {
+                        response = wallib.wmUtility.SearchProdID(row.UPC);
+                        if (response.Count == 0)
+                        {
+                            if (row.MPN != null)
+                            {
+                                response = wallib.wmUtility.SearchProdID(row.MPN);
+                            }
+                        }
+                        if (response.Count == 1)
+                        {
+                            var walitem = await wallib.wmUtility.GetDetail(response.URL);
+                            response.SoldAndShippedByWalmart = walitem.FulfilledByWalmart;
+                        }
+                        models.UpdateOrderHistory(rptNumber, row.ItemID, response);
+                    }
+                    else
                     {
                         if (row.MPN != null)
                         {
                             response = wallib.wmUtility.SearchProdID(row.MPN);
+                            if (response.Count == 1)
+                            {
+                                var walitem = await wallib.wmUtility.GetDetail(response.URL);
+                                response.SoldAndShippedByWalmart = walitem.FulfilledByWalmart;
+                            }
+                            models.UpdateOrderHistory(rptNumber, row.ItemID, response);
                         }
                     }
-                    models.UpdateOrderHistory(rptNumber, row.ItemID, response);
                 }
-                else
-                {
-                    if (row.MPN != null)
-                    {
-                        response = wallib.wmUtility.SearchProdID(row.MPN);
-                        models.UpdateOrderHistory(rptNumber, row.ItemID, response);
-                    }
-                }
+                return mv;
             }
-            return mv;
+            catch (Exception exc)
+            {
+                string msg = dsutil.DSUtil.ErrMsg("FillMatch", exc);
+                dsutil.DSUtil.WriteFile(_logfile, itemID + ": " + msg, "");
+                return null;
+            }
         }
 
     }
