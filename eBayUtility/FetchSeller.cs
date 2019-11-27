@@ -422,6 +422,7 @@ namespace eBayUtility
                             var walitem = await wallib.wmUtility.GetDetail(response.URL);
                             response.SoldAndShippedByWalmart = walitem.FulfilledByWalmart;
                             response.SupplierBrand = walitem.Brand;
+                            response.Price = walitem.Price;
                         }
                         models.UpdateOrderHistory(rptNumber, row.ItemID, response);
                     }
@@ -435,6 +436,7 @@ namespace eBayUtility
                                 var walitem = await wallib.wmUtility.GetDetail(response.URL);
                                 response.SoldAndShippedByWalmart = walitem.FulfilledByWalmart;
                                 response.SupplierBrand = walitem.Brand;
+                                response.Price = walitem.Price;
                             }
                             models.UpdateOrderHistory(rptNumber, row.ItemID, response);
                         }
