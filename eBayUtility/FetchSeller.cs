@@ -423,6 +423,7 @@ namespace eBayUtility
                             response.SoldAndShippedByWalmart = walitem.FulfilledByWalmart;
                             response.SupplierBrand = walitem.Brand;
                             response.Price = walitem.Price;
+                            response.IsVariation = walitem.IsVariation;
                         }
                         models.UpdateOrderHistory(rptNumber, row.ItemID, response);
                     }
@@ -437,6 +438,7 @@ namespace eBayUtility
                                 response.SoldAndShippedByWalmart = walitem.FulfilledByWalmart;
                                 response.SupplierBrand = walitem.Brand;
                                 response.Price = walitem.Price;
+                                response.IsVariation = walitem.IsVariation;
                             }
                             models.UpdateOrderHistory(rptNumber, row.ItemID, response);
                         }
