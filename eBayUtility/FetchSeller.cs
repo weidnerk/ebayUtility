@@ -424,6 +424,7 @@ namespace eBayUtility
                             response.SupplierBrand = walitem.Brand;
                             response.Price = walitem.Price;
                             response.IsVariation = walitem.IsVariation;
+                            response.ProprosePrice = Utility.eBayItem.wmNewPrice(walitem.Price, 5);
                         }
                         models.UpdateOrderHistory(rptNumber, row.ItemID, response);
                     }
@@ -439,6 +440,7 @@ namespace eBayUtility
                                 response.SupplierBrand = walitem.Brand;
                                 response.Price = walitem.Price;
                                 response.IsVariation = walitem.IsVariation;
+                                response.ProprosePrice = Utility.eBayItem.wmNewPrice(walitem.Price, 5);
                             }
                             models.UpdateOrderHistory(rptNumber, row.ItemID, response);
                         }
