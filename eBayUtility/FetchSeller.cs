@@ -73,7 +73,7 @@ namespace eBayUtility
         /// 
         /// </summary>
         /// <returns></returns>
-        public static ModelView ScanSeller(UserSettingsView settings, string seller, int daysBack)
+        public static ModelView ScanSeller(UserSettingsView settings, string seller, DateTime fromDate)
         {
             dsmodels.DataModelsDB db = new dsmodels.DataModelsDB();
             int notSold = 0;
@@ -86,7 +86,7 @@ namespace eBayUtility
                 service.appID = settings.AppID;
                 int currentPageNumber = 1;
 
-                var request = ebayAPIs.BuildReqest(seller, daysBack);
+                var request = ebayAPIs.BuildReqest(seller, fromDate);
                 dsutil.DSUtil.WriteFile(_logfile, "Retrieve sales for " + seller, settings.UserName);
                 var response = GetCompletedItems(service, request, currentPageNumber);
                 dsutil.DSUtil.WriteFile(_logfile, "Retrieve sales complete", settings.UserName);
@@ -203,11 +203,7 @@ namespace eBayUtility
                                     var tran = new OrderHistoryDetail();
                                     tran.Price = Convert.ToDecimal(price);
                                     tran.Qty = qty;
-                                    dateSold = dateSold.Replace(" PST", "").Replace(" PDT", "");
-                                    //tran.DateSold = DateTime.ParseExact(dateSold, "MMM-dd-yy hh:mm:ss", CultureInfo.InvariantCulture);
-                                    DateTime dateTime;
-                                    bool r = DateTime.TryParse(dateSold, out dateTime);
-                                    tran.DateOfPurchase = dateTime;
+                                    tran.DateOfPurchase = GetUTCFromEbayDateStr(dateSold);
                                     transactions.Add(tran);
                                     element = 0;
                                     break;
@@ -230,6 +226,32 @@ namespace eBayUtility
                 return null;
             }
         }
+
+        /// <summary>
+        /// Convert a purchase date string taken from ebay Purchase History page to a UTC date.
+        /// </summary>
+        /// <param name="dateTimeStr">Example: Nov-29-19 09:06:46 PST</param>
+        /// <returns></returns>
+        private static DateTime GetUTCFromEbayDateStr(string dateTimeStr)
+        {
+            string timeZoneStr = dateTimeStr.Substring(dateTimeStr.Length - 3, 3);
+            dateTimeStr = dateTimeStr.Replace(" PST", "").Replace(" PDT", "");
+            //tran.DateSold = DateTime.ParseExact(dateSold, "MMM-dd-yy hh:mm:ss", CultureInfo.InvariantCulture);
+            DateTime dateTime;
+            bool r = DateTime.TryParse(dateTimeStr, out dateTime);
+            TimeZoneInfo timeZone = null;
+            //if (timeZoneStr == "PDT")
+            //{
+            //    timeZone = TimeZoneInfo.FindSystemTimeZoneById("Pacific Daylight Time");
+            //}
+            //if (timeZoneStr == "PST")
+            //{
+                timeZone = TimeZoneInfo.FindSystemTimeZoneById("Pacific Standard Time");
+            //}
+            var databaseUtcTime = TimeZoneInfo.ConvertTimeToUtc(dateTime, timeZone);
+            return databaseUtcTime;
+        }
+
         private static void AddVariations(HtmlNodeCollection variationNode, List<OrderHistoryDetail> transactions, string itemID)
         {
             try { 
@@ -455,6 +477,6 @@ namespace eBayUtility
                 return null;
             }
         }
-
+        
     }
 }

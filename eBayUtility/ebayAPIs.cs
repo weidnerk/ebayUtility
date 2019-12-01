@@ -1211,7 +1211,7 @@ namespace eBayUtility
         /// <param name="seller"></param>
         /// <param name="daysBack"></param>
         /// <returns></returns>
-        public static FindCompletedItemsRequest BuildReqest(string seller, int daysBack)
+        public static FindCompletedItemsRequest BuildReqest(string seller, DateTime fromDate)
         {
             FindCompletedItemsRequest request = new FindCompletedItemsRequest();
 
@@ -1222,9 +1222,9 @@ namespace eBayUtility
             filterSeller.value = new string[] { seller };
 
             DateTime ModTimeTo = DateTime.Now.ToUniversalTime();
-            DateTime ModTimeFrom = ModTimeTo.AddDays(-daysBack);
+            //DateTime ModTimeFrom = ModTimeTo.AddDays(-daysBack);
             string ModTimeToStr = FormateBayTime(ModTimeTo);
-            string ModTimeFromStr = FormateBayTime(ModTimeFrom);
+            string ModTimeFromStr = FormateBayTime(fromDate);
 
             //DateTime ModTimeTo = DateTime.Now;
             //DateTime ModTimeFrom = ModTimeTo.AddDays(-daysBack);

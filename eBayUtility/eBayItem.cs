@@ -524,7 +524,7 @@ namespace Utility
         public static decimal wmNewPrice(decimal supplierPrice, double pctProfit)
         {
             decimal breakeven = wmBreakEvenPrice(supplierPrice);
-            return breakeven * (1m + (supplierPrice * 0.01m));
+            return breakeven * (1m + ((decimal)pctProfit * 0.01m));
         }
     }
 }
