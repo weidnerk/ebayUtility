@@ -246,7 +246,7 @@ namespace eBayUtility
             //}
             //if (timeZoneStr == "PST")
             //{
-                timeZone = TimeZoneInfo.FindSystemTimeZoneById("Pacific Standard Time");
+            timeZone = TimeZoneInfo.FindSystemTimeZoneById("Pacific Standard Time");
             //}
             var databaseUtcTime = TimeZoneInfo.ConvertTimeToUtc(dateTime, timeZone);
             return databaseUtcTime;
