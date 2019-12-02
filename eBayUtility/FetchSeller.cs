@@ -383,7 +383,7 @@ namespace eBayUtility
         //    return result.searchResult.item;
         //}
 
-        public static async Task<ModelViewTimesSold> FillMatch(UserSettingsView settings, int rptNumber, int minSold, int daysBack, int? minPrice, int? maxPrice, bool? activeStatusOnly, bool? nonVariation, string itemID)
+        public static async Task<ModelViewTimesSold> FillMatch(UserSettingsView settings, int rptNumber, int minSold, int daysBack, int? minPrice, int? maxPrice, bool? activeStatusOnly, bool? nonVariation, string itemID, double pctProfit)
         {
             try
             {
@@ -446,7 +446,7 @@ namespace eBayUtility
                             response.SupplierBrand = walitem.Brand;
                             response.Price = walitem.Price;
                             response.IsVariation = walitem.IsVariation;
-                            response.ProprosePrice = Utility.eBayItem.wmNewPrice(walitem.Price, 5);
+                            response.ProprosePrice = Utility.eBayItem.wmNewPrice(walitem.Price, pctProfit);
                         }
                         models.UpdateOrderHistory(rptNumber, row.ItemID, response);
                     }
@@ -462,7 +462,7 @@ namespace eBayUtility
                                 response.SupplierBrand = walitem.Brand;
                                 response.Price = walitem.Price;
                                 response.IsVariation = walitem.IsVariation;
-                                response.ProprosePrice = Utility.eBayItem.wmNewPrice(walitem.Price, 5);
+                                response.ProprosePrice = Utility.eBayItem.wmNewPrice(walitem.Price, pctProfit);
                             }
                             models.UpdateOrderHistory(rptNumber, row.ItemID, response);
                         }
