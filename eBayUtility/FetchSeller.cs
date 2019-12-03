@@ -447,8 +447,13 @@ namespace eBayUtility
                             response.Price = walitem.Price;
                             response.IsVariation = walitem.IsVariation;
                             response.ProprosePrice = Utility.eBayItem.wmNewPrice(walitem.Price, pctProfit);
+                            if (!string.IsNullOrEmpty(walitem.PictureUrl))
+                            {
+                                string[] arr = walitem.PictureUrl.Split(';');
+                                response.Picture = arr[0];
+                            }
                         }
-                        models.UpdateOrderHistory(rptNumber, row.ItemID, response);
+                        models.OrderHistoryUpdate(rptNumber, row.ItemID, response);
                     }
                     else
                     {
@@ -463,8 +468,14 @@ namespace eBayUtility
                                 response.Price = walitem.Price;
                                 response.IsVariation = walitem.IsVariation;
                                 response.ProprosePrice = Utility.eBayItem.wmNewPrice(walitem.Price, pctProfit);
+
+                                if (!string.IsNullOrEmpty(walitem.PictureUrl))
+                                {
+                                    string[] arr = walitem.PictureUrl.Split(';');
+                                    response.Picture = arr[0];
+                                }
                             }
-                            models.UpdateOrderHistory(rptNumber, row.ItemID, response);
+                            models.OrderHistoryUpdate(rptNumber, row.ItemID, response);
                         }
                     }
                 }

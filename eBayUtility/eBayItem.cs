@@ -58,7 +58,7 @@ namespace Utility
                             listing.Listed = DateTime.Now;
                         }
                         var response = FlattenList(output);
-                        await db.UpdateListedItemID(listing, verifyItemID, settings.UserID, true, response);
+                        await db.ListedItemIDUpdate(listing, verifyItemID, settings.UserID, true, response);
                     }
                     else
                     {
@@ -78,7 +78,7 @@ namespace Utility
                     {
                         response = FlattenList(output);
                     }
-                    await db.UpdateListedItemID(listing, listing.ListedItemID, settings.UserID, true, response, updated: DateTime.Now);
+                    await db.ListedItemIDUpdate(listing, listing.ListedItemID, settings.UserID, true, response, updated: DateTime.Now);
                     output.Insert(0, listing.ListedItemID);
                 }
             }
