@@ -423,7 +423,7 @@ namespace eBayUtility
                 foreach (var row in mv.TimesSoldRpt)
                 {
 
-                    //if (row.ItemID == "273973838208")
+                    //if (row.ItemID == "312767833884")
                     //{
                     //    int stop = 99;
                     //}
@@ -452,6 +452,10 @@ namespace eBayUtility
                                 string[] arr = walitem.PictureUrl.Split(';');
                                 response.Picture = arr[0];
                             }
+                            else
+                            {
+                                dsutil.DSUtil.WriteFile(_logfile, itemID + ": (FillMatch) supplier images not available.", "");
+                            }
                         }
                         models.OrderHistoryUpdate(rptNumber, row.ItemID, response);
                     }
@@ -473,6 +477,10 @@ namespace eBayUtility
                                 {
                                     string[] arr = walitem.PictureUrl.Split(';');
                                     response.Picture = arr[0];
+                                }
+                                else
+                                {
+                                    dsutil.DSUtil.WriteFile(_logfile, itemID + ": (FillMatch) supplier images not available.", "");
                                 }
                             }
                             models.OrderHistoryUpdate(rptNumber, row.ItemID, response);
