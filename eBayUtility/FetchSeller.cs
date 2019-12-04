@@ -447,6 +447,7 @@ namespace eBayUtility
                             response.Price = walitem.Price;
                             response.IsVariation = walitem.IsVariation;
                             response.ProprosePrice = Utility.eBayItem.wmNewPrice(walitem.Price, pctProfit);
+                            response.Description = walitem.Description;
                             if (!string.IsNullOrEmpty(walitem.PictureUrl))
                             {
                                 response.Picture = walitem.PictureUrl;
@@ -471,7 +472,7 @@ namespace eBayUtility
                                 response.Price = walitem.Price;
                                 response.IsVariation = walitem.IsVariation;
                                 response.ProprosePrice = Utility.eBayItem.wmNewPrice(walitem.Price, pctProfit);
-
+                                response.Description = walitem.Description;
                                 if (!string.IsNullOrEmpty(walitem.PictureUrl))
                                 {
                                     response.Picture = walitem.PictureUrl;
@@ -518,6 +519,7 @@ namespace eBayUtility
                     listing.Profit = 0;
                     listing.ProfitMargin = 0;
                     listing.StoreID = settings.StoreID;
+                    listing.Description = oh.SourceDescription;
                     var upc = models.ItemSpecifics.Where(i => i.SellerItemID == oh.ItemID && i.ItemName == "UPC").SingleOrDefault();
                     if (upc != null)
                     {
