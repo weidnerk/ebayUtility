@@ -449,8 +449,8 @@ namespace eBayUtility
                             response.ProprosePrice = Utility.eBayItem.wmNewPrice(walitem.Price, pctProfit);
                             if (!string.IsNullOrEmpty(walitem.PictureUrl))
                             {
-                                string[] arr = walitem.PictureUrl.Split(';');
-                                response.Picture = arr[0];
+                                //string[] arr = walitem.PictureUrl.Split(';');
+                                response.Picture = walitem.PictureUrl;
                             }
                             else
                             {
@@ -475,8 +475,8 @@ namespace eBayUtility
 
                                 if (!string.IsNullOrEmpty(walitem.PictureUrl))
                                 {
-                                    string[] arr = walitem.PictureUrl.Split(';');
-                                    response.Picture = arr[0];
+                                    //string[] arr = walitem.PictureUrl.Split(';');
+                                    response.Picture = walitem.PictureUrl;
                                 }
                                 else
                                 {
