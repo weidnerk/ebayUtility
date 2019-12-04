@@ -584,7 +584,7 @@ namespace eBayUtility
 
         // Purpose of GetSingleItem is to fetch properties such as a listing's description and photos
         // it is used when performing an auto-listing
-        public static async Task<Listing> GetSingleItem(string itemId, string appid)
+        public static async Task<SellerListing> GetSingleItem(UserSettingsView settings, string itemID)
         {
             string errMsg = null;
             StringReader sr;
@@ -608,7 +608,7 @@ namespace eBayUtility
 
                 // docs for IncludeSelector
                 // https://developer.ebay.com/devzone/shopping/docs/callref/getsingleitem.html
-                svc.Url = string.Format("http://open.api.ebay.com/shopping?callname=GetSingleItem&IncludeSelector=Details,Description,ItemSpecifics,Variations&appid={0}&version=515&ItemID={1}", appid, itemId);
+                svc.Url = string.Format("http://open.api.ebay.com/shopping?callname=GetSingleItem&IncludeSelector=Details,Description,ItemSpecifics,Variations&appid={0}&version=515&ItemID={1}", settings.AppID, itemID);
                 // create a new request type
                 GetSingleItemRequestType request = new GetSingleItemRequestType();
                 // put in your own item number
@@ -693,15 +693,13 @@ namespace eBayUtility
                         string n = i.Name;
                         string v = i.Value;
                         var specific = new ItemSpecific();
-                        specific.SellerItemID = itemId;
+                        specific.SellerItemID = itemID;
                         specific.ItemName = n;
                         specific.ItemValue = v;
                         itemSpecifics.Add(specific);
                     }
-
                     var a = r.Shipping;
 
-                    var si = new Listing();
                     var sellerListing = new SellerListing();
                     sellerListing.ItemSpecifics = itemSpecifics.ToList();
 
@@ -713,27 +711,25 @@ namespace eBayUtility
                     si.ShippingServiceCost = shippingCost.ShippingServiceCost;
                     si.ShippingServiceName = shippingCost.ShippingServiceName;
                     */
-                    si.ItemID = itemId;
-                    si.PictureUrl = DSUtil.ListToDelimited(list, ';');
+                    sellerListing.ItemID = itemID;
+                    sellerListing.PictureURL = DSUtil.ListToDelimited(list, ';');
                     sellerListing.Title = r.Title.Value;
-                    si.Description = r.Description.Value;
+                    sellerListing.Description = r.Description.Value;
                     sellerListing.SellerPrice = Convert.ToDecimal(r.Price.Value);
                     sellerListing.EbayUrl = r.ListingUrl.Value;
-                    si.PrimaryCategoryID = r.PrimaryCategoryID.Value;
-                    si.PrimaryCategoryName = r.PrimaryCategoryName;
+                    sellerListing.PrimaryCategoryID = r.PrimaryCategoryID.Value;
+                    sellerListing.PrimaryCategoryName = r.PrimaryCategoryName;
                     int x1 = Convert.ToInt32(r.Quantity.Value);
                     int x2 = Convert.ToInt32(r.QuantitySold.Value);
-                    si.Qty = x1 - x2;   // available qty; https://forums.developer.ebay.com/questions/11293/how-to-get-item-quantity-available.html
+                    sellerListing.Qty = x1 - x2;   // available qty; https://forums.developer.ebay.com/questions/11293/how-to-get-item-quantity-available.html
                     sellerListing.ListingStatus = r.ListingStatus.Value;
                     sellerListing.Seller = r.Seller.Value;
-                    //si.Qty = Convert.ToInt32(r.Quantity.Value);
-                    si.SellerListing = sellerListing;
-                    return si;
+                    return sellerListing;
                 }
             }
             catch (Exception exc)
             {
-                string msg = "itemid: " + itemId.ToString() + " GetSingleItem " + exc.Message;
+                string msg = "itemid: " + itemID.ToString() + " GetSingleItem " + exc.Message;
                 dsutil.DSUtil.WriteFile(_logfile, msg, "nousername");
                 throw;
             }

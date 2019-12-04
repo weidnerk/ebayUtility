@@ -369,20 +369,21 @@ namespace eBayUtility
                 return null;
             }
         }
+       
         /// <summary>
-        /// Get seller's sold items for last 30 days, but no sales information as far as I can tell.
+        /// Based on filtering a seller's sales, try to match a prodID with a prodID on walmart
         /// </summary>
-        /// <param name="seller"></param>
-        //public static SearchItem[] GetSellersSoldItems(UserSettingsView settings, string seller)
-        //{
-        //    var result = ebayAPIs.FindCompletedItems(seller, 30, settings.AppID, 1);
-        //    foreach (SearchItem x in result.searchResult.item)
-        //    {
-        //        Console.WriteLine(x.title);
-        //    }
-        //    return result.searchResult.item;
-        //}
-
+        /// <param name="settings"></param>
+        /// <param name="rptNumber"></param>
+        /// <param name="minSold"></param>
+        /// <param name="daysBack"></param>
+        /// <param name="minPrice"></param>
+        /// <param name="maxPrice"></param>
+        /// <param name="activeStatusOnly"></param>
+        /// <param name="nonVariation"></param>
+        /// <param name="itemID"></param>
+        /// <param name="pctProfit"></param>
+        /// <returns></returns>
         public static async Task<ModelViewTimesSold> FillMatch(UserSettingsView settings, int rptNumber, int minSold, int daysBack, int? minPrice, int? maxPrice, bool? activeStatusOnly, bool? nonVariation, string itemID, double pctProfit)
         {
             try
@@ -422,7 +423,6 @@ namespace eBayUtility
                 mv.TimesSoldRpt = x.ToList();
                 foreach (var row in mv.TimesSoldRpt)
                 {
-
                     //if (row.ItemID == "312767833884")
                     //{
                     //    int stop = 99;
@@ -449,7 +449,6 @@ namespace eBayUtility
                             response.ProprosePrice = Utility.eBayItem.wmNewPrice(walitem.Price, pctProfit);
                             if (!string.IsNullOrEmpty(walitem.PictureUrl))
                             {
-                                //string[] arr = walitem.PictureUrl.Split(';');
                                 response.Picture = walitem.PictureUrl;
                             }
                             else
@@ -475,7 +474,6 @@ namespace eBayUtility
 
                                 if (!string.IsNullOrEmpty(walitem.PictureUrl))
                                 {
-                                    //string[] arr = walitem.PictureUrl.Split(';');
                                     response.Picture = walitem.PictureUrl;
                                 }
                                 else
@@ -496,6 +494,66 @@ namespace eBayUtility
                 return null;
             }
         }
-        
+        /// <summary>
+        /// This is where a SellerListing record is created.
+        /// </summary>
+        /// <param name="settings"></param>
+        /// <param name="rptNumber"></param>
+        /// <returns></returns>
+        public static async Task<string> StoreToListing(UserSettingsView settings, int rptNumber)
+        {
+            string ret = null;
+            try
+            {
+                var searchHistory = models.SearchHistory.Find(rptNumber);
+                var recs = models.OrderHistory.Where(p => p.ToList ?? false).ToList();
+                foreach (var oh in recs)
+                {
+                    var listing = new Listing();
+                    listing.ItemID = oh.ItemID;
+                    listing.ListingTitle = oh.Title;
+                    listing.SourceUrl = oh.WMUrl;
+                    listing.SupplierPrice = oh.WMPrice.Value;
+
+                    listing.Profit = 0;
+                    listing.ProfitMargin = 0;
+                    listing.StoreID = settings.StoreID;
+                    var upc = models.ItemSpecifics.Where(i => i.SellerItemID == oh.ItemID && i.ItemName == "UPC").SingleOrDefault();
+                    if (upc != null)
+                    {
+                        listing.UPC = upc.ItemValue;
+                    }
+                    var mpn = models.ItemSpecifics.Where(i => i.SellerItemID == oh.ItemID && i.ItemName == "MPN").SingleOrDefault();
+                    if (mpn != null)
+                    {
+                        listing.MPN = mpn.ItemValue;
+                    }
+                    var sellerListing = new SellerListing();
+                    sellerListing.ItemID = oh.ItemID;
+                    sellerListing.Title = oh.Title;
+                    sellerListing.Seller = searchHistory.Seller;
+                    var si = await eBayUtility.ebayAPIs.GetSingleItem(settings, listing.ItemID);
+                    sellerListing.PrimaryCategoryID = si.PrimaryCategoryID;
+                    sellerListing.PrimaryCategoryName = si.PrimaryCategoryName;
+                    sellerListing.Description = si.Description;
+                    sellerListing.ListingStatus = si.ListingStatus;
+                    sellerListing.EbayUrl = oh.EbayUrl;
+                    sellerListing.PictureURL = si.PictureURL;
+                    sellerListing.SellerPrice = si.SellerPrice;
+                    listing.PrimaryCategoryID = si.PrimaryCategoryID;
+                    listing.PrimaryCategoryName = si.PrimaryCategoryName;
+                    listing.SellerListing = sellerListing;
+
+                    await models.ListingSaveAsync(listing, settings.UserID);
+                }
+            }
+            catch (Exception exc)
+            {
+                ret = dsutil.DSUtil.ErrMsg("StoreToListing", exc);
+                dsutil.DSUtil.WriteFile(_logfile, ret, "admin");
+            }
+            return ret;
+        }
+
     }
 }
