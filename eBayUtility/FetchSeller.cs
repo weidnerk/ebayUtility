@@ -411,53 +411,36 @@ namespace eBayUtility
                         x = x.Where(p => p.ListingStatus == "Active");
                     }
                 }
-                if (nonVariation.HasValue)
-                {
-                    if (nonVariation.Value)
-                    {
-                        x = x.Where(p => !p.IsMultiVariationListing.Value);
-                    }
-                }
+                //if (nonVariation.HasValue)
+                //{
+                //    if (nonVariation.Value)
+                //    {
+                //        x = x.Where(p => !p.IsSupplierVariation.Value);
+                //    }
+                //}
 
                 var mv = new ModelViewTimesSold();
                 mv.TimesSoldRpt = x.ToList();
                 foreach (var row in mv.TimesSoldRpt)
                 {
-                    //if (row.ItemID == "312767833884")
-                    //{
-                    //    int stop = 99;
-                    //}
+                    if (row.ItemID == "392408389536")
+                    {
+                        int stop = 99;
+                    }
 
                     WalmartSearchProdIDResponse response;
+                    var walitem = new SupplierItem();
                     if (row.UPC != null)
                     {
                         response = wallib.wmUtility.SearchProdID(row.UPC);
-                        if (response.Count == 0)
-                        {
-                            if (row.MPN != null)
-                            {
-                                response = wallib.wmUtility.SearchProdID(row.MPN);
-                            }
-                        }
                         if (response.Count == 1)
                         {
-                            var walitem = await wallib.wmUtility.GetDetail(response.URL);
-                            response.SoldAndShippedByWalmart = walitem.FulfilledByWalmart;
-                            response.SupplierBrand = walitem.Brand;
-                            response.Price = walitem.Price;
-                            response.IsVariation = walitem.IsVariation;
-                            response.ProprosePrice = Utility.eBayItem.wmNewPrice(walitem.Price, pctProfit);
-                            response.Description = walitem.Description;
-                            if (!string.IsNullOrEmpty(walitem.PictureUrl))
-                            {
-                                response.Picture = walitem.PictureUrl;
-                            }
-                            else
-                            {
-                                dsutil.DSUtil.WriteFile(_logfile, itemID + ": (FillMatch) supplier images not available.", "");
-                            }
+                            walitem = await wallib.wmUtility.GetDetail(response.URL);
+                            //response.ProprosePrice = Utility.eBayItem.wmNewPrice(walitem.Price, pctProfit);
+                            walitem.MatchCount = response.Count;
+                            walitem.UPC = row.UPC;
+                            models.WMItemUpdate(row.UPC, "", walitem);
                         }
-                        models.OrderHistoryUpdate(rptNumber, row.ItemID, response);
                     }
                     else
                     {
@@ -466,23 +449,12 @@ namespace eBayUtility
                             response = wallib.wmUtility.SearchProdID(row.MPN);
                             if (response.Count == 1)
                             {
-                                var walitem = await wallib.wmUtility.GetDetail(response.URL);
-                                response.SoldAndShippedByWalmart = walitem.FulfilledByWalmart;
-                                response.SupplierBrand = walitem.Brand;
-                                response.Price = walitem.Price;
-                                response.IsVariation = walitem.IsVariation;
-                                response.ProprosePrice = Utility.eBayItem.wmNewPrice(walitem.Price, pctProfit);
-                                response.Description = walitem.Description;
-                                if (!string.IsNullOrEmpty(walitem.PictureUrl))
-                                {
-                                    response.Picture = walitem.PictureUrl;
-                                }
-                                else
-                                {
-                                    dsutil.DSUtil.WriteFile(_logfile, itemID + ": (FillMatch) supplier images not available.", "");
-                                }
+                                walitem = await wallib.wmUtility.GetDetail(response.URL);
+                                //response.ProprosePrice = Utility.eBayItem.wmNewPrice(walitem.Price, pctProfit);
+                                walitem.MatchCount = response.Count;
+                                walitem.MPN = row.MPN;
+                                models.WMItemUpdate("", row.MPN, walitem);
                             }
-                            models.OrderHistoryUpdate(rptNumber, row.ItemID, response);
                         }
                     }
                 }
@@ -513,9 +485,10 @@ namespace eBayUtility
                     var listing = new Listing();
                     listing.ItemID = oh.ItemID;
                     listing.ListingTitle = oh.Title;
-                    listing.SourceUrl = oh.WMUrl;
-                    listing.SupplierPrice = oh.WMPrice.Value;
-
+                    var supplierItem = models.GetSupplierItem(oh.ItemID);
+                    listing.SourceUrl = supplierItem.ItemURL;
+                    //listing.SupplierPrice = oh.WMPrice.Value;
+                    //listing.PictureUrl = oh.WMPicUrl;
                     listing.Profit = 0;
                     listing.ProfitMargin = 0;
                     listing.StoreID = settings.StoreID;
