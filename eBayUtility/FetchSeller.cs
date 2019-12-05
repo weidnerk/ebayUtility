@@ -439,7 +439,7 @@ namespace eBayUtility
                             //response.ProprosePrice = Utility.eBayItem.wmNewPrice(walitem.Price, pctProfit);
                             walitem.MatchCount = response.Count;
                             walitem.UPC = row.UPC;
-                            models.WMItemUpdate(row.UPC, "", walitem);
+                            models.SupplierItemUpdate(row.UPC, "", walitem);
                         }
                     }
                     else
@@ -453,7 +453,7 @@ namespace eBayUtility
                                 //response.ProprosePrice = Utility.eBayItem.wmNewPrice(walitem.Price, pctProfit);
                                 walitem.MatchCount = response.Count;
                                 walitem.MPN = row.MPN;
-                                models.WMItemUpdate("", row.MPN, walitem);
+                                models.SupplierItemUpdate("", row.MPN, walitem);
                             }
                         }
                     }
@@ -512,12 +512,13 @@ namespace eBayUtility
                     sellerListing.PrimaryCategoryName = si.PrimaryCategoryName;
                     sellerListing.Description = si.Description;
                     sellerListing.ListingStatus = si.ListingStatus;
-                    sellerListing.EbayUrl = oh.EbayUrl;
+                    sellerListing.EbayUrl = si.EbayUrl;
                     sellerListing.PictureURL = si.PictureURL;
                     sellerListing.SellerPrice = si.SellerPrice;
                     listing.PrimaryCategoryID = si.PrimaryCategoryID;
                     listing.PrimaryCategoryName = si.PrimaryCategoryName;
                     listing.SellerListing = sellerListing;
+                    listing.SupplierID = supplierItem.ID;
 
                     await models.ListingSaveAsync(listing, settings.UserID);
                 }
