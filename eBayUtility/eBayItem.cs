@@ -206,7 +206,6 @@ namespace Utility
                     var n = AddItemSpecifics(i);
                     ItemSpecs.Add(n);
                 }
-
                 item.ItemSpecifics = ItemSpecs;
 
                 var pd = new ProductListingDetailsType();

@@ -423,7 +423,7 @@ namespace eBayUtility
                 mv.TimesSoldRpt = x.ToList();
                 foreach (var row in mv.TimesSoldRpt)
                 {
-                    if (row.ItemID == "392408389536")
+                    if (row.ItemID == "392308936294")
                     {
                         int stop = 99;
                     }
