@@ -384,7 +384,7 @@ namespace eBayUtility
         /// <param name="itemID"></param>
         /// <param name="pctProfit"></param>
         /// <returns></returns>
-        public static async Task<ModelViewTimesSold> FillMatch(UserSettingsView settings, int rptNumber, int minSold, int daysBack, int? minPrice, int? maxPrice, bool? activeStatusOnly, bool? nonVariation, string itemID, double pctProfit)
+        public static async Task<ModelViewTimesSold> FillMatch(UserSettingsView settings, int rptNumber, int minSold, int daysBack, int? minPrice, int? maxPrice, bool? activeStatusOnly, bool? isSellerVariation, string itemID, double pctProfit)
         {
             try
             {
@@ -411,13 +411,13 @@ namespace eBayUtility
                         x = x.Where(p => p.ListingStatus == "Active");
                     }
                 }
-                //if (nonVariation.HasValue)
-                //{
-                //    if (nonVariation.Value)
-                //    {
-                //        x = x.Where(p => !p.IsSupplierVariation.Value);
-                //    }
-                //}
+                if (isSellerVariation.HasValue)
+                {
+                    if (isSellerVariation.Value)
+                    {
+                        x = x.Where(p => !p.IsSellerVariation.Value);
+                    }
+                }
 
                 var mv = new ModelViewTimesSold();
                 mv.TimesSoldRpt = x.ToList();
@@ -492,7 +492,7 @@ namespace eBayUtility
                     listing.Profit = 0;
                     listing.ProfitMargin = 0;
                     listing.StoreID = settings.StoreID;
-                    listing.Description = oh.SourceDescription;
+                    listing.Description = supplierItem.Description;
                     var upc = models.ItemSpecifics.Where(i => i.SellerItemID == oh.ItemID && i.ItemName == "UPC").SingleOrDefault();
                     if (upc != null)
                     {
