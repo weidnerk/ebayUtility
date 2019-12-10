@@ -117,6 +117,10 @@ namespace eBayUtility
                     int b = notSold;
                     return mv;
                 }
+                else
+                {
+                    dsutil.DSUtil.WriteFile(_logfile, "ScanSeller: " + seller + " - GetCompletedItems returned Failure", "admin");
+                }
                 return null;
             }
             catch (Exception exc)
@@ -423,7 +427,7 @@ namespace eBayUtility
                 mv.TimesSoldRpt = x.ToList();
                 foreach (var row in mv.TimesSoldRpt)
                 {
-                    if (row.ItemID == "392308936294")
+                    if (row.ItemID == "173695755057")
                     {
                         int stop = 99;
                     }
@@ -439,7 +443,7 @@ namespace eBayUtility
                             //response.ProprosePrice = Utility.eBayItem.wmNewPrice(walitem.Price, pctProfit);
                             walitem.MatchCount = response.Count;
                             walitem.UPC = row.UPC;
-                            models.SupplierItemUpdate(row.UPC, "", walitem);
+                            models.SupplierItemUpdate(row.UPC, "", walitem, new string[] { "MatchCount", "ItemURL", "SoldAndShippedBySupplier", "SupplierBrand", "SupplierPrice", "IsVariation", "SupplierPicURL" });
                         }
                     }
                     else
@@ -453,7 +457,7 @@ namespace eBayUtility
                                 //response.ProprosePrice = Utility.eBayItem.wmNewPrice(walitem.Price, pctProfit);
                                 walitem.MatchCount = response.Count;
                                 walitem.MPN = row.MPN;
-                                models.SupplierItemUpdate("", row.MPN, walitem);
+                                models.SupplierItemUpdate("", row.MPN, walitem, new string[] { "MatchCount", "ItemURL", "SoldAndShippedBySupplier", "SupplierBrand", "SupplierPrice", "IsVariation", "SupplierPicURL" });
                             }
                         }
                     }
