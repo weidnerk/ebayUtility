@@ -373,7 +373,39 @@ namespace eBayUtility
                 return null;
             }
         }
-       
+        public static async Task<string> CalculateMatch(UserSettingsView settings, int rptNumber, int minSold, int daysBack, int? minPrice, int? maxPrice, bool? activeStatusOnly, bool? isSellerVariation, string itemID, double pctProfit, int storeID)
+        {
+            string ret = null;
+            var sh = new SearchHistory();
+            if (rptNumber > 0)
+            {
+                sh.ID = rptNumber;
+                sh.CalculateMatch = DateTime.Now;
+                await models.SearchHistoryUpdate(sh, "CalculateMatch");
+                var mv = await FetchSeller.FillMatch(settings, rptNumber, minSold, daysBack, minPrice, maxPrice, activeStatusOnly, isSellerVariation, itemID, 5);
+            }
+            else if (storeID > 0)
+            {
+                var sellers = models.GetSellers(storeID);
+                foreach (var s in sellers)
+                {
+                    if (s.CalculateMatch < s.Updated)
+                    {
+                        sh.ID = rptNumber;
+                        sh.CalculateMatch = DateTime.Now;
+                        await models.SearchHistoryUpdate(sh, "CalculateMatch");
+                        var mv = await FetchSeller.FillMatch(settings, s.ID, minSold, daysBack, minPrice, maxPrice, activeStatusOnly, isSellerVariation, itemID, 5);
+                        dsutil.DSUtil.WriteFile(_logfile, s.Seller + ": Ran FillMatch", "");
+                    }
+                }
+            }
+            else
+            {
+                ret = "Invalid call to FillMatch.";
+                dsutil.DSUtil.WriteFile(_logfile, ret, "");
+            }
+            return ret;
+        }
         /// <summary>
         /// Based on filtering a seller's sales, try to match a prodID with a prodID on walmart
         /// </summary>
@@ -388,7 +420,7 @@ namespace eBayUtility
         /// <param name="itemID"></param>
         /// <param name="pctProfit"></param>
         /// <returns></returns>
-        public static async Task<ModelViewTimesSold> FillMatch(UserSettingsView settings, int rptNumber, int minSold, int daysBack, int? minPrice, int? maxPrice, bool? activeStatusOnly, bool? isSellerVariation, string itemID, double pctProfit)
+        private static async Task<ModelViewTimesSold> FillMatch(UserSettingsView settings, int rptNumber, int minSold, int daysBack, int? minPrice, int? maxPrice, bool? activeStatusOnly, bool? isSellerVariation, string itemID, double pctProfit)
         {
             try
             {
@@ -466,7 +498,7 @@ namespace eBayUtility
             }
             catch (Exception exc)
             {
-                string msg = dsutil.DSUtil.ErrMsg("FillMatch", exc);
+                string msg = dsutil.DSUtil.ErrMsg("FillMatch RptNumber: " + rptNumber.ToString(), exc);
                 dsutil.DSUtil.WriteFile(_logfile, itemID + ": " + msg, "");
                 return null;
             }
