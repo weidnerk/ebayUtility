@@ -477,30 +477,30 @@ namespace eBayUtility
 
                     WalmartSearchProdIDResponse response;
                     var walitem = new SupplierItem();
-                    if (row.UPC != null)
+                    if (row.SellerUPC != null)
                     {
-                        response = wallib.wmUtility.SearchProdID(row.UPC);
+                        response = wallib.wmUtility.SearchProdID(row.SellerUPC);
                         if (response.Count == 1)
                         {
                             walitem = await wallib.wmUtility.GetDetail(response.URL);
                             //response.ProprosePrice = Utility.eBayItem.wmNewPrice(walitem.Price, pctProfit);
                             walitem.MatchCount = response.Count;
-                            walitem.UPC = row.UPC;
-                            models.SupplierItemUpdate(row.UPC, "", walitem);
+                            walitem.UPC = row.SellerUPC;
+                            models.SupplierItemUpdate(row.SellerUPC, "", walitem);
                         }
                     }
                     else
                     {
-                        if (row.MPN != null)
+                        if (row.SellerMPN != null)
                         {
-                            response = wallib.wmUtility.SearchProdID(row.MPN);
+                            response = wallib.wmUtility.SearchProdID(row.SellerMPN);
                             if (response.Count == 1)
                             {
                                 walitem = await wallib.wmUtility.GetDetail(response.URL);
                                 //response.ProprosePrice = Utility.eBayItem.wmNewPrice(walitem.Price, pctProfit);
                                 walitem.MatchCount = response.Count;
-                                walitem.MPN = row.MPN;
-                                models.SupplierItemUpdate("", row.MPN, walitem);
+                                walitem.MPN = row.SellerMPN;
+                                models.SupplierItemUpdate("", row.SellerMPN, walitem);
                             }
                         }
                     }
