@@ -377,11 +377,16 @@ namespace eBayUtility
         {
             string ret = null;
             var sh = new SearchHistory();
-            if (rptNumber > 0)
+            if (rptNumber > 0 && storeID > 0)
+            {
+                ret = "Invalid call to FillMatch.";
+                dsutil.DSUtil.WriteFile(_logfile, ret, "");
+            }
+            else if (rptNumber > 0)
             {
                 sh.ID = rptNumber;
                 sh.CalculateMatch = DateTime.Now;
-                await models.SearchHistoryUpdate(sh, "CalculateMatch");
+                await models.SearchHistoryUpdate_CalculateMatch(sh);
                 var mv = await FetchSeller.FillMatch(settings, rptNumber, minSold, daysBack, minPrice, maxPrice, activeStatusOnly, isSellerVariation, itemID, 5);
             }
             else if (storeID > 0)
@@ -389,13 +394,19 @@ namespace eBayUtility
                 var sellers = models.GetSellers(storeID);
                 foreach (var s in sellers)
                 {
+                    if (s.ID == 12177)
+                    {
+                        int stop = 99;
+                    }
                     if (s.CalculateMatch < s.Updated)
                     {
-                        sh.ID = rptNumber;
+                        Console.WriteLine(s.Seller);
+                        sh.ID = s.ID;
                         sh.CalculateMatch = DateTime.Now;
-                        await models.SearchHistoryUpdate(sh, "CalculateMatch");
+                        await models.SearchHistoryUpdate_CalculateMatch(sh);
                         var mv = await FetchSeller.FillMatch(settings, s.ID, minSold, daysBack, minPrice, maxPrice, activeStatusOnly, isSellerVariation, itemID, 5);
                         dsutil.DSUtil.WriteFile(_logfile, s.Seller + ": Ran FillMatch", "");
+                        Thread.Sleep(2000);
                     }
                 }
             }
@@ -475,7 +486,7 @@ namespace eBayUtility
                             //response.ProprosePrice = Utility.eBayItem.wmNewPrice(walitem.Price, pctProfit);
                             walitem.MatchCount = response.Count;
                             walitem.UPC = row.UPC;
-                            models.SupplierItemUpdate(row.UPC, "", walitem, new string[] { "MatchCount", "ItemURL", "SoldAndShippedBySupplier", "SupplierBrand", "SupplierPrice", "IsVariation", "SupplierPicURL" });
+                            models.SupplierItemUpdate(row.UPC, "", walitem);
                         }
                     }
                     else
@@ -489,7 +500,7 @@ namespace eBayUtility
                                 //response.ProprosePrice = Utility.eBayItem.wmNewPrice(walitem.Price, pctProfit);
                                 walitem.MatchCount = response.Count;
                                 walitem.MPN = row.MPN;
-                                models.SupplierItemUpdate("", row.MPN, walitem, new string[] { "MatchCount", "ItemURL", "SoldAndShippedBySupplier", "SupplierBrand", "SupplierPrice", "IsVariation", "SupplierPicURL" });
+                                models.SupplierItemUpdate("", row.MPN, walitem);
                             }
                         }
                     }
