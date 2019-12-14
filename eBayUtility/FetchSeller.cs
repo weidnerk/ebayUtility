@@ -501,6 +501,12 @@ namespace eBayUtility
                                 walitem.MatchCount = response.Count;
                                 walitem.MPN = row.SellerMPN;
                                 models.SupplierItemUpdate("", row.SellerMPN, walitem);
+                                var itemSpecific = new ItemSpecific();
+                                itemSpecific.SellerItemID = row.ItemID;
+                                itemSpecific.ItemName = "UPC";
+                                itemSpecific.ItemValue = walitem.UPC;
+                                itemSpecific.Flags = true;
+                                models.ItemSpecificUpdate(itemSpecific);
                             }
                         }
                     }
