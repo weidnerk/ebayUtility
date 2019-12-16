@@ -392,21 +392,34 @@ namespace eBayUtility
             else if (storeID > 0)
             {
                 var sellers = models.GetSellers(storeID);
+                bool runScan = false;
                 foreach (var s in sellers)
                 {
-                    if (s.ID == 12177)
+                    runScan = false;
+                    var sellerProfile = await models.SellerProfileGet(s.Seller);
+                    if (sellerProfile == null)
                     {
-                        int stop = 99;
+                        runScan = true;
                     }
-                    if (s.CalculateMatch < s.Updated)
+                    else
                     {
-                        Console.WriteLine(s.Seller);
-                        sh.ID = s.ID;
-                        sh.CalculateMatch = DateTime.Now;
-                        await models.SearchHistoryUpdate_CalculateMatch(sh);
-                        var mv = await FetchSeller.FillMatch(settings, s.ID, minSold, daysBack, minPrice, maxPrice, activeStatusOnly, isSellerVariation, itemID, 5);
-                        dsutil.DSUtil.WriteFile(_logfile, s.Seller + ": Ran FillMatch", "");
-                        Thread.Sleep(2000);
+                        if (sellerProfile.Active)
+                        {
+                            runScan = true;
+                        }
+                    }
+                    if (runScan)
+                    {
+                        if (s.CalculateMatch < s.Updated)
+                        {
+                            Console.WriteLine(s.Seller);
+                            sh.ID = s.ID;
+                            sh.CalculateMatch = DateTime.Now;
+                            await models.SearchHistoryUpdate_CalculateMatch(sh);
+                            var mv = await FetchSeller.FillMatch(settings, s.ID, minSold, daysBack, minPrice, maxPrice, activeStatusOnly, isSellerVariation, itemID, 5);
+                            dsutil.DSUtil.WriteFile(_logfile, s.Seller + ": Ran FillMatch", "");
+                            Thread.Sleep(2000);
+                        }
                     }
                 }
             }
