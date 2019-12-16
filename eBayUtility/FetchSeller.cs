@@ -452,7 +452,7 @@ namespace eBayUtility
                 DateTime ModTimeFrom = ModTimeTo.AddDays(-daysBack);
 
                 itemID = (itemID == "null") ? null : itemID;
-                var x = models.GetScanData(rptNumber, ModTimeFrom, settings.StoreID, itemID: itemID);
+                var x = models.GetSalesData(rptNumber, ModTimeFrom, settings.StoreID, itemID);
 
                 // filter by min and max price
                 if (minPrice.HasValue)
