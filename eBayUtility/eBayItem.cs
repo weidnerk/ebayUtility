@@ -517,6 +517,7 @@ namespace Utility
 
         /// <summary>
         /// https://community.ebay.com/t5/Selling/Excel-Spreadsheet-formula-to-break-even-with-eBay-sales/qaq-p/23249463
+        /// Markup b/e price by pctProfit percent
         /// </summary>
         /// <param name="supplierPrice"></param>
         /// <returns></returns>

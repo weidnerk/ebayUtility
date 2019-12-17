@@ -32,6 +32,7 @@ namespace eBayUtility
     {
         readonly static string _logfile = "log.txt";
         static dsmodels.DataModelsDB models = new dsmodels.DataModelsDB();
+
         /// <summary>
         /// GetCompletedItems(service, request, currentPageNumber) returns a FindCompletedItemsResponse which has property, searchResult
         /// Iterate the seller's sold items, fetching sales history
@@ -373,6 +374,21 @@ namespace eBayUtility
                 return null;
             }
         }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="settings"></param>
+        /// <param name="rptNumber">Pass either rptNumber or storeID.</param>
+        /// <param name="minSold"></param>
+        /// <param name="daysBack"></param>
+        /// <param name="minPrice"></param>
+        /// <param name="maxPrice"></param>
+        /// <param name="activeStatusOnly"></param>
+        /// <param name="isSellerVariation"></param>
+        /// <param name="itemID"></param>
+        /// <param name="pctProfit"></param>
+        /// <param name="storeID">Pass storeID to run all sellers in store.</param>
+        /// <returns></returns>
         public static async Task<string> CalculateMatch(UserSettingsView settings, int rptNumber, int minSold, int daysBack, int? minPrice, int? maxPrice, bool? activeStatusOnly, bool? isSellerVariation, string itemID, double pctProfit, int storeID)
         {
             string ret = null;
@@ -387,7 +403,7 @@ namespace eBayUtility
                 sh.ID = rptNumber;
                 sh.CalculateMatch = DateTime.Now;
                 await models.SearchHistoryUpdate_CalculateMatch(sh);
-                var mv = await FetchSeller.FillMatch(settings, rptNumber, minSold, daysBack, minPrice, maxPrice, activeStatusOnly, isSellerVariation, itemID, 5);
+                var mv = await FillMatch(settings, rptNumber, minSold, daysBack, minPrice, maxPrice, activeStatusOnly, isSellerVariation, itemID, 5);
             }
             else if (storeID > 0)
             {
@@ -483,10 +499,10 @@ namespace eBayUtility
                 mv.TimesSoldRpt = x.ToList();
                 foreach (var row in mv.TimesSoldRpt)
                 {
-                    if (row.ItemID == "173695755057")
-                    {
-                        int stop = 99;
-                    }
+                    //if (row.ItemID == "173695755057")
+                    //{
+                    //    int stop = 99;
+                    //}
 
                     WalmartSearchProdIDResponse response;
                     var walitem = new SupplierItem();
@@ -496,7 +512,6 @@ namespace eBayUtility
                         if (response.Count == 1)
                         {
                             walitem = await wallib.wmUtility.GetDetail(response.URL);
-                            //response.ProprosePrice = Utility.eBayItem.wmNewPrice(walitem.Price, pctProfit);
                             walitem.MatchCount = response.Count;
                             walitem.UPC = row.SellerUPC;
                             models.SupplierItemUpdate(row.SellerUPC, "", walitem);
@@ -510,7 +525,6 @@ namespace eBayUtility
                             if (response.Count == 1)
                             {
                                 walitem = await wallib.wmUtility.GetDetail(response.URL);
-                                //response.ProprosePrice = Utility.eBayItem.wmNewPrice(walitem.Price, pctProfit);
                                 walitem.MatchCount = response.Count;
                                 walitem.MPN = row.SellerMPN;
                                 models.SupplierItemUpdate("", row.SellerMPN, walitem);
