@@ -515,6 +515,12 @@ namespace eBayUtility
                             walitem.MatchCount = response.Count;
                             walitem.UPC = row.SellerUPC;
                             models.SupplierItemUpdate(row.SellerUPC, "", walitem);
+
+                            var oh = new OrderHistory();
+                            oh.ItemID = row.ItemID;
+                            var p = Utility.eBayItem.wmNewPrice(walitem.SupplierPrice.Value, 6);
+                            oh.ProposePrice = p;
+                            models.OrderHistoryUpdate(oh, "ProposePrice");
                         }
                     }
                     else
@@ -528,12 +534,20 @@ namespace eBayUtility
                                 walitem.MatchCount = response.Count;
                                 walitem.MPN = row.SellerMPN;
                                 models.SupplierItemUpdate("", row.SellerMPN, walitem);
+
+                                // now update the ebay seller item specific UPC
                                 var itemSpecific = new ItemSpecific();
                                 itemSpecific.SellerItemID = row.ItemID;
                                 itemSpecific.ItemName = "UPC";
                                 itemSpecific.ItemValue = walitem.UPC;
                                 itemSpecific.Flags = true;
                                 models.ItemSpecificUpdate(itemSpecific);
+
+                                var oh = new OrderHistory();
+                                oh.ItemID = row.ItemID;
+                                var p = Utility.eBayItem.wmNewPrice(walitem.SupplierPrice.Value, 6);
+                                oh.ProposePrice = p;
+                                models.OrderHistoryUpdate(oh, "ProposePrice");
                             }
                         }
                     }
