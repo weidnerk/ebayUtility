@@ -46,6 +46,10 @@ namespace eBayUtility
                 // Iterate completed items
                 foreach (SearchItem searchItem in result.item)
                 {
+                    //if (searchItem.itemId == "303200616411")
+                    //{
+                    //    int stop = 99;
+                    //}
                     var listing = new Listing();
                     var sellerListing = new SellerListing();
 
