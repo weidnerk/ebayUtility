@@ -20,7 +20,6 @@ using wallib.Models;
 
 namespace eBayUtility
 {
-
     public class Transaction
     {
         public string Price { get; set; }
