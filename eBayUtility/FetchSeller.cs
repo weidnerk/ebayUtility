@@ -429,7 +429,7 @@ namespace eBayUtility
                     }
                     if (runScan)
                     {
-                        if (s.CalculateMatch < s.Updated)
+                        if (s.CalculateMatch == null || s.CalculateMatch < s.Updated)
                         {
                             Console.WriteLine(s.Seller);
                             sh.ID = s.ID;
