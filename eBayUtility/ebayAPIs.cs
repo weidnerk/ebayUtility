@@ -716,7 +716,7 @@ namespace eBayUtility
                     sellerListing.Title = r.Title.Value;
                     sellerListing.Description = r.Description.Value;
                     sellerListing.SellerPrice = Convert.ToDecimal(r.Price.Value);
-                    sellerListing.EbayUrl = r.ListingUrl.Value;
+                    sellerListing.EbayURL = r.ListingUrl.Value;
                     sellerListing.PrimaryCategoryID = r.PrimaryCategoryID.Value;
                     sellerListing.PrimaryCategoryName = r.PrimaryCategoryName;
                     int x1 = Convert.ToInt32(r.Quantity.Value);

@@ -55,7 +55,7 @@ namespace eBayUtility
 
                     sellerListing.Title = searchItem.title;
                     listing.ItemID = searchItem.itemId;
-                    sellerListing.EbayUrl = searchItem.viewItemURL;
+                    sellerListing.EbayURL = searchItem.viewItemURL;
                     listing.PrimaryCategoryID = searchItem.primaryCategory.categoryId;
                     listing.PrimaryCategoryName = searchItem.primaryCategory.categoryName;
                     sellerListing.SellerPrice = (decimal)searchItem.sellingStatus.currentPrice.Value;
@@ -631,7 +631,7 @@ namespace eBayUtility
                     sellerListing.PrimaryCategoryName = si.PrimaryCategoryName;
                     sellerListing.Description = si.Description;
                     sellerListing.ListingStatus = si.ListingStatus;
-                    sellerListing.EbayUrl = si.EbayUrl;
+                    sellerListing.EbayURL = si.EbayURL;
                     sellerListing.PictureURL = si.PictureURL;
                     sellerListing.SellerPrice = si.SellerPrice;
                     listing.PrimaryCategoryID = si.PrimaryCategoryID;
