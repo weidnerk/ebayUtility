@@ -412,10 +412,10 @@ namespace eBayUtility
             {
                 var sellers = models.GetSellers(storeID);
                 bool runScan = false;
-                foreach (var s in sellers)
+                foreach (var seller in sellers)
                 {
                     runScan = false;
-                    var sellerProfile = await models.SellerProfileGet(s.Seller);
+                    var sellerProfile = await models.SellerProfileGet(seller.Seller);
                     if (sellerProfile == null)
                     {
                         runScan = true;
@@ -429,14 +429,14 @@ namespace eBayUtility
                     }
                     if (runScan)
                     {
-                        if (s.CalculateMatch == null || s.CalculateMatch < s.Updated)
+                        if (seller.CalculateMatch == null || seller.CalculateMatch < seller.Updated)
                         {
-                            Console.WriteLine(s.Seller);
-                            sh.ID = s.ID;
+                            Console.WriteLine(seller.Seller);
+                            sh.ID = seller.ID;
                             sh.CalculateMatch = DateTime.Now;
                             await models.SearchHistoryUpdate_CalculateMatch(sh);
-                            var mv = await FetchSeller.FillMatch(settings, s.ID, minSold, daysBack, minPrice, maxPrice, activeStatusOnly, isSellerVariation, itemID, 5);
-                            dsutil.DSUtil.WriteFile(_logfile, s.Seller + ": Ran FillMatch", "");
+                            var mv = await FetchSeller.FillMatch(settings, seller.ID, minSold, daysBack, minPrice, maxPrice, activeStatusOnly, isSellerVariation, itemID, 5);
+                            dsutil.DSUtil.WriteFile(_logfile, seller.Seller + ": Ran FillMatch", "");
                             Thread.Sleep(2000);
                         }
                     }
@@ -465,6 +465,7 @@ namespace eBayUtility
         /// <returns></returns>
         private static async Task<ModelViewTimesSold> FillMatch(UserSettingsView settings, int rptNumber, int minSold, int daysBack, int? minPrice, int? maxPrice, bool? activeStatusOnly, bool? isSellerVariation, string itemID, double pctProfit)
         {
+            string loopItemID = null;
             try
             {
                 DateTime ModTimeTo = DateTime.Now.ToUniversalTime();
@@ -497,57 +498,39 @@ namespace eBayUtility
                         x = x.Where(p => !p.IsSellerVariation.Value);
                     }
                 }
-
                 var mv = new ModelViewTimesSold();
                 mv.TimesSoldRpt = x.ToList();
                 foreach (var row in mv.TimesSoldRpt)
                 {
-                    //if (row.ItemID == "173695755057")
-                    //{
-                    //    int stop = 99;
-                    //}
-
-                    WalmartSearchProdIDResponse response;
-                    var walitem = new SupplierItem();
-                    if (row.SellerUPC != null)
+                    loopItemID = row.ItemID;
+                    if (row.ItemID == "333398835608")
                     {
-                        response = wallib.wmUtility.SearchProdID(row.SellerUPC);
-                        if (response.Count == 1)
-                        {
-                            walitem = await wallib.wmUtility.GetDetail(response.URL);
-                            walitem.MatchCount = response.Count;
-                            walitem.UPC = row.SellerUPC;
-                            models.SupplierItemUpdate(row.SellerUPC, "", walitem);
-
-                            if (walitem.SupplierPrice.HasValue)
-                            {
-                                var oh = new OrderHistory();
-                                oh.ItemID = row.ItemID;
-                                var p = Utility.eBayItem.wmNewPrice(walitem.SupplierPrice.Value, 6);
-                                oh.ProposePrice = p;
-                                models.OrderHistoryUpdate(oh, "ProposePrice");
-                            }
-                        }
+                        int stop = 99;
                     }
-                    else
+
+                    var supplierItem = models.GetSupplierItem(row.ItemID);
+                    if (supplierItem != null && supplierItem.MatchCount == 1)
                     {
-                        if (row.SellerMPN != null)
+                        // Why would i process again?
+                        int stop = 99;
+                    }
+                    else 
+                    { 
+                        WalmartSearchProdIDResponse response;
+                        var walitem = new SupplierItem();
+                        if (row.SellerUPC != null)
                         {
-                            response = wallib.wmUtility.SearchProdID(row.SellerMPN);
+                            response = wallib.wmUtility.SearchProdID(row.SellerUPC);
                             if (response.Count == 1)
                             {
+                                if (row.SellerUPC == "081483818559")
+                                {
+                                    int stop = 99;
+                                }
                                 walitem = await wallib.wmUtility.GetDetail(response.URL);
                                 walitem.MatchCount = response.Count;
-                                walitem.MPN = row.SellerMPN;
-                                models.SupplierItemUpdate("", row.SellerMPN, walitem);
-
-                                // now update the ebay seller item specific UPC
-                                var itemSpecific = new ItemSpecific();
-                                itemSpecific.SellerItemID = row.ItemID;
-                                itemSpecific.ItemName = "UPC";
-                                itemSpecific.ItemValue = walitem.UPC;
-                                itemSpecific.Flags = true;
-                                models.ItemSpecificUpdate(itemSpecific);
+                                walitem.UPC = row.SellerUPC;
+                                models.SupplierItemUpdate(row.SellerUPC, "", walitem);
 
                                 if (walitem.SupplierPrice.HasValue)
                                 {
@@ -559,14 +542,47 @@ namespace eBayUtility
                                 }
                             }
                         }
+                        else
+                        {
+                            if (row.SellerMPN != null)
+                            {
+                                response = wallib.wmUtility.SearchProdID(row.SellerMPN);
+                                if (response.Count == 1)
+                                {
+                                    walitem = await wallib.wmUtility.GetDetail(response.URL);
+                                    walitem.MatchCount = response.Count;
+                                    walitem.MPN = row.SellerMPN;
+                                    models.SupplierItemUpdate("", row.SellerMPN, walitem);
+
+                                    // now update the ebay seller item specific UPC
+                                    var itemSpecific = new ItemSpecific();
+                                    itemSpecific.SellerItemID = row.ItemID;
+                                    itemSpecific.ItemName = "UPC";
+                                    itemSpecific.ItemValue = walitem.UPC;
+                                    itemSpecific.Flags = true;
+                                    models.ItemSpecificUpdate(itemSpecific);
+
+                                    if (walitem.SupplierPrice.HasValue)
+                                    {
+                                        var oh = new OrderHistory();
+                                        oh.ItemID = row.ItemID;
+                                        var p = Utility.eBayItem.wmNewPrice(walitem.SupplierPrice.Value, 6);
+                                        oh.ProposePrice = p;
+                                        models.OrderHistoryUpdate(oh, "ProposePrice");
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
                 return mv;
             }
             catch (Exception exc)
             {
-                string msg = dsutil.DSUtil.ErrMsg("FillMatch RptNumber: " + rptNumber.ToString(), exc);
-                dsutil.DSUtil.WriteFile(_logfile, itemID + ": " + msg, "");
+                string msgItemID = (!string.IsNullOrEmpty(loopItemID)) ? "ItemID: " + loopItemID : "";
+                string header = "FillMatch RptNumber: " + rptNumber.ToString() + " " + msgItemID;
+                string msg = dsutil.DSUtil.ErrMsg(header, exc);
+                dsutil.DSUtil.WriteFile(_logfile, msg, "");
                 return null;
             }
         }
