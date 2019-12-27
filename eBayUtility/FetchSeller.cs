@@ -262,7 +262,8 @@ namespace eBayUtility
 
         private static void AddVariations(HtmlNodeCollection variationNode, List<OrderHistoryDetail> transactions, string itemID)
         {
-            try { 
+            try
+            {
                 var variations = new List<string>();
                 foreach (HtmlNode nodet in variationNode)
                 {
@@ -414,6 +415,14 @@ namespace eBayUtility
                 bool runScan = false;
                 foreach (var seller in sellers)
                 {
+                    //if (seller.Seller == "exxbargain")
+                    //{
+                    //    int stop = 99;
+                    //}
+                    //else
+                    //{
+                    //    continue;
+                    //}
                     runScan = false;
                     var sellerProfile = await models.SellerProfileGet(seller.Seller);
                     if (sellerProfile == null)
@@ -503,34 +512,55 @@ namespace eBayUtility
                 foreach (var row in mv.TimesSoldRpt)
                 {
                     loopItemID = row.ItemID;
-                    if (row.ItemID == "333398835608")
+                    if (row.ItemID == "223283081318")
                     {
                         int stop = 99;
                     }
-
-                    var supplierItem = models.GetSupplierItem(row.ItemID);
-                    if (supplierItem != null && supplierItem.MatchCount == 1)
+                    WalmartSearchProdIDResponse response;
+                    var walitem = new SupplierItem();
+                    if (row.SellerUPC != null)
                     {
-                        // Why would i process again?
-                        int stop = 99;
-                    }
-                    else 
-                    { 
-                        WalmartSearchProdIDResponse response;
-                        var walitem = new SupplierItem();
-                        if (row.SellerUPC != null)
+                        response = wallib.wmUtility.SearchProdID(row.SellerUPC);
+                        if (response.Count == 1)
                         {
-                            response = wallib.wmUtility.SearchProdID(row.SellerUPC);
+                            //if (row.SellerUPC == "081483818559")
+                            //{
+                            //    int stop = 99;
+                            //}
+                            walitem = await wallib.wmUtility.GetDetail(response.URL);
+                            walitem.MatchCount = response.Count;
+                            walitem.UPC = row.SellerUPC;
+                            models.SupplierItemUpdate(row.SellerUPC, "", walitem);
+
+                            if (walitem.SupplierPrice.HasValue)
+                            {
+                                var oh = new OrderHistory();
+                                oh.ItemID = row.ItemID;
+                                var p = Utility.eBayItem.wmNewPrice(walitem.SupplierPrice.Value, 6);
+                                oh.ProposePrice = p;
+                                models.OrderHistoryUpdate(oh, "ProposePrice");
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (row.SellerMPN != null)
+                        {
+                            response = wallib.wmUtility.SearchProdID(row.SellerMPN);
                             if (response.Count == 1)
                             {
-                                if (row.SellerUPC == "081483818559")
-                                {
-                                    int stop = 99;
-                                }
                                 walitem = await wallib.wmUtility.GetDetail(response.URL);
                                 walitem.MatchCount = response.Count;
-                                walitem.UPC = row.SellerUPC;
-                                models.SupplierItemUpdate(row.SellerUPC, "", walitem);
+                                walitem.MPN = row.SellerMPN;
+                                models.SupplierItemUpdate("", row.SellerMPN, walitem);
+
+                                // now update the ebay seller item specific UPC
+                                var itemSpecific = new ItemSpecific();
+                                itemSpecific.SellerItemID = row.ItemID;
+                                itemSpecific.ItemName = "UPC";
+                                itemSpecific.ItemValue = walitem.UPC;
+                                itemSpecific.Flags = true;
+                                models.ItemSpecificUpdate(itemSpecific);
 
                                 if (walitem.SupplierPrice.HasValue)
                                 {
@@ -539,37 +569,6 @@ namespace eBayUtility
                                     var p = Utility.eBayItem.wmNewPrice(walitem.SupplierPrice.Value, 6);
                                     oh.ProposePrice = p;
                                     models.OrderHistoryUpdate(oh, "ProposePrice");
-                                }
-                            }
-                        }
-                        else
-                        {
-                            if (row.SellerMPN != null)
-                            {
-                                response = wallib.wmUtility.SearchProdID(row.SellerMPN);
-                                if (response.Count == 1)
-                                {
-                                    walitem = await wallib.wmUtility.GetDetail(response.URL);
-                                    walitem.MatchCount = response.Count;
-                                    walitem.MPN = row.SellerMPN;
-                                    models.SupplierItemUpdate("", row.SellerMPN, walitem);
-
-                                    // now update the ebay seller item specific UPC
-                                    var itemSpecific = new ItemSpecific();
-                                    itemSpecific.SellerItemID = row.ItemID;
-                                    itemSpecific.ItemName = "UPC";
-                                    itemSpecific.ItemValue = walitem.UPC;
-                                    itemSpecific.Flags = true;
-                                    models.ItemSpecificUpdate(itemSpecific);
-
-                                    if (walitem.SupplierPrice.HasValue)
-                                    {
-                                        var oh = new OrderHistory();
-                                        oh.ItemID = row.ItemID;
-                                        var p = Utility.eBayItem.wmNewPrice(walitem.SupplierPrice.Value, 6);
-                                        oh.ProposePrice = p;
-                                        models.OrderHistoryUpdate(oh, "ProposePrice");
-                                    }
                                 }
                             }
                         }
