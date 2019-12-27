@@ -603,6 +603,10 @@ namespace eBayUtility
                     var listing = new Listing();
                     listing.ItemID = oh.ItemID;
                     listing.ListingTitle = oh.Title;
+                    if (oh.ProposePrice.HasValue)
+                    {
+                        listing.ListingPrice = oh.ProposePrice.Value;
+                    }
                     var supplierItem = models.GetSupplierItem(oh.ItemID);
                     listing.SourceUrl = supplierItem.ItemURL;
                     //listing.SupplierPrice = oh.WMPrice.Value;
@@ -633,6 +637,7 @@ namespace eBayUtility
                     sellerListing.EbayURL = si.EbayURL;
                     sellerListing.PictureURL = si.PictureURL;
                     sellerListing.SellerPrice = si.SellerPrice;
+                    sellerListing.Updated = DateTime.Now;
                     listing.PrimaryCategoryID = si.PrimaryCategoryID;
                     listing.PrimaryCategoryName = si.PrimaryCategoryName;
                     listing.SellerListing = sellerListing;
