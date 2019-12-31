@@ -505,11 +505,11 @@ namespace Utility
             return response;
         }
 
-        protected static decimal wmBreakEvenPrice(decimal supplierPrice)
+        protected static decimal wmBreakEvenPrice(decimal supplierPrice, decimal minFreeShipping, decimal shipping)
         {
-            if (supplierPrice < 35.0m)
+            if (supplierPrice < minFreeShipping)
             {
-                supplierPrice += 6;
+                supplierPrice += shipping;
             }
             decimal p = (supplierPrice + 0.30m) / (1m - 0.029m - 0.0915m);
             return p;
@@ -523,7 +523,7 @@ namespace Utility
         /// <returns></returns>
         public static decimal wmNewPrice(decimal supplierPrice, double pctProfit)
         {
-            decimal breakeven = wmBreakEvenPrice(supplierPrice);
+            decimal breakeven = wmBreakEvenPrice(supplierPrice, 35.0m, 6.0m);
             return breakeven * (1m + ((decimal)pctProfit * 0.01m));
         }
     }
