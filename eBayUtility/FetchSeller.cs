@@ -511,7 +511,7 @@ namespace eBayUtility
                 foreach (var row in mv.TimesSoldRpt)
                 {
                     loopItemID = row.ItemID;
-                    if (row.ItemID == "223283081318")
+                    if (row.ItemID == "153463983964")
                     {
                         int stop = 99;
                     }
@@ -529,6 +529,7 @@ namespace eBayUtility
                             walitem = await wallib.wmUtility.GetDetail(response.URL);
                             walitem.MatchCount = response.Count;
                             walitem.UPC = row.SellerUPC;
+                            walitem.MatchType = 1;
                             models.SupplierItemUpdate(row.SellerUPC, "", walitem);
 
                             if (walitem.SupplierPrice.HasValue)
@@ -551,15 +552,20 @@ namespace eBayUtility
                                 walitem = await wallib.wmUtility.GetDetail(response.URL);
                                 walitem.MatchCount = response.Count;
                                 walitem.MPN = row.SellerMPN;
+                                walitem.MatchType = 2;
                                 models.SupplierItemUpdate("", row.SellerMPN, walitem);
 
                                 // now update the ebay seller item specific UPC
-                                var itemSpecific = new ItemSpecific();
-                                itemSpecific.SellerItemID = row.ItemID;
-                                itemSpecific.ItemName = "UPC";
-                                itemSpecific.ItemValue = walitem.UPC;
-                                itemSpecific.Flags = true;
-                                models.ItemSpecificUpdate(itemSpecific);
+                                // but walmart doesn't always give a UPC
+                                if (!string.IsNullOrEmpty(walitem.UPC))
+                                {
+                                    var itemSpecific = new ItemSpecific();
+                                    itemSpecific.SellerItemID = row.ItemID;
+                                    itemSpecific.ItemName = "UPC";
+                                    itemSpecific.ItemValue = walitem.UPC;
+                                    itemSpecific.Flags = true;
+                                    models.ItemSpecificUpdate(itemSpecific);
+                                }
 
                                 if (walitem.SupplierPrice.HasValue)
                                 {
