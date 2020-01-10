@@ -511,7 +511,7 @@ namespace eBayUtility
                 foreach (var row in mv.TimesSoldRpt)
                 {
                     loopItemID = row.ItemID;
-                    if (row.ItemID == "153463983964")
+                    if (row.ItemID == "392551593836")
                     {
                         int stop = 99;
                     }
@@ -649,6 +649,9 @@ namespace eBayUtility
                     listing.SupplierID = supplierItem.ID;
 
                     await models.ListingSaveAsync(listing, settings.UserID);
+
+                    oh.ToList = false;
+                    models.OrderHistoryUpdate(oh, "ToList");
                 }
             }
             catch (Exception exc)
