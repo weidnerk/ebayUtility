@@ -602,7 +602,7 @@ namespace eBayUtility
             try
             {
                 var searchHistory = models.SearchHistory.Find(rptNumber);
-                var recs = models.OrderHistory.Where(p => p.ToList ?? false).ToList();
+                var recs = models.OrderHistory.Where(p => p.ToListing ?? false).ToList();
                 foreach (var oh in recs)
                 {
                     var listing = new Listing();
@@ -650,8 +650,8 @@ namespace eBayUtility
 
                     await models.ListingSaveAsync(listing, settings.UserID);
 
-                    oh.ToList = false;
-                    models.OrderHistoryUpdate(oh, "ToList");
+                    oh.ToListing = false;
+                    models.OrderHistoryUpdate(oh, "ToListing");
                 }
             }
             catch (Exception exc)
