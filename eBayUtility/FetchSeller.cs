@@ -596,12 +596,12 @@ namespace eBayUtility
         /// <param name="settings"></param>
         /// <param name="rptNumber"></param>
         /// <returns></returns>
-        public static async Task<string> StoreToListing(UserSettingsView settings, int rptNumber)
+        public static async Task<string> StoreToListing(UserSettingsView settings)
         {
             string ret = null;
             try
             {
-                var searchHistory = models.SearchHistory.Find(rptNumber);
+                //var searchHistory = models.SearchHistory.Find(rptNumber);
                 var recs = models.OrderHistory.Where(p => p.ToListing ?? false).ToList();
                 foreach (var oh in recs)
                 {
@@ -633,7 +633,7 @@ namespace eBayUtility
                     var sellerListing = new SellerListing();
                     sellerListing.ItemID = oh.ItemID;
                     sellerListing.Title = oh.Title;
-                    sellerListing.Seller = searchHistory.Seller;
+                    sellerListing.Seller = oh.SearchHistory.Seller;
                     var si = await eBayUtility.ebayAPIs.GetSingleItem(settings, listing.ItemID);
                     sellerListing.PrimaryCategoryID = si.PrimaryCategoryID;
                     sellerListing.PrimaryCategoryName = si.PrimaryCategoryName;
