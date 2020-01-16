@@ -405,7 +405,7 @@ namespace eBayUtility
             {
                 sh.ID = rptNumber;
                 sh.CalculateMatch = DateTime.Now;
-                await models.SearchHistoryUpdate(sh, "CalculateMatch");
+                models.SearchHistoryUpdate(sh, "CalculateMatch");
                 var mv = await FillMatch(settings, rptNumber, minSold, daysBack, minPrice, maxPrice, activeStatusOnly, isSellerVariation, itemID, 5);
             }
             else if (storeID > 0)
@@ -442,7 +442,7 @@ namespace eBayUtility
                             Console.WriteLine(seller.Seller);
                             sh.ID = seller.ID;
                             sh.CalculateMatch = DateTime.Now;
-                            await models.SearchHistoryUpdate(sh, "CalculateMatch");
+                            models.SearchHistoryUpdate(sh, "CalculateMatch");
                             var mv = await FetchSeller.FillMatch(settings, seller.ID, minSold, daysBack, minPrice, maxPrice, activeStatusOnly, isSellerVariation, itemID, 5);
                             dsutil.DSUtil.WriteFile(_logfile, seller.Seller + ": Ran FillMatch", "");
                             Thread.Sleep(2000);
