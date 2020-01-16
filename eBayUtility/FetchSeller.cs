@@ -405,7 +405,7 @@ namespace eBayUtility
             {
                 sh.ID = rptNumber;
                 sh.CalculateMatch = DateTime.Now;
-                await models.SearchHistoryUpdate_CalculateMatch(sh);
+                await models.SearchHistoryUpdate(sh, "CalculateMatch");
                 var mv = await FillMatch(settings, rptNumber, minSold, daysBack, minPrice, maxPrice, activeStatusOnly, isSellerVariation, itemID, 5);
             }
             else if (storeID > 0)
@@ -442,7 +442,7 @@ namespace eBayUtility
                             Console.WriteLine(seller.Seller);
                             sh.ID = seller.ID;
                             sh.CalculateMatch = DateTime.Now;
-                            await models.SearchHistoryUpdate_CalculateMatch(sh);
+                            await models.SearchHistoryUpdate(sh, "CalculateMatch");
                             var mv = await FetchSeller.FillMatch(settings, seller.ID, minSold, daysBack, minPrice, maxPrice, activeStatusOnly, isSellerVariation, itemID, 5);
                             dsutil.DSUtil.WriteFile(_logfile, seller.Seller + ": Ran FillMatch", "");
                             Thread.Sleep(2000);
@@ -530,7 +530,17 @@ namespace eBayUtility
                             walitem.MatchCount = response.Count;
                             walitem.UPC = row.SellerUPC;
                             walitem.MatchType = 1;
-                            models.SupplierItemUpdate(row.SellerUPC, "", walitem);
+                            walitem.Updated = DateTime.Now;
+                            models.SupplierItemUpdateScrape(row.SellerUPC, "", walitem, 
+                                "MatchCount",
+                                "Updated",
+                                "MatchType",
+                                "ItemURL",
+                                "SoldAndShippedBySupplier",
+                                "SupplierBrand",
+                                "SupplierPrice",
+                                "IsVariation",
+                                "SupplierPicURL");
 
                             if (walitem.SupplierPrice.HasValue)
                             {
@@ -553,18 +563,28 @@ namespace eBayUtility
                                 walitem.MatchCount = response.Count;
                                 walitem.MPN = row.SellerMPN;
                                 walitem.MatchType = 2;
-                                models.SupplierItemUpdate("", row.SellerMPN, walitem);
+                                walitem.Updated = DateTime.Now;
+                                models.SupplierItemUpdateScrape("", row.SellerMPN, walitem,
+                                    "MatchCount",
+                                    "Updated",
+                                    "MatchType",
+                                    "ItemURL",
+                                    "SoldAndShippedBySupplier",
+                                    "SupplierBrand",
+                                    "SupplierPrice",
+                                    "IsVariation",
+                                    "SupplierPicURL");
 
                                 // now update the ebay seller item specific UPC
                                 // but walmart doesn't always give a UPC
                                 if (!string.IsNullOrEmpty(walitem.UPC))
                                 {
-                                    var itemSpecific = new ItemSpecific();
+                                    var itemSpecific = new OrderHistoryItemSpecific();
                                     itemSpecific.SellerItemID = row.ItemID;
                                     itemSpecific.ItemName = "UPC";
                                     itemSpecific.ItemValue = walitem.UPC;
                                     itemSpecific.Flags = true;
-                                    models.ItemSpecificUpdate(itemSpecific);
+                                    models.OrderHistoryItemSpecificUpdate(itemSpecific);
                                 }
 
                                 if (walitem.SupplierPrice.HasValue)
@@ -602,7 +622,7 @@ namespace eBayUtility
             try
             {
                 //var searchHistory = models.SearchHistory.Find(rptNumber);
-                var recs = models.OrderHistory.Where(p => p.ToListing ?? false).ToList();
+                var recs = models.OrderHistory.Include("SearchHistory").Where(p => p.ToListing ?? false).ToList();
                 foreach (var oh in recs)
                 {
                     var listing = new Listing();
@@ -620,12 +640,12 @@ namespace eBayUtility
                     listing.ProfitMargin = 0;
                     listing.StoreID = settings.StoreID;
                     listing.Description = supplierItem.Description;
-                    var upc = models.ItemSpecifics.Where(i => i.SellerItemID == oh.ItemID && i.ItemName == "UPC").SingleOrDefault();
+                    var upc = models.OrderHistoryItemSpecifics.Where(i => i.SellerItemID == oh.ItemID && i.ItemName == "UPC").SingleOrDefault();
                     if (upc != null)
                     {
                         listing.UPC = upc.ItemValue;
                     }
-                    var mpn = models.ItemSpecifics.Where(i => i.SellerItemID == oh.ItemID && i.ItemName == "MPN").SingleOrDefault();
+                    var mpn = models.OrderHistoryItemSpecifics.Where(i => i.SellerItemID == oh.ItemID && i.ItemName == "MPN").SingleOrDefault();
                     if (mpn != null)
                     {
                         listing.MPN = mpn.ItemValue;
@@ -648,7 +668,15 @@ namespace eBayUtility
                     listing.SellerListing = sellerListing;
                     listing.SupplierID = supplierItem.ID;
 
-                    await models.ListingSaveAsync(listing, settings.UserID);
+                    await models.ListingSaveAsync(listing, settings.UserID,
+                        "SupplierItem.SupplierPrice",
+                        "ListingPrice",
+                        "ListingTitle",
+                        "Description",
+                        "Qty",
+                        "Profit",
+                        "ProfitMargin",
+                        "UpdatedBy");
 
                     oh.ToListing = false;
                     models.OrderHistoryUpdate(oh, "ToListing");

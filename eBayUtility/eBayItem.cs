@@ -291,7 +291,7 @@ namespace Utility
             }
         }
 
-        protected static eBay.Service.Core.Soap.NameValueListType AddItemSpecifics(ItemSpecific item)
+        protected static eBay.Service.Core.Soap.NameValueListType AddItemSpecifics(SellerListingItemSpecific item)
         {
             var itemSpecs = new NameValueListTypeCollection();
             var nv2 = new eBay.Service.Core.Soap.NameValueListType();
@@ -303,9 +303,9 @@ namespace Utility
 
             return nv2;
         }
-        protected static List<ItemSpecific> ModifyItemSpecific(List<ItemSpecific> itemSpecifics)
+        protected static List<SellerListingItemSpecific> ModifyItemSpecific(List<SellerListingItemSpecific> itemSpecifics)
         {
-            var specifics = new List<ItemSpecific>();
+            var specifics = new List<SellerListingItemSpecific>();
             foreach(var s in itemSpecifics)
             {
                 if (!OmitSpecific(s.ItemName))
@@ -315,7 +315,7 @@ namespace Utility
             }
             return specifics;
         }
-        protected static bool ItemSpecificExists(List<ItemSpecific> itemSpecifics, string itemName)
+        protected static bool ItemSpecificExists(List<SellerListingItemSpecific> itemSpecifics, string itemName)
         {
             foreach (var s in itemSpecifics)
             {

@@ -687,12 +687,12 @@ namespace eBayUtility
                                          Value = r3.Element("Value").Value
                                      }).ToArray();
 
-                    var itemSpecifics = new List<ItemSpecific>();
+                    var itemSpecifics = new List<SellerListingItemSpecific>();
                     foreach (var i in specifics)
                     {
                         string n = i.Name;
                         string v = i.Value;
-                        var specific = new ItemSpecific();
+                        var specific = new SellerListingItemSpecific();
                         specific.SellerItemID = itemID;
                         specific.ItemName = n;
                         specific.ItemValue = v;
