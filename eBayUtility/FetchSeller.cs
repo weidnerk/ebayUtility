@@ -619,67 +619,81 @@ namespace eBayUtility
         public static async Task<string> StoreToListing(UserSettingsView settings)
         {
             string ret = null;
+            int copiedRecords = 0;
             try
             {
                 //var searchHistory = models.SearchHistory.Find(rptNumber);
-                var recs = models.OrderHistory.Include("SearchHistory").Where(p => p.ToListing ?? false).ToList();
+                var recs = models.OrderHistory.Include("SearchHistory").Include("ItemSpecifics").Where(p => p.ToListing ?? false).ToList();
                 foreach (var oh in recs)
                 {
-                    var listing = new Listing();
-                    listing.ItemID = oh.ItemID;
-                    listing.ListingTitle = oh.Title;
-                    if (oh.ProposePrice.HasValue)
+                    var UPC = oh.ItemSpecifics.Where(p => p.ItemName == "UPC").Select(q => q.ItemValue).SingleOrDefault();
+                    var MPN = oh.ItemSpecifics.Where(p => p.ItemName == "MPN").Select(q => q.ItemValue).SingleOrDefault();
+                    string foundResult = models.ProdIDExists(UPC, MPN, settings.StoreID);
+                    if (foundResult == null)
                     {
-                        listing.ListingPrice = oh.ProposePrice.Value;
-                    }
-                    var supplierItem = models.GetSupplierItem(oh.ItemID);
-                    listing.SourceUrl = supplierItem.ItemURL;
-                    //listing.SupplierPrice = oh.WMPrice.Value;
-                    //listing.PictureUrl = oh.WMPicUrl;
-                    listing.Profit = 0;
-                    listing.ProfitMargin = 0;
-                    listing.StoreID = settings.StoreID;
-                    listing.Description = supplierItem.Description;
-                    var upc = models.OrderHistoryItemSpecifics.Where(i => i.SellerItemID == oh.ItemID && i.ItemName == "UPC").SingleOrDefault();
-                    if (upc != null)
-                    {
-                        listing.UPC = upc.ItemValue;
-                    }
-                    var mpn = models.OrderHistoryItemSpecifics.Where(i => i.SellerItemID == oh.ItemID && i.ItemName == "MPN").SingleOrDefault();
-                    if (mpn != null)
-                    {
-                        listing.MPN = mpn.ItemValue;
-                    }
-                    var sellerListing = new SellerListing();
-                    sellerListing.ItemID = oh.ItemID;
-                    sellerListing.Title = oh.Title;
-                    sellerListing.Seller = oh.SearchHistory.Seller;
-                    var si = await eBayUtility.ebayAPIs.GetSingleItem(settings, listing.ItemID);
-                    sellerListing.PrimaryCategoryID = si.PrimaryCategoryID;
-                    sellerListing.PrimaryCategoryName = si.PrimaryCategoryName;
-                    sellerListing.Description = si.Description;
-                    sellerListing.ListingStatus = si.ListingStatus;
-                    sellerListing.EbayURL = si.EbayURL;
-                    sellerListing.PictureURL = si.PictureURL;
-                    sellerListing.SellerPrice = si.SellerPrice;
-                    sellerListing.Updated = DateTime.Now;
-                    listing.PrimaryCategoryID = si.PrimaryCategoryID;
-                    listing.PrimaryCategoryName = si.PrimaryCategoryName;
-                    listing.SellerListing = sellerListing;
-                    listing.SupplierID = supplierItem.ID;
+                        var listing = new Listing();
+                        listing.ItemID = oh.ItemID;
+                        listing.ListingTitle = oh.Title;
+                        if (oh.ProposePrice.HasValue)
+                        {
+                            listing.ListingPrice = oh.ProposePrice.Value;
+                        }
+                        var supplierItem = models.GetSupplierItem(oh.ItemID);
+                        listing.SourceUrl = supplierItem.ItemURL;
+                        //listing.SupplierPrice = oh.WMPrice.Value;
+                        //listing.PictureUrl = oh.WMPicUrl;
+                        listing.Profit = 0;
+                        listing.ProfitMargin = 0;
+                        listing.StoreID = settings.StoreID;
+                        listing.Description = supplierItem.Description;
+                        var upc = models.OrderHistoryItemSpecifics.Where(i => i.SellerItemID == oh.ItemID && i.ItemName == "UPC").SingleOrDefault();
+                        if (upc != null)
+                        {
+                            listing.UPC = upc.ItemValue;
+                        }
+                        var mpn = models.OrderHistoryItemSpecifics.Where(i => i.SellerItemID == oh.ItemID && i.ItemName == "MPN").SingleOrDefault();
+                        if (mpn != null)
+                        {
+                            listing.MPN = mpn.ItemValue;
+                        }
+                        var sellerListing = new SellerListing();
+                        sellerListing.ItemID = oh.ItemID;
+                        sellerListing.Title = oh.Title;
+                        sellerListing.Seller = oh.SearchHistory.Seller;
+                        var si = await eBayUtility.ebayAPIs.GetSingleItem(settings, listing.ItemID);
+                        sellerListing.PrimaryCategoryID = si.PrimaryCategoryID;
+                        sellerListing.PrimaryCategoryName = si.PrimaryCategoryName;
+                        sellerListing.Description = si.Description;
+                        sellerListing.ListingStatus = si.ListingStatus;
+                        sellerListing.EbayURL = si.EbayURL;
+                        sellerListing.PictureURL = si.PictureURL;
+                        sellerListing.SellerPrice = si.SellerPrice;
+                        sellerListing.Updated = DateTime.Now;
+                        listing.PrimaryCategoryID = si.PrimaryCategoryID;
+                        listing.PrimaryCategoryName = si.PrimaryCategoryName;
+                        sellerListing.ItemSpecifics = dsmodels.DataModelsDB.CopyFromOrderHistory(oh.ItemSpecifics);
+                        listing.SellerListing = sellerListing;
+                        listing.SupplierID = supplierItem.ID;
 
-                    await models.ListingSaveAsync(listing, settings.UserID,
-                        "SupplierItem.SupplierPrice",
-                        "ListingPrice",
-                        "ListingTitle",
-                        "Description",
-                        "Qty",
-                        "Profit",
-                        "ProfitMargin",
-                        "UpdatedBy");
+                        await models.ListingSaveAsync(listing, settings.UserID,
+                            "SupplierItem.SupplierPrice",
+                            "ListingPrice",
+                            "ListingTitle",
+                            "Description",
+                            "Qty",
+                            "Profit",
+                            "ProfitMargin",
+                            "UpdatedBy");
 
-                    oh.ToListing = false;
-                    models.OrderHistoryUpdate(oh, "ToListing");
+                        oh.ToListing = false;
+                        models.OrderHistoryUpdate(oh, "ToListing");
+                        ++copiedRecords;
+                        ret = "Copied records: " + copiedRecords.ToString();
+                    }
+                    else
+                    {
+                        return foundResult;
+                    }
                 }
             }
             catch (Exception exc)
