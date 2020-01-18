@@ -32,7 +32,7 @@ namespace Utility
         {
             var output = new List<string>();
 
-            var listing = await db.ListingGet(itemId);     // item has to be stored before it can be listed
+            var listing = db.ListingGet(itemId);     // item has to be stored before it can be listed
             if (listing != null)
             {
                 // if item is listed already, then revise

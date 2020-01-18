@@ -618,12 +618,12 @@ namespace eBayUtility
         /// <returns></returns>
         public static async Task<string> StoreToListing(UserSettingsView settings)
         {
-            string ret = null;
+            string ret = "Copied 0 records.";
             int copiedRecords = 0;
             try
             {
                 //var searchHistory = models.SearchHistory.Find(rptNumber);
-                var recs = models.OrderHistory.Include("SearchHistory").Include("ItemSpecifics").Where(p => p.ToListing ?? false).ToList();
+                var recs = models.OrderHistory.AsNoTracking().Include("SearchHistory").Include("ItemSpecifics").Where(p => p.ToListing ?? false).ToList();
                 foreach (var oh in recs)
                 {
                     var UPC = oh.ItemSpecifics.Where(p => p.ItemName == "UPC").Select(q => q.ItemValue).SingleOrDefault();
@@ -646,12 +646,12 @@ namespace eBayUtility
                         listing.ProfitMargin = 0;
                         listing.StoreID = settings.StoreID;
                         listing.Description = supplierItem.Description;
-                        var upc = models.OrderHistoryItemSpecifics.Where(i => i.SellerItemID == oh.ItemID && i.ItemName == "UPC").SingleOrDefault();
+                        var upc = models.OrderHistoryItemSpecifics.AsNoTracking().Where(i => i.SellerItemID == oh.ItemID && i.ItemName == "UPC").SingleOrDefault();
                         if (upc != null)
                         {
                             listing.UPC = upc.ItemValue;
                         }
-                        var mpn = models.OrderHistoryItemSpecifics.Where(i => i.SellerItemID == oh.ItemID && i.ItemName == "MPN").SingleOrDefault();
+                        var mpn = models.OrderHistoryItemSpecifics.AsNoTracking().Where(i => i.SellerItemID == oh.ItemID && i.ItemName == "MPN").SingleOrDefault();
                         if (mpn != null)
                         {
                             listing.MPN = mpn.ItemValue;
