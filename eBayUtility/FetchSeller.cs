@@ -616,7 +616,7 @@ namespace eBayUtility
         /// <param name="settings"></param>
         /// <param name="rptNumber"></param>
         /// <returns></returns>
-        public static async Task<string> StoreToListing(UserSettingsView settings)
+        public static async Task<string> StoreToListing(UserSettingsView settings, int storeID)
         {
             string ret = "Copied 0 records.";
             int copiedRecords = 0;
@@ -628,7 +628,7 @@ namespace eBayUtility
                 {
                     var UPC = oh.ItemSpecifics.Where(p => p.ItemName == "UPC").Select(q => q.ItemValue).SingleOrDefault();
                     var MPN = oh.ItemSpecifics.Where(p => p.ItemName == "MPN").Select(q => q.ItemValue).SingleOrDefault();
-                    string foundResult = models.ProdIDExists(UPC, MPN, settings.StoreID);
+                    string foundResult = models.ProdIDExists(UPC, MPN, storeID);
                     if (foundResult == null)
                     {
                         var listing = new Listing();
@@ -644,7 +644,7 @@ namespace eBayUtility
                         //listing.PictureUrl = oh.WMPicUrl;
                         listing.Profit = 0;
                         listing.ProfitMargin = 0;
-                        listing.StoreID = settings.StoreID;
+                        listing.StoreID = storeID;
                         listing.Description = supplierItem.Description;
                         var upc = models.OrderHistoryItemSpecifics.AsNoTracking().Where(i => i.SellerItemID == oh.ItemID && i.ItemName == "UPC").SingleOrDefault();
                         if (upc != null)
