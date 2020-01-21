@@ -8,6 +8,7 @@ using eBayUtility.WebReference;
 using HtmlAgilityPack;
 using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.Globalization;
 using System.Linq;
 using System.Net;
@@ -622,8 +623,7 @@ namespace eBayUtility
             int copiedRecords = 0;
             try
             {
-                //var searchHistory = models.SearchHistory.Find(rptNumber);
-                var recs = models.OrderHistory.AsNoTracking().Include("SearchHistory").Include("ItemSpecifics").Where(p => p.ToListing ?? false).ToList();
+                var recs = models.OrderHistory.AsNoTracking().Include("ItemSpecifics").AsNoTracking().Where(p => p.ToListing ?? false).ToList();
                 foreach (var oh in recs)
                 {
                     var UPC = oh.ItemSpecifics.Where(p => p.ItemName == "UPC").Select(q => q.ItemValue).SingleOrDefault();
@@ -656,36 +656,33 @@ namespace eBayUtility
                         {
                             listing.MPN = mpn.ItemValue;
                         }
-                        var sellerListing = new SellerListing();
-                        sellerListing.ItemID = oh.ItemID;
-                        sellerListing.Title = oh.Title;
-                        sellerListing.Seller = oh.SearchHistory.Seller;
                         var si = await eBayUtility.ebayAPIs.GetSingleItem(settings, listing.ItemID);
-                        sellerListing.PrimaryCategoryID = si.PrimaryCategoryID;
-                        sellerListing.PrimaryCategoryName = si.PrimaryCategoryName;
-                        sellerListing.Description = si.Description;
-                        sellerListing.ListingStatus = si.ListingStatus;
-                        sellerListing.EbayURL = si.EbayURL;
-                        sellerListing.PictureURL = si.PictureURL;
-                        sellerListing.SellerPrice = si.SellerPrice;
-                        sellerListing.Updated = DateTime.Now;
                         listing.PrimaryCategoryID = si.PrimaryCategoryID;
                         listing.PrimaryCategoryName = si.PrimaryCategoryName;
-                        sellerListing.ItemSpecifics = dsmodels.DataModelsDB.CopyFromOrderHistory(oh.ItemSpecifics);
-                        listing.SellerListing = sellerListing;
                         listing.SupplierID = supplierItem.ID;
+                        if (models.GetSellerListing(oh.ItemID) == null)
+                        {
+                            var sellerListing = new SellerListing();
+                            sellerListing.ItemID = oh.ItemID;
+                            sellerListing.Title = oh.Title;
+                            sellerListing.Seller = si.Seller;
+                            sellerListing.PrimaryCategoryID = si.PrimaryCategoryID;
+                            sellerListing.PrimaryCategoryName = si.PrimaryCategoryName;
+                            sellerListing.Description = si.Description;
+                            sellerListing.ListingStatus = si.ListingStatus;
+                            sellerListing.EbayURL = si.EbayURL;
+                            sellerListing.PictureURL = si.PictureURL;
+                            sellerListing.SellerPrice = si.SellerPrice;
+                            sellerListing.Updated = DateTime.Now;
+                            sellerListing.ItemSpecifics = dsmodels.DataModelsDB.CopyFromOrderHistory(oh.ItemSpecifics);
+                            listing.SellerListing = sellerListing;
+                        }
 
-                        await models.ListingSaveAsync(listing, settings.UserID,
-                            "SupplierItem.SupplierPrice",
-                            "ListingPrice",
-                            "ListingTitle",
-                            "Description",
-                            "Qty",
-                            "Profit",
-                            "ProfitMargin",
-                            "UpdatedBy");
+                        await models.ListingSaveAsync(listing, settings.UserID);
 
                         oh.ToListing = false;
+                        oh.ItemSpecifics = null;
+                        oh.OrderHistoryDetails = null;
                         models.OrderHistoryUpdate(oh, "ToListing");
                         ++copiedRecords;
                         ret = "Copied records: " + copiedRecords.ToString();
