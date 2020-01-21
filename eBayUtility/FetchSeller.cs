@@ -681,8 +681,13 @@ namespace eBayUtility
                         await models.ListingSaveAsync(listing, settings.UserID);
 
                         oh.ToListing = false;
+
+                        // If these nested objects aren't nulled out then get this error after 1st call:
+                        // {"Attaching an entity of type 'dsmodels.OrderHistoryItemSpecific' failed because another entity of the same type already has the same primary key value. This can happen when using the 'Attach' method or setting the state of an entity to 'Unchanged' or 'Modified' if any entities in the graph have conflicting key values. This may be because some entities are new and have not yet received database-generated key values. In this case use the 'Add' method or the 'Added' entity state to track the graph and then set the state of non-new entities to 'Unchanged' or 'Modified' as appropriate."}
+                        // See OrderHistoryUpdate() for more notes.
                         oh.ItemSpecifics = null;
                         oh.OrderHistoryDetails = null;
+
                         models.OrderHistoryUpdate(oh, "ToListing");
                         ++copiedRecords;
                         ret = "Copied records: " + copiedRecords.ToString();
