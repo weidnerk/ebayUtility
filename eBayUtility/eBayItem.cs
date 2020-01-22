@@ -31,6 +31,7 @@ namespace Utility
         public static async Task<List<string>> ListingCreateAsync(UserSettingsView settings, string itemID, int storeID)
         {
             var output = new List<string>();
+            var token = db.GetToken(storeID);
 
             var listing = db.ListingGet(itemID, storeID);     // item has to be stored before it can be listed
             if (listing != null)
@@ -68,7 +69,7 @@ namespace Utility
                 else
                 {
                     string response = null;
-                    output = ReviseItem(settings,
+                    output = ReviseItem(token,
                                         listing.ListedItemID,
                                         qty: listing.Qty,
                                         price: Convert.ToDouble(listing.ListingPrice),
@@ -404,7 +405,7 @@ namespace Utility
         // use this for itemspecifics:
         // https://ebaydts.com/eBayKBDetails?KBid=1647
         //
-        public static List<string> ReviseItem(UserSettingsView settings,
+        public static List<string> ReviseItem(string token,
             string listedItemID,
             int? qty = null,
             double? price = null,
@@ -416,7 +417,6 @@ namespace Utility
             ApiContext context = new ApiContext();
 
             //set the User token
-            string token = settings.Token;
             context.ApiCredential.eBayToken = token;
 
             //set the server url
