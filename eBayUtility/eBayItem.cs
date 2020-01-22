@@ -26,13 +26,13 @@ namespace Utility
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="itemId">ebay seller listing id</param>
+        /// <param name="itemID">ebay seller listing id</param>
         /// <returns></returns>
-        public static async Task<List<string>> ListingCreateAsync(UserSettingsView settings, string itemId, int storeID)
+        public static async Task<List<string>> ListingCreateAsync(UserSettingsView settings, string itemID, int storeID)
         {
             var output = new List<string>();
 
-            var listing = db.ListingGet(itemId, storeID);     // item has to be stored before it can be listed
+            var listing = db.ListingGet(itemID, storeID);     // item has to be stored before it can be listed
             if (listing != null)
             {
                 // if item is listed already, then revise
