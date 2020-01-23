@@ -623,35 +623,38 @@ namespace eBayUtility
             int copiedRecords = 0;
             try
             {
-                var recs = models.OrderHistory.AsNoTracking().Include("ItemSpecifics").AsNoTracking().Where(p => p.ToListing ?? false).ToList();
-                foreach (var oh in recs)
+                var recs = models.UpdateToListing.AsNoTracking().Where(p => p.StoreID == storeID && p.ToListing).ToList();
+                foreach (var updateToList in recs)
                 {
-                    var UPC = oh.ItemSpecifics.Where(p => p.ItemName == "UPC").Select(q => q.ItemValue).SingleOrDefault();
-                    var MPN = oh.ItemSpecifics.Where(p => p.ItemName == "MPN").Select(q => q.ItemValue).SingleOrDefault();
+                    var ohObj = models.OrderHistory.AsNoTracking().Include("ItemSpecifics").AsNoTracking().Where(p => p.ItemID == updateToList.ItemID).SingleOrDefault();
+
+                    var UPC = ohObj.ItemSpecifics.Where(p => p.ItemName == "UPC").Select(q => q.ItemValue).SingleOrDefault();
+                    var MPN = ohObj.ItemSpecifics.Where(p => p.ItemName == "MPN").Select(q => q.ItemValue).SingleOrDefault();
                     string foundResult = models.ProdIDExists(UPC, MPN, storeID);
                     if (foundResult == null)
                     {
                         var listing = new Listing();
-                        listing.ItemID = oh.ItemID;
-                        listing.ListingTitle = oh.Title;
-                        if (oh.ProposePrice.HasValue)
+                        listing.ItemID = ohObj.ItemID;
+                        listing.ListingTitle = ohObj.Title;
+                        if (ohObj.ProposePrice.HasValue)
                         {
-                            listing.ListingPrice = oh.ProposePrice.Value;
+                            listing.ListingPrice = ohObj.ProposePrice.Value;
                         }
-                        var supplierItem = models.GetSupplierItem(oh.ItemID);
+                        var supplierItem = models.GetSupplierItem(ohObj.ItemID);
                         listing.SourceUrl = supplierItem.ItemURL;
+                        listing.SupplierID = supplierItem.ID;
                         //listing.SupplierPrice = oh.WMPrice.Value;
                         //listing.PictureUrl = oh.WMPicUrl;
                         listing.Profit = 0;
                         listing.ProfitMargin = 0;
                         listing.StoreID = storeID;
                         listing.Description = supplierItem.Description;
-                        var upc = models.OrderHistoryItemSpecifics.AsNoTracking().Where(i => i.SellerItemID == oh.ItemID && i.ItemName == "UPC").SingleOrDefault();
+                        var upc = models.OrderHistoryItemSpecifics.AsNoTracking().Where(i => i.SellerItemID == ohObj.ItemID && i.ItemName == "UPC").SingleOrDefault();
                         if (upc != null)
                         {
                             listing.UPC = upc.ItemValue;
                         }
-                        var mpn = models.OrderHistoryItemSpecifics.AsNoTracking().Where(i => i.SellerItemID == oh.ItemID && i.ItemName == "MPN").SingleOrDefault();
+                        var mpn = models.OrderHistoryItemSpecifics.AsNoTracking().Where(i => i.SellerItemID == ohObj.ItemID && i.ItemName == "MPN").SingleOrDefault();
                         if (mpn != null)
                         {
                             listing.MPN = mpn.ItemValue;
@@ -659,12 +662,12 @@ namespace eBayUtility
                         var si = await eBayUtility.ebayAPIs.GetSingleItem(settings, listing.ItemID);
                         listing.PrimaryCategoryID = si.PrimaryCategoryID;
                         listing.PrimaryCategoryName = si.PrimaryCategoryName;
-                        listing.SupplierID = supplierItem.ID;
-                        if (models.GetSellerListing(oh.ItemID) == null)
+                        
+                        if (models.GetSellerListing(ohObj.ItemID) == null)
                         {
                             var sellerListing = new SellerListing();
-                            sellerListing.ItemID = oh.ItemID;
-                            sellerListing.Title = oh.Title;
+                            sellerListing.ItemID = ohObj.ItemID;
+                            sellerListing.Title = ohObj.Title;
                             sellerListing.Seller = si.Seller;
                             sellerListing.PrimaryCategoryID = si.PrimaryCategoryID;
                             sellerListing.PrimaryCategoryName = si.PrimaryCategoryName;
@@ -674,21 +677,14 @@ namespace eBayUtility
                             sellerListing.PictureURL = si.PictureURL;
                             sellerListing.SellerPrice = si.SellerPrice;
                             sellerListing.Updated = DateTime.Now;
-                            sellerListing.ItemSpecifics = dsmodels.DataModelsDB.CopyFromOrderHistory(oh.ItemSpecifics);
+                            sellerListing.ItemSpecifics = dsmodels.DataModelsDB.CopyFromOrderHistory(ohObj.ItemSpecifics);
                             listing.SellerListing = sellerListing;
                         }
 
                         await models.ListingSaveAsync(listing, settings.UserID);
 
-                        oh.ToListing = false;
-
-                        // If these nested objects aren't nulled out then get this error after 1st call:
-                        // {"Attaching an entity of type 'dsmodels.OrderHistoryItemSpecific' failed because another entity of the same type already has the same primary key value. This can happen when using the 'Attach' method or setting the state of an entity to 'Unchanged' or 'Modified' if any entities in the graph have conflicting key values. This may be because some entities are new and have not yet received database-generated key values. In this case use the 'Add' method or the 'Added' entity state to track the graph and then set the state of non-new entities to 'Unchanged' or 'Modified' as appropriate."}
-                        // See OrderHistoryUpdate() for more notes.
-                        oh.ItemSpecifics = null;
-                        oh.OrderHistoryDetails = null;
-
-                        models.OrderHistoryUpdate(oh, "ToListing");
+                        var obj = new UpdateToListing() { StoreID = storeID, ItemID = ohObj.ItemID };
+                        await models.UpdateToListingRemove(obj);
                         ++copiedRecords;
                         ret = "Copied records: " + copiedRecords.ToString();
                     }
