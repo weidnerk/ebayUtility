@@ -39,7 +39,12 @@ namespace Utility
                 // if item is listed already, then revise
                 if (listing.Listed == null)
                 {
-                    List<string> pictureURLs = dsutil.DSUtil.DelimitedToList(listing.PictureUrl, ';');
+                    if (string.IsNullOrEmpty(listing.PictureURL))
+                    {
+                        output.Add("ERROR: PictureURL is null");
+                        return output;
+                    }
+                    List<string> pictureURLs = dsutil.DSUtil.DelimitedToList(listing.PictureURL, ';');
                     string verifyItemID = eBayItem.VerifyAddItemRequest(settings, listing.ListingTitle,
                         listing.Description,
                         listing.PrimaryCategoryID,
