@@ -411,7 +411,7 @@ namespace eBayUtility
             }
             else if (storeID > 0)
             {
-                var sellers = models.GetSellers(storeID);
+                var sellers = models.GetSellers();
                 bool runScan = false;
                 foreach (var seller in sellers)
                 {
