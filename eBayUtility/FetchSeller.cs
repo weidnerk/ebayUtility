@@ -531,42 +531,15 @@ namespace eBayUtility
                             //    int stop = 99;
                             //}
                             walitem = await wallib.wmUtility.GetDetail(response.URL);
-                            walitem.UPC = row.SellerUPC;
-                            walitem.Updated = DateTime.Now;
-                            models.SupplierItemUpdateScrape(row.SellerUPC, "", walitem, 
-                                "Updated",
-                                "ItemURL",
-                                "SoldAndShippedBySupplier",
-                                "SupplierBrand",
-                                "SupplierPrice",
-                                "IsVariation",
-                                "SupplierPicURL");
 
-                            if (walitem.SupplierPrice.HasValue)
+                            // If can't get supplier pics, not much point in posting.
+                            // Can happen when not matching correctly on something like an eBook or giftcard where walmart
+                            // is not providing "standard" images. (error is logged in GetDetail()).
+                            if (!string.IsNullOrEmpty(walitem.SupplierPicURL))
                             {
-                                var oh = new OrderHistory();
-                                oh.ItemID = row.ItemID;
-                                var p = Utility.eBayItem.wmNewPrice(walitem.SupplierPrice.Value, 6);
-                                oh.ProposePrice = p;
-                                oh.MatchCount = response.Count;
-                                oh.MatchType = 1;
-                                oh.SourceID = walitem.SourceID;
-                                oh.SupplierItemID = walitem.ID;
-                                models.OrderHistoryUpdate(oh, "ProposePrice","MatchType","MatchCount", "SourceID", "SupplierItemID");
-                            }
-                        }
-                    }
-                    else
-                    {
-                        if (row.SellerMPN != null)
-                        {
-                            response = wallib.wmUtility.SearchProdID(row.SellerMPN);
-                            if (response.Count == 1)
-                            {
-                                walitem = await wallib.wmUtility.GetDetail(response.URL);
-                                walitem.MPN = row.SellerMPN;
+                                walitem.UPC = row.SellerUPC;
                                 walitem.Updated = DateTime.Now;
-                                models.SupplierItemUpdateScrape("", row.SellerMPN, walitem,
+                                models.SupplierItemUpdateScrape(row.SellerUPC, "", walitem,
                                     "Updated",
                                     "ItemURL",
                                     "SoldAndShippedBySupplier",
@@ -574,18 +547,6 @@ namespace eBayUtility
                                     "SupplierPrice",
                                     "IsVariation",
                                     "SupplierPicURL");
-
-                                // now update the ebay seller item specific UPC
-                                // but walmart doesn't always give a UPC
-                                if (!string.IsNullOrEmpty(walitem.UPC))
-                                {
-                                    var itemSpecific = new OrderHistoryItemSpecific();
-                                    itemSpecific.SellerItemID = row.ItemID;
-                                    itemSpecific.ItemName = "UPC";
-                                    itemSpecific.ItemValue = walitem.UPC;
-                                    itemSpecific.Flags = true;
-                                    models.OrderHistoryItemSpecificUpdate(itemSpecific);
-                                }
 
                                 if (walitem.SupplierPrice.HasValue)
                                 {
@@ -597,7 +558,60 @@ namespace eBayUtility
                                     oh.MatchType = 1;
                                     oh.SourceID = walitem.SourceID;
                                     oh.SupplierItemID = walitem.ID;
-                                    models.OrderHistoryUpdate(oh, "ProposePrice", "MatchType", "MatchCount", "SourceID","SupplierItemID");
+                                    models.OrderHistoryUpdate(oh, "ProposePrice", "MatchType", "MatchCount", "SourceID", "SupplierItemID");
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (row.SellerMPN != null)
+                        {
+                            response = wallib.wmUtility.SearchProdID(row.SellerMPN);
+                            if (response.Count == 1)
+                            {
+                                walitem = await wallib.wmUtility.GetDetail(response.URL);
+
+                                // If can't get supplier pics, not much point in posting.
+                                // Can happen when not matching correctly on something like an eBook or giftcard where walmart
+                                // is not providing "standard" images. (error is logged in GetDetail()).
+                                if (!string.IsNullOrEmpty(walitem.SupplierPicURL))
+                                {
+                                    walitem.MPN = row.SellerMPN;
+                                    walitem.Updated = DateTime.Now;
+                                    models.SupplierItemUpdateScrape("", row.SellerMPN, walitem,
+                                        "Updated",
+                                        "ItemURL",
+                                        "SoldAndShippedBySupplier",
+                                        "SupplierBrand",
+                                        "SupplierPrice",
+                                        "IsVariation",
+                                        "SupplierPicURL");
+
+                                    // now update the ebay seller item specific UPC
+                                    // but walmart doesn't always give a UPC
+                                    if (!string.IsNullOrEmpty(walitem.UPC))
+                                    {
+                                        var itemSpecific = new OrderHistoryItemSpecific();
+                                        itemSpecific.SellerItemID = row.ItemID;
+                                        itemSpecific.ItemName = "UPC";
+                                        itemSpecific.ItemValue = walitem.UPC;
+                                        itemSpecific.Flags = true;
+                                        models.OrderHistoryItemSpecificUpdate(itemSpecific);
+                                    }
+
+                                    if (walitem.SupplierPrice.HasValue)
+                                    {
+                                        var oh = new OrderHistory();
+                                        oh.ItemID = row.ItemID;
+                                        var p = Utility.eBayItem.wmNewPrice(walitem.SupplierPrice.Value, 6);
+                                        oh.ProposePrice = p;
+                                        oh.MatchCount = response.Count;
+                                        oh.MatchType = 1;
+                                        oh.SourceID = walitem.SourceID;
+                                        oh.SupplierItemID = walitem.ID;
+                                        models.OrderHistoryUpdate(oh, "ProposePrice", "MatchType", "MatchCount", "SourceID", "SupplierItemID");
+                                    }
                                 }
                             }
                         }
