@@ -51,7 +51,7 @@ namespace Utility
                         (double)listing.ListingPrice,
                         pictureURLs,
                         ref output,
-                        _qtyToList,
+                        listing.Qty,
                         listing);
                     // at this point, 'output' will be populated with errors if any occurred
 
@@ -376,13 +376,13 @@ namespace Utility
         }
 
 
-        public static void EndFixedPriceItem(UserSettingsView settings, string itemID)
+        public static string EndFixedPriceItem(Listing listing)
         {
             //create the context
             ApiContext context = new ApiContext();
 
             //set the User token
-            string token = settings.Token;
+            string token = db.GetToken(listing.StoreID);
             context.ApiCredential.eBayToken = token;
 
             //set the server url
@@ -400,11 +400,12 @@ namespace Utility
 
             EndFixedPriceItemCall endFP = new EndFixedPriceItemCall(context);
 
-            endFP.ItemID = itemID;
+            endFP.ItemID = listing.ListedItemID;
             endFP.EndingReason = EndReasonCodeType.NotAvailable;
 
             endFP.Execute();
-            Console.WriteLine(endFP.ApiResponse.Ack + " Ended ItemID " + endFP.ItemID);
+            string result = endFP.ApiResponse.Ack + " Ended ItemID " + endFP.ItemID;
+            return result;
         }
 
         // use this for itemspecifics:
