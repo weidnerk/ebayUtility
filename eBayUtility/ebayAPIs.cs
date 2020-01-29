@@ -34,32 +34,56 @@ namespace eBayUtility
     public class ebayAPIs
     {
         readonly static string _logfile = "log.txt";
-        dsmodels.DataModelsDB db = new dsmodels.DataModelsDB();
-        DataModelsDB models = new DataModelsDB();
+        //dsmodels.DataModelsDB db = new dsmodels.DataModelsDB();
+        static DataModelsDB models = new DataModelsDB();
 
         /// <summary>
-        /// 
+        /// GetSellerTransactions
+        /// https://developer.ebay.com/DevZone/XML/Docs/Reference/ebay/GetSellerTransactions.html
         /// </summary>
-        /// <param name="orderid">19-04026-11927</param>
-        public static void GetOrders(UserSettingsView settings, string orderid)
+        /// <param name="orderID">19-04026-11927</param>
+        public static eBayOrder GetOrders(string orderID, int storeID, out string msg)
         {
-            //ApiContext context = new ApiContext();
+            msg = null;
+            var eBayOrder = new eBayOrder();
+            ApiContext context = new ApiContext();
 
-            //string token = settings.Token;
-            //context.ApiCredential.eBayToken = token;
+            string token = models.GetToken(storeID);
+            context.ApiCredential.eBayToken = token;
 
-            ////set the server url
-            //string endpoint = AppSettingsHelper.Endpoint;
-            //context.SoapApiServerUrl = endpoint;
+            // set the server url
+            string endpoint = "https://api.ebay.com/wsapi";
+            context.SoapApiServerUrl = endpoint;
 
-            //GetOrdersCall call = new GetOrdersCall(context);
-            //call.DetailLevelList = new DetailLevelCodeTypeCollection();
-            //call.DetailLevelList.Add(DetailLevelCodeType.ReturnAll);
-            //call.OrderIDList = new StringCollection();
-            //call.OrderIDList.Add(orderid);
-            //call.Execute();
-            //var r = call.ApiResponse.OrderArray;
-            //var a = call.ApiResponse.Ack;
+            GetOrdersCall call = new GetOrdersCall(context);
+            call.DetailLevelList = new DetailLevelCodeTypeCollection();
+            call.DetailLevelList.Add(DetailLevelCodeType.ReturnAll);
+            call.OrderIDList = new StringCollection();
+            call.OrderIDList.Add(orderID);
+            call.Execute();
+            
+            var r = call.ApiResponse.OrderArray;
+            eBayOrder.BuyerHandle = r[0].BuyerUserID;     // customer eBay handle
+            eBayOrder.DatePurchased = r[0].PaidTime;
+            var ShippingAddress = r[0].ShippingAddress;
+            // Name
+            eBayOrder.Buyer = ShippingAddress.Name;
+            // PostalCode
+            // StateOrProvince
+            // Street1
+            // Phone
+            // CityName
+            var SubTotal = r[0].Subtotal;
+            var Total = r[0].Total;
+            var amtPaid = r[0].AmountPaid;
+
+            // orderID is returned as a hyphenated string like:
+            // 223707436249-2329703153012
+            // first number is the itemID
+            var OrderID = r[0].OrderID;
+
+            var a = call.ApiResponse.Ack;
+            return eBayOrder;
         }
 
         public static string GetebayDetails(UserSettingsView settings)
@@ -276,7 +300,10 @@ namespace eBayUtility
         // https://ebaydts.com/eBayKBDetails?KBid=1937
         //
         // also look at GetOrderTransactions()
-        public static TransactionTypeCollection GetItemTransactions(UserSettingsView settings, string itemId, DateTime ModTimeFrom, DateTime ModTimeTo)
+        //
+        // GetSellerTransactions
+        // https://developer.ebay.com/DevZone/XML/Docs/Reference/ebay/GetSellerTransactions.html
+        public static TransactionTypeCollection GetItemTransactions(UserSettingsView settings, string itemID, DateTime ModTimeFrom, DateTime ModTimeTo, int storeID)
         {
             dsmodels.DataModelsDB db = new dsmodels.DataModelsDB();
 
@@ -287,7 +314,7 @@ namespace eBayUtility
             oContext.ApiCredential.ApiAccount.Developer = settings.DevID;
             oContext.ApiCredential.ApiAccount.Application = settings.AppID;
             oContext.ApiCredential.ApiAccount.Certificate = settings.CertID;
-            oContext.ApiCredential.eBayToken = settings.Token;
+            oContext.ApiCredential.eBayToken = db.GetToken(storeID);
 
             oContext.SoapApiServerUrl = "https://api.ebay.com/wsapi";
 
@@ -327,10 +354,10 @@ namespace eBayUtility
             //ModTimeFrom = CreateTimeFromPrev;
 
             //set ItemID and <DetailLevel>ReturnAll<DetailLevel>
-            oGetItemTransactionsCall.ItemID = itemId;
+            oGetItemTransactionsCall.ItemID = itemID;
             oGetItemTransactionsCall.DetailLevelList.Add(DetailLevelCodeType.ReturnAll);
 
-            var r = oGetItemTransactionsCall.GetItemTransactions(itemId, ModTimeFrom, ModTimeTo);
+            var r = oGetItemTransactionsCall.GetItemTransactions(itemID, ModTimeFrom, ModTimeTo);
             var b = oGetItemTransactionsCall.HasError;
 
             return r;
@@ -1038,6 +1065,56 @@ namespace eBayUtility
         //    return totalCount;
         //}
 
+        public static void ProcessTransactions(UserSettingsView settings, string itemID, DateTime ModTimeFrom, DateTime ModTimeTo)
+        {
+            var transactions = eBayUtility.ebayAPIs.GetItemTransactions(settings, itemID, ModTimeFrom, ModTimeTo, 1);
+            foreach (TransactionType item in transactions)
+            {
+                // did it sell?
+                if (item.MonetaryDetails != null)
+                {
+                    var pmtTime = item.MonetaryDetails.Payments.Payment[0].PaymentTime;
+                    var pmtAmt = item.MonetaryDetails.Payments.Payment[0].PaymentAmount.Value;
+                    var order = new OrderHistoryDetail();
+                    // order.Title = searchItem.title;
+                    order.Qty = item.QuantityPurchased;
+
+                    if (item.TransactionPrice == null)
+                    {
+                        // is this bcs sellerPaidStatus="notpaid"?
+                        order.Price = 0;
+                        // dsutil.DSUtil.WriteFile(_logfile, string.Format("StoreTransactions: item.TransactionPrice == null for item: {0}", searchItem.itemId), settings.UserName);
+                    }
+                    else
+                    {
+                        var sellerPrice = item.TransactionPrice.Value.ToString();
+                    }
+                    // dsutil.DSUtil.WriteFile(_logfile, string.Format("Seller price: {0}", order.SellerPrice), user.UserName);
+
+                    order.DateOfPurchase = item.CreatedDate;
+
+                    //order.EbayUrl = searchItem.viewItemURL;
+                    // dsutil.DSUtil.WriteFile(_logfile, "order.EbayUrl complete", user.UserName);
+
+                    //order.ImageUrl = searchItem.galleryURL;
+                    dsutil.DSUtil.WriteFile(_logfile, "order.ImageUrl complete", settings.UserName);
+
+                    //var pictures = searchItem.pictureURLLarge;
+                    // dsutil.DSUtil.WriteFile(_logfile, "pictures complete", user.UserName);
+
+                    //order.PageNumber = pg;
+                    //order.ItemId = searchItem.itemId;
+                    //order.SellingState = searchItem.sellingStatus.sellingState;
+                    //order.ListingStatus = i.ListingStatus;
+                    //order.IsMultiVariationListing = isVariation;
+
+                    // order.ShippingServiceCost = i.ShippingServiceCost;
+                    // order.ShippingServiceName = i.ShippingServiceName;
+
+                    //orderHistory.Add(order);
+                }
+            }
+        }
 
         ///// <summary>
         ///// Store seller's transactions for a page of results 

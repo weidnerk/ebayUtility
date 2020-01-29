@@ -60,6 +60,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AppSettingsHelper.cs" />
     <Compile Include="CustomFindingService.cs" />
     <Compile Include="DataModels.cs" />
     <Compile Include="ebayAPIs.cs" />
