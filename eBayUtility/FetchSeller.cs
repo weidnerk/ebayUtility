@@ -74,12 +74,12 @@ namespace eBayUtility
         }
 
         /// <summary>
-        /// 
+        /// GetCompletedItems for a seller.
+        /// NOTE: we use the Listing class to house the seller's listing. 
         /// </summary>
         /// <returns></returns>
         public static ModelView ScanSeller(UserSettingsView settings, string seller, DateTime fromDate)
         {
-            dsmodels.DataModelsDB db = new dsmodels.DataModelsDB();
             int notSold = 0;
             var listings = new List<Listing>();
             var searchResult = new List<SearchResult>();
