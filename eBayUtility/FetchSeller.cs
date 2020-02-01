@@ -645,8 +645,8 @@ namespace eBayUtility
                 {
                     var ohObj = models.OrderHistory.AsNoTracking().Include("ItemSpecifics").AsNoTracking().Where(p => p.ItemID == updateToList.ItemID).SingleOrDefault();
 
-                    var UPC = ohObj.ItemSpecifics.Where(p => p.ItemName == "UPC").Select(q => q.ItemValue).SingleOrDefault();
-                    var MPN = ohObj.ItemSpecifics.Where(p => p.ItemName == "MPN").Select(q => q.ItemValue).SingleOrDefault();
+                    var UPC = ohObj.ItemSpecifics.Where(p => p.ItemName == "UPC").Select(q => q.ItemValue).FirstOrDefault();
+                    var MPN = ohObj.ItemSpecifics.Where(p => p.ItemName == "MPN").Select(q => q.ItemValue).FirstOrDefault();
                     string foundResult = models.ProdIDExists(UPC, MPN, storeID);
                     if (foundResult == null)
                     {

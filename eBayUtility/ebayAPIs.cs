@@ -706,6 +706,8 @@ namespace eBayUtility
                             .Select(element => element.Value)
                             .ToArray();
                     }
+                    var variations = qryRecords.Elements("Variations").Elements("Variation")
+                            .ToArray();
 
                     var specifics = (from r3 in qryRecords.Elements("ItemSpecifics").Elements("NameValueList")
                                      select new
