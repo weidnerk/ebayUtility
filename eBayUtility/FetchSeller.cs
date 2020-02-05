@@ -658,7 +658,6 @@ namespace eBayUtility
                             listing.ListingPrice = ohObj.ProposePrice.Value;
                         }
                         var supplierItem = models.GetSupplierItem(ohObj.ItemID);
-                        listing.SourceUrl = supplierItem.ItemURL;
                         listing.SupplierID = supplierItem.ID;
                         //listing.SupplierPrice = oh.WMPrice.Value;
                         //listing.PictureUrl = oh.WMPicUrl;
@@ -697,7 +696,6 @@ namespace eBayUtility
                             sellerListing.ItemSpecifics = dsmodels.DataModelsDB.CopyFromOrderHistory(ohObj.ItemSpecifics);
                             listing.SellerListing = sellerListing;
                         }
-
                         await models.ListingSaveAsync(listing, settings.UserID);
 
                         var obj = new UpdateToListing() { StoreID = storeID, ItemID = ohObj.ItemID };

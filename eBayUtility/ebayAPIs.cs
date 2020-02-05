@@ -620,7 +620,6 @@ namespace eBayUtility
             try
             {
                 DataModelsDB db = new DataModelsDB();
-                //var profile = db.UserProfiles.Find(user.Id);
 
                 //CustomShoppingService service = new CustomShoppingService();
                 //service.Url = "http://open.api.ebay.com/shopping";
@@ -654,15 +653,6 @@ namespace eBayUtility
                     string s = await httpClient.GetStringAsync(uri);
                     s = s.Replace("\"", "'");
                     output = s.Replace(" xmlns='urn:ebay:apis:eBLBaseComponents'", string.Empty);
-
-                    #region Could not get xml deserialization to work - very annoying!
-                    XmlSerializer x = new XmlSerializer(typeof(GetSingleItemResponseType));
-                    //output = @"<?xml version='1.0' encoding='UTF-8'?>
-                    //  <GetSingleItemResponse>
-                    //   <Timestamp>2018-04-18T21:18:17.064Z</Timestamp>
-                    //</GetSingleItemResponse>
-                    //";
-                    #endregion
 
                     errMsg = GetSingleItemError(output);
                     if (!string.IsNullOrEmpty(errMsg))
@@ -706,8 +696,19 @@ namespace eBayUtility
                             .Select(element => element.Value)
                             .ToArray();
                     }
+
+                    #region Generate list of Variation objects
                     var variations = qryRecords.Elements("Variations").Elements("Variation")
                             .ToArray();
+                    XmlSerializer serializer = new XmlSerializer(typeof(Variation));
+                    var variationList = new List<Variation>();
+                    foreach (var v in variations)
+                    {
+                        var variation = (Variation)serializer.Deserialize(v.CreateReader());
+                        variationList.Add(variation);
+                    }
+
+                    #endregion
 
                     var specifics = (from r3 in qryRecords.Elements("ItemSpecifics").Elements("NameValueList")
                                      select new
@@ -731,7 +732,7 @@ namespace eBayUtility
 
                     var sellerListing = new SellerListing();
                     sellerListing.ItemSpecifics = itemSpecifics.ToList();
-
+                    sellerListing.Variations = variationList;
                     /*
                      * 10.07.2019
                      * Good to know how to do this but not necessary since can mostly just look up the seller and see what his
