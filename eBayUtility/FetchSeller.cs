@@ -527,7 +527,7 @@ namespace eBayUtility
                 foreach (var row in mv.TimesSoldRpt)
                 {
                     loopItemID = row.ItemID;
-                    if (row.ItemID == "392551593836")
+                    if (row.ItemID == "323976086179")
                     {
                         int stop = 99;
                     }
@@ -560,17 +560,21 @@ namespace eBayUtility
                                     "IsVariation",
                                     "SupplierPicURL");
 
+                                var oh = new OrderHistory();
+                                oh.ItemID = row.ItemID;
+                                oh.MatchCount = response.Count;
+                                oh.MatchType = 1;
+                                oh.SourceID = walitem.SourceID;
+                                oh.SupplierItemID = walitem.ID;
                                 if (walitem.SupplierPrice.HasValue)
                                 {
-                                    var oh = new OrderHistory();
-                                    oh.ItemID = row.ItemID;
                                     var p = Utility.eBayItem.wmNewPrice(walitem.SupplierPrice.Value, pctProfit);
                                     oh.ProposePrice = p;
-                                    oh.MatchCount = response.Count;
-                                    oh.MatchType = 1;
-                                    oh.SourceID = walitem.SourceID;
-                                    oh.SupplierItemID = walitem.ID;
                                     models.OrderHistoryUpdate(oh, "ProposePrice", "MatchType", "MatchCount", "SourceID", "SupplierItemID");
+                                }
+                                else
+                                {
+                                    models.OrderHistoryUpdate(oh, "MatchType", "MatchCount", "SourceID", "SupplierItemID");
                                 }
                             }
                         }
