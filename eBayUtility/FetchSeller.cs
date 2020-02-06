@@ -396,68 +396,80 @@ namespace eBayUtility
         public static async Task<string> CalculateMatch(UserSettingsView settings, int rptNumber, int minSold, int daysBack, int? minPrice, int? maxPrice, bool? activeStatusOnly, bool? isSellerVariation, string itemID, double pctProfit, int storeID)
         {
             string ret = null;
-            var sh = new SearchHistory();
-            if (rptNumber > 0 && storeID > 0)
+            try
             {
-                ret = "Invalid call to FillMatch.";
-                dsutil.DSUtil.WriteFile(_logfile, ret, "");
-            }
-            else if (rptNumber > 0)
-            {
-                sh.ID = rptNumber;
-                sh.CalculateMatch = DateTime.Now;
-                models.SearchHistoryUpdate(sh, "CalculateMatch");
-                models.ClearOrderHistory(rptNumber);
-                var mv = await FillMatch(settings, rptNumber, minSold, daysBack, minPrice, maxPrice, activeStatusOnly, isSellerVariation, itemID, 5);
-            }
-            else if (storeID > 0)
-            {
-                var sellers = models.GetSellers();
-                bool runScan = false;
-                foreach (var seller in sellers)
+                var sh = new SearchHistory();
+                if (rptNumber > 0 && storeID > 0)
                 {
-                    //if (seller.Seller == "exxbargain")
-                    //{
-                    //    int stop = 99;
-                    //}
-                    //else
-                    //{
-                    //    continue;
-                    //}
-                    runScan = false;
-                    var sellerProfile = await models.SellerProfileGet(seller.Seller);
-                    if (sellerProfile == null)
+                    ret = "Invalid call to FillMatch.";
+                    dsutil.DSUtil.WriteFile(_logfile, ret, "");
+                }
+                else if (rptNumber > 0)
+                {
+                    sh.ID = rptNumber;
+                    sh.CalculateMatch = DateTime.Now;
+                    models.SearchHistoryUpdate(sh, "CalculateMatch");
+                    models.ClearOrderHistory(rptNumber);
+                    var mv = await FillMatch(settings, rptNumber, minSold, daysBack, minPrice, maxPrice, activeStatusOnly, isSellerVariation, itemID, pctProfit);
+                }
+                else if (storeID > 0)
+                {
+                    var sellers = models.GetSellers();
+                    bool runScan = false;
+                    foreach (var seller in sellers)
                     {
-                        runScan = true;
-                    }
-                    else
-                    {
-                        if (sellerProfile.Active)
+                        Console.WriteLine(seller.Seller);
+                        //if (seller.Seller == "kermont-24")
+                        //{
+                        //    int stop = 99;
+                        //}
+                        //else
+                        //{
+                        //    continue;
+                        //}
+                        runScan = false;
+                        var sellerProfile = await models.SellerProfileGet(seller.Seller);
+                        if (sellerProfile == null)
                         {
                             runScan = true;
                         }
-                    }
-                    if (runScan)
-                    {
-                        int? latest = models.LatestRptNumber(seller.Seller);
-                        var tgtSearchHistory = seller.SearchHistory.Where(p => p.ID == latest).SingleOrDefault();
-                        if (tgtSearchHistory.CalculateMatch == null || tgtSearchHistory.CalculateMatch < tgtSearchHistory.Updated)
+                        else
                         {
-                            Console.WriteLine(seller.Seller);
-                            sh.ID = tgtSearchHistory.ID;
-                            sh.CalculateMatch = DateTime.Now;
-                            models.SearchHistoryUpdate(sh, "CalculateMatch");
-                            var mv = await FetchSeller.FillMatch(settings, tgtSearchHistory.ID, minSold, daysBack, minPrice, maxPrice, activeStatusOnly, isSellerVariation, itemID, 5);
-                            dsutil.DSUtil.WriteFile(_logfile, seller.Seller + ": Ran FillMatch", "");
-                            Thread.Sleep(2000);
+                            if (sellerProfile.Active)
+                            {
+                                runScan = true;
+                            }
+                        }
+                        if (runScan)
+                        {
+                            int? latest = models.LatestRptNumber(seller.Seller);
+                            var tgtSearchHistory = seller.SearchHistory.Where(p => p.ID == latest).SingleOrDefault();
+                            if (tgtSearchHistory != null) 
+                            {
+                                if (tgtSearchHistory.CalculateMatch == null || tgtSearchHistory.CalculateMatch < tgtSearchHistory.Updated)
+                                {
+                                    sh.CalculateMatch = DateTime.Now;
+                                    sh.Updated = DateTime.Now;
+                                    sh.ID = tgtSearchHistory.ID;
+                                    models.SearchHistoryUpdate(sh, "CalculateMatch", "Updated");
+                                    var mv = await FetchSeller.FillMatch(settings, tgtSearchHistory.ID, minSold, daysBack, minPrice, maxPrice, activeStatusOnly, isSellerVariation, itemID, 5);
+                                    dsutil.DSUtil.WriteFile(_logfile, seller.Seller + ": Ran FillMatch", "");
+                                }
+                                Thread.Sleep(2000);
+                            }
                         }
                     }
                 }
+                else
+                {
+                    ret = "Invalid call to FillMatch.";
+                    dsutil.DSUtil.WriteFile(_logfile, ret, "");
+                }
             }
-            else
+            catch (Exception exc)
             {
-                ret = "Invalid call to FillMatch.";
-                dsutil.DSUtil.WriteFile(_logfile, ret, "");
+                ret = dsutil.DSUtil.ErrMsg("CalculateMatch", exc);
+                dsutil.DSUtil.WriteFile(_logfile, ret, "admin");
             }
             return ret;
         }
@@ -552,7 +564,7 @@ namespace eBayUtility
                                 {
                                     var oh = new OrderHistory();
                                     oh.ItemID = row.ItemID;
-                                    var p = Utility.eBayItem.wmNewPrice(walitem.SupplierPrice.Value, 6);
+                                    var p = Utility.eBayItem.wmNewPrice(walitem.SupplierPrice.Value, pctProfit);
                                     oh.ProposePrice = p;
                                     oh.MatchCount = response.Count;
                                     oh.MatchType = 1;

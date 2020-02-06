@@ -511,7 +511,6 @@ namespace Utility
             return response;
         }
 
-
         protected static decimal wmBreakEvenPrice(decimal supplierPrice, decimal minFreeShipping, decimal shipping)
         {
             if (supplierPrice < minFreeShipping)
