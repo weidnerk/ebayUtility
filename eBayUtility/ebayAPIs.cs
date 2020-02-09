@@ -42,47 +42,55 @@ namespace eBayUtility
         /// https://developer.ebay.com/DevZone/XML/Docs/Reference/ebay/GetSellerTransactions.html
         /// </summary>
         /// <param name="orderID">19-04026-11927</param>
-        public static eBayOrder GetOrders(string orderID, int storeID, out string msg)
+        public static GetOrdersResponse GetOrders(string orderID, int storeID, out string msg)
         {
             msg = null;
-            var eBayOrder = new eBayOrder();
+            var eBayOrder = new GetOrdersResponse();
             ApiContext context = new ApiContext();
+            try
+            {
+                string token = models.GetToken(storeID);
+                context.ApiCredential.eBayToken = token;
 
-            string token = models.GetToken(storeID);
-            context.ApiCredential.eBayToken = token;
+                // set the server url
+                string endpoint = "https://api.ebay.com/wsapi";
+                context.SoapApiServerUrl = endpoint;
 
-            // set the server url
-            string endpoint = "https://api.ebay.com/wsapi";
-            context.SoapApiServerUrl = endpoint;
+                GetOrdersCall call = new GetOrdersCall(context);
+                call.DetailLevelList = new DetailLevelCodeTypeCollection();
+                call.DetailLevelList.Add(DetailLevelCodeType.ReturnAll);
+                call.OrderIDList = new StringCollection();
+                call.OrderIDList.Add(orderID);
+                call.Execute();
 
-            GetOrdersCall call = new GetOrdersCall(context);
-            call.DetailLevelList = new DetailLevelCodeTypeCollection();
-            call.DetailLevelList.Add(DetailLevelCodeType.ReturnAll);
-            call.OrderIDList = new StringCollection();
-            call.OrderIDList.Add(orderID);
-            call.Execute();
-            
-            var r = call.ApiResponse.OrderArray;
-            eBayOrder.BuyerHandle = r[0].BuyerUserID;     // customer eBay handle
-            eBayOrder.DatePurchased = r[0].PaidTime;
-            var ShippingAddress = r[0].ShippingAddress;
-            // Name
-            eBayOrder.Buyer = ShippingAddress.Name;
-            // PostalCode
-            // StateOrProvince
-            // Street1
-            // Phone
-            // CityName
-            var SubTotal = r[0].Subtotal;
-            var Total = r[0].Total;
-            var amtPaid = r[0].AmountPaid;
+                var r = call.ApiResponse.OrderArray;
+                eBayOrder.BuyerHandle = r[0].BuyerUserID;     // customer eBay handle
+                eBayOrder.DatePurchased = r[0].PaidTime;
+                var ShippingAddress = r[0].ShippingAddress;
+                // Name
+                eBayOrder.Buyer = ShippingAddress.Name;
+                // PostalCode
+                // StateOrProvince
+                // Street1
+                // Phone
+                // CityName
+                var SubTotal = r[0].Subtotal;
+                var Total = r[0].Total;
+                eBayOrder.BuyerPaid = (decimal)r[0].AmountPaid.Value;
+                eBayOrder.BuyerState = ShippingAddress.StateOrProvince;
 
-            // orderID is returned as a hyphenated string like:
-            // 223707436249-2329703153012
-            // first number is the itemID
-            var OrderID = r[0].OrderID;
+                // orderID is returned as a hyphenated string like:
+                // 223707436249-2329703153012
+                // first number is the itemID
+                var OrderID = r[0].OrderID;
 
-            var a = call.ApiResponse.Ack;
+                var a = call.ApiResponse.Ack;
+            }
+            catch (Exception exc)
+            {
+                msg = dsutil.DSUtil.ErrMsg("GetOrders", exc);
+                dsutil.DSUtil.WriteFile(_logfile, msg, "nousername");
+            }
             return eBayOrder;
         }
 
