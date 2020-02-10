@@ -11,8 +11,11 @@ using eBay.Service.Call;
 using eBay.Service.Core.Sdk;
 using eBay.Service.Core.Soap;
 using eBay.Service.Util;
+using eBayUtility;
 using System;
 using System.Collections.Generic;
+using System.Data.Entity;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Web.Services.Protocols;
 
@@ -511,6 +514,72 @@ namespace Utility
             return response;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="listing"></param>
+        /// <returns></returns>
+        public static List<string> ReviseItemSpecifics(Listing listing)
+        {
+            var response = new List<string>();
+            //create the context
+            ApiContext context = new ApiContext();
+
+            //set the User token
+            var token = db.GetToken(listing.StoreID);
+            context.ApiCredential.eBayToken = token;
+
+            //enable logging
+            context.ApiLogManager = new ApiLogManager();
+            context.ApiLogManager.ApiLoggerList.Add(new FileLogger("log.txt", true, true, true));
+            context.ApiLogManager.EnableLogging = true;
+
+            //set the version
+            context.Version = "817";
+            context.Site = eBay.Service.Core.Soap.SiteCodeType.US;
+
+            ReviseFixedPriceItemCall reviseFP = new ReviseFixedPriceItemCall(context);
+
+            ItemType item = new ItemType();
+            item.ItemID = listing.ListedItemID;
+
+            NameValueListTypeCollection ItemSpecs = new NameValueListTypeCollection();
+            var revisedItemSpecs = ModifyItemSpecific(listing.SellerListing.ItemSpecifics);
+            foreach (var i in revisedItemSpecs)
+            {
+                var n = AddItemSpecifics(i);
+                ItemSpecs.Add(n);
+            }
+            item.ItemSpecifics = ItemSpecs;
+
+            reviseFP.Item = item;
+
+            reviseFP.Execute();
+            var r = reviseFP.ApiResponse;
+            string msg = r.Ack.ToString();
+            if (r.Errors.Count > 0)
+            {
+                foreach (eBay.Service.Core.Soap.ErrorType e in r.Errors)
+                {
+                    // msg += " " + e.LongMessage;
+                    response.Add(e.LongMessage);
+                }
+            }
+            return response;
+        }
+        public async static Task RefreshItemSpecifics(UserSettingsView settings, int ID)
+        {
+            //var listing = db.Listings.Where(p => p.ID == ID).Include(t => t.SellerListing).SingleOrDefault();
+            var listing = db.Listings.Where(p => p.ID == ID).SingleOrDefault();
+            var sellerListing = await ebayAPIs.GetSingleItem(settings, listing.SellerListing.ItemID);
+
+            //sellerListing.Updated = DateTime.Now;
+            var sellerListingdb = db.SellerListings.Find(sellerListing.ItemID);
+            sellerListingdb.ItemSpecifics.ForEach(c => c.Updated = DateTime.Now);
+            listing.SellerListing = sellerListingdb;
+            await db.SellerListingItemSpecificSave(sellerListing);
+            ReviseItemSpecifics(listing);
+        }
         protected static decimal wmBreakEvenPrice(decimal supplierPrice, decimal minFreeShipping, decimal shipping)
         {
             if (supplierPrice < minFreeShipping)
