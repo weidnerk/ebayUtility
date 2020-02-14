@@ -686,7 +686,9 @@ namespace eBayUtility
                         {
                             listing.UPC = upc.ItemValue;
                         }
-                        var mpn = models.OrderHistoryItemSpecifics.AsNoTracking().Where(i => i.SellerItemID == ohObj.ItemID && i.ItemName == "MPN").SingleOrDefault();
+
+                        // MPN may have been collected twice - which one to use?  For now, pick first one.
+                        var mpn = models.OrderHistoryItemSpecifics.AsNoTracking().Where(i => i.SellerItemID == ohObj.ItemID && i.ItemName == "MPN").FirstOrDefault();
                         if (mpn != null)
                         {
                             listing.MPN = mpn.ItemValue;
