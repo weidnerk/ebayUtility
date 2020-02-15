@@ -569,7 +569,7 @@ namespace eBayUtility
                                 if (walitem.SupplierPrice.HasValue)
                                 {
                                     var p = Utility.eBayItem.wmNewPrice(walitem.SupplierPrice.Value, pctProfit);
-                                    oh.ProposePrice = p;
+                                    oh.ProposePrice = p.ProposePrice;
                                     models.OrderHistoryUpdate(oh, "ProposePrice", "MatchType", "MatchCount", "SourceID", "SupplierItemID");
                                 }
                                 else
@@ -621,7 +621,7 @@ namespace eBayUtility
                                         var oh = new OrderHistory();
                                         oh.ItemID = row.ItemID;
                                         var p = Utility.eBayItem.wmNewPrice(walitem.SupplierPrice.Value, 6);
-                                        oh.ProposePrice = p;
+                                        oh.ProposePrice = p.ProposePrice;
                                         oh.MatchCount = response.Count;
                                         oh.MatchType = 1;
                                         oh.SourceID = walitem.SourceID;

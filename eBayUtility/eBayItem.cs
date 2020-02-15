@@ -596,10 +596,11 @@ namespace Utility
         /// </summary>
         /// <param name="supplierPrice"></param>
         /// <returns></returns>
-        public static decimal wmNewPrice(decimal supplierPrice, double pctProfit)
+        public static PriceProfit wmNewPrice(decimal supplierPrice, double pctProfit)
         {
             decimal breakeven = wmBreakEvenPrice(supplierPrice, 35.0m, 6.0m);
-            return breakeven * (1m + ((decimal)pctProfit * 0.01m));
+            var proposePrice = breakeven * (1m + ((decimal)pctProfit * 0.01m));
+            return new PriceProfit { BreakEven = breakeven, ProposePrice = proposePrice };
         }
     }
 }
