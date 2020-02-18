@@ -31,7 +31,7 @@ namespace Utility
         /// </summary>
         /// <param name="itemID">ebay seller listing id</param>
         /// <returns></returns>
-        public static async Task<List<string>> ListingCreateAsync(UserSettingsView settings, string itemID, int storeID)
+        public static async Task<List<string>> ListingCreateAsync(UserSettingsView settings, string itemID, int storeID, string shippingProfile, string returnProfile, string paymentProfile)
         {
             var output = new List<string>();
             var token = db.GetToken(storeID);
@@ -55,7 +55,10 @@ namespace Utility
                         pictureURLs,
                         ref output,
                         listing.Qty,
-                        listing);
+                        listing,
+                        shippingProfile,
+                        returnProfile,
+                        paymentProfile);
                     // at this point, 'output' will be populated with errors if any occurred
 
                     if (!string.IsNullOrEmpty(verifyItemID))
@@ -126,7 +129,10 @@ namespace Utility
             List<string> pictureURLs,
             ref List<string> errors,
             int qtyToList,
-            Listing listing)
+            Listing listing,
+            string shippingProfile,
+            string returnProfile,
+            string paymentProfile)
         {
             //errors = null;
             string listedItemID = null;
@@ -231,13 +237,13 @@ namespace Utility
                 var sp = new SellerProfilesType();
 
                 var spp = new SellerPaymentProfileType();
-                spp.PaymentProfileName = "default";
+                spp.PaymentProfileName = paymentProfile;
 
                 var srp = new SellerReturnProfileType();
-                srp.ReturnProfileName = "mw";
+                srp.ReturnProfileName = returnProfile;
 
                 var ssp = new SellerShippingProfileType();
-                ssp.ShippingProfileName = "mw";
+                ssp.ShippingProfileName = shippingProfile;
 
                 sp.SellerPaymentProfile = spp;
                 sp.SellerReturnProfile = srp;
