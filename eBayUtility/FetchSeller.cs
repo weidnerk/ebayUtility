@@ -393,7 +393,7 @@ namespace eBayUtility
         /// <param name="pctProfit"></param>
         /// <param name="storeID">Pass storeID to run all sellers in store.</param>
         /// <returns></returns>
-        public static async Task<string> CalculateMatch(UserSettingsView settings, int rptNumber, int minSold, int daysBack, int? minPrice, int? maxPrice, bool? activeStatusOnly, bool? isSellerVariation, string itemID, double pctProfit, int storeID)
+        public static async Task<string> CalculateMatch(UserSettingsView settings, int rptNumber, int minSold, int daysBack, int? minPrice, int? maxPrice, bool? activeStatusOnly, bool? isSellerVariation, string itemID, double pctProfit, int storeID, decimal wmShipping)
         {
             string ret = null;
             try
@@ -410,7 +410,7 @@ namespace eBayUtility
                     sh.CalculateMatch = DateTime.Now;
                     models.SearchHistoryUpdate(sh, "CalculateMatch");
                     models.ClearOrderHistory(rptNumber);
-                    var mv = await FillMatch(settings, rptNumber, minSold, daysBack, minPrice, maxPrice, activeStatusOnly, isSellerVariation, itemID, pctProfit);
+                    var mv = await FillMatch(settings, rptNumber, minSold, daysBack, minPrice, maxPrice, activeStatusOnly, isSellerVariation, itemID, pctProfit, wmShipping);
                 }
                 else if (storeID > 0)
                 {
@@ -452,7 +452,7 @@ namespace eBayUtility
                                     sh.Updated = DateTime.Now;
                                     sh.ID = tgtSearchHistory.ID;
                                     models.SearchHistoryUpdate(sh, "CalculateMatch", "Updated");
-                                    var mv = await FetchSeller.FillMatch(settings, tgtSearchHistory.ID, minSold, daysBack, minPrice, maxPrice, activeStatusOnly, isSellerVariation, itemID, 5);
+                                    var mv = await FetchSeller.FillMatch(settings, tgtSearchHistory.ID, minSold, daysBack, minPrice, maxPrice, activeStatusOnly, isSellerVariation, itemID, pctProfit, wmShipping);
                                     dsutil.DSUtil.WriteFile(_logfile, seller.Seller + ": Ran FillMatch", "");
                                 }
                                 Thread.Sleep(2000);
@@ -487,7 +487,7 @@ namespace eBayUtility
         /// <param name="itemID"></param>
         /// <param name="pctProfit"></param>
         /// <returns></returns>
-        private static async Task<ModelViewTimesSold> FillMatch(UserSettingsView settings, int rptNumber, int minSold, int daysBack, int? minPrice, int? maxPrice, bool? activeStatusOnly, bool? isSellerVariation, string itemID, double pctProfit)
+        private static async Task<ModelViewTimesSold> FillMatch(UserSettingsView settings, int rptNumber, int minSold, int daysBack, int? minPrice, int? maxPrice, bool? activeStatusOnly, bool? isSellerVariation, string itemID, double pctProfit, decimal wmShipping)
         {
             string loopItemID = null;
             try
@@ -522,6 +522,7 @@ namespace eBayUtility
                         x = x.Where(p => !p.IsSellerVariation.Value);
                     }
                 }
+                
                 var mv = new ModelViewTimesSold();
                 mv.TimesSoldRpt = x.ToList();
                 foreach (var row in mv.TimesSoldRpt)
@@ -568,7 +569,7 @@ namespace eBayUtility
                                 oh.SupplierItemID = walitem.ID;
                                 if (walitem.SupplierPrice.HasValue)
                                 {
-                                    var p = Utility.eBayItem.wmNewPrice(walitem.SupplierPrice.Value, pctProfit);
+                                    var p = wallib.wmUtility.wmNewPrice(walitem.SupplierPrice.Value, pctProfit, wmShipping);
                                     oh.ProposePrice = p.ProposePrice;
                                     models.OrderHistoryUpdate(oh, "ProposePrice", "MatchType", "MatchCount", "SourceID", "SupplierItemID");
                                 }
@@ -620,7 +621,7 @@ namespace eBayUtility
                                     {
                                         var oh = new OrderHistory();
                                         oh.ItemID = row.ItemID;
-                                        var p = Utility.eBayItem.wmNewPrice(walitem.SupplierPrice.Value, 6);
+                                        var p = wallib.wmUtility.wmNewPrice(walitem.SupplierPrice.Value, pctProfit, wmShipping);
                                         oh.ProposePrice = p.ProposePrice;
                                         oh.MatchCount = response.Count;
                                         oh.MatchType = 1;
