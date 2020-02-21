@@ -393,7 +393,7 @@ namespace eBayUtility
         /// <param name="pctProfit"></param>
         /// <param name="storeID">Pass storeID to run all sellers in store.</param>
         /// <returns></returns>
-        public static async Task<string> CalculateMatch(UserSettingsView settings, int rptNumber, int minSold, int daysBack, int? minPrice, int? maxPrice, bool? activeStatusOnly, bool? isSellerVariation, string itemID, double pctProfit, int storeID, decimal wmShipping, decimal wmFreeShippingMin, double eBayPct)
+        public static async Task<string> CalculateMatch(UserSettingsView settings, int rptNumber, int minSold, int daysBack, int? minPrice, int? maxPrice, bool? activeStatusOnly, bool? isSellerVariation, string itemID, double pctProfit, int storeID, decimal wmShipping, decimal wmFreeShippingMin, double eBayPct, int imgLimit)
         {
             string ret = null;
             try
@@ -410,7 +410,7 @@ namespace eBayUtility
                     sh.CalculateMatch = DateTime.Now;
                     models.SearchHistoryUpdate(sh, "CalculateMatch");
                     models.ClearOrderHistory(rptNumber);
-                    var mv = await FillMatch(settings, rptNumber, minSold, daysBack, minPrice, maxPrice, activeStatusOnly, isSellerVariation, itemID, pctProfit, wmShipping, wmFreeShippingMin, eBayPct);
+                    var mv = await FillMatch(settings, rptNumber, minSold, daysBack, minPrice, maxPrice, activeStatusOnly, isSellerVariation, itemID, pctProfit, wmShipping, wmFreeShippingMin, eBayPct, imgLimit);
                 }
                 else if (storeID > 0)
                 {
@@ -452,7 +452,7 @@ namespace eBayUtility
                                     sh.Updated = DateTime.Now;
                                     sh.ID = tgtSearchHistory.ID;
                                     models.SearchHistoryUpdate(sh, "CalculateMatch", "Updated");
-                                    var mv = await FetchSeller.FillMatch(settings, tgtSearchHistory.ID, minSold, daysBack, minPrice, maxPrice, activeStatusOnly, isSellerVariation, itemID, pctProfit, wmShipping, wmFreeShippingMin, eBayPct);
+                                    var mv = await FetchSeller.FillMatch(settings, tgtSearchHistory.ID, minSold, daysBack, minPrice, maxPrice, activeStatusOnly, isSellerVariation, itemID, pctProfit, wmShipping, wmFreeShippingMin, eBayPct, imgLimit);
                                     dsutil.DSUtil.WriteFile(_logfile, seller.Seller + ": Ran FillMatch", "");
                                 }
                                 Thread.Sleep(2000);
@@ -487,7 +487,7 @@ namespace eBayUtility
         /// <param name="itemID"></param>
         /// <param name="pctProfit"></param>
         /// <returns></returns>
-        private static async Task<ModelViewTimesSold> FillMatch(UserSettingsView settings, int rptNumber, int minSold, int daysBack, int? minPrice, int? maxPrice, bool? activeStatusOnly, bool? isSellerVariation, string itemID, double pctProfit, decimal wmShipping, decimal wmFreeShippingMin, double eBayPct)
+        private static async Task<ModelViewTimesSold> FillMatch(UserSettingsView settings, int rptNumber, int minSold, int daysBack, int? minPrice, int? maxPrice, bool? activeStatusOnly, bool? isSellerVariation, string itemID, double pctProfit, decimal wmShipping, decimal wmFreeShippingMin, double eBayPct, int imgLimit)
         {
             string loopItemID = null;
             try
@@ -543,7 +543,7 @@ namespace eBayUtility
                             //{
                             //    int stop = 99;
                             //}
-                            walitem = await wallib.wmUtility.GetDetail(response.URL);
+                            walitem = await wallib.wmUtility.GetDetail(response.URL, imgLimit);
 
                             // If can't get supplier pics, not much point in posting.
                             // Can happen when not matching correctly on something like an eBook or giftcard where walmart
@@ -587,7 +587,7 @@ namespace eBayUtility
                             response = wallib.wmUtility.SearchProdID(row.SellerMPN);
                             if (response.Count == 1)
                             {
-                                walitem = await wallib.wmUtility.GetDetail(response.URL);
+                                walitem = await wallib.wmUtility.GetDetail(response.URL, imgLimit);
 
                                 // If can't get supplier pics, not much point in posting.
                                 // Can happen when not matching correctly on something like an eBook or giftcard where walmart
