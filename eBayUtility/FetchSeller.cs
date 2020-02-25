@@ -559,7 +559,8 @@ namespace eBayUtility
                                     "SupplierBrand",
                                     "SupplierPrice",
                                     "IsVariation",
-                                    "SupplierPicURL");
+                                    "SupplierPicURL",
+                                    "IsFreightShipping");
 
                                 var oh = new OrderHistory();
                                 oh.ItemID = row.ItemID;
