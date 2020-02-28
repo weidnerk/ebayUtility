@@ -708,11 +708,11 @@ namespace eBayUtility
                     #region Generate list of Variation objects
                     var variations = qryRecords.Elements("Variations").Elements("Variation")
                             .ToArray();
-                    XmlSerializer serializer = new XmlSerializer(typeof(SellerVariation));
-                    var variationList = new List<SellerVariation>();
+                    XmlSerializer serializer = new XmlSerializer(typeof(Variation));
+                    var variationList = new List<Variation>();
                     foreach (var v in variations)
                     {
-                        var variation = (SellerVariation)serializer.Deserialize(v.CreateReader());
+                        var variation = (Variation)serializer.Deserialize(v.CreateReader());
                         variationList.Add(variation);
                     }
 
