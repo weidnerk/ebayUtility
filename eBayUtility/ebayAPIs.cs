@@ -624,6 +624,7 @@ namespace eBayUtility
             string errMsg = null;
             StringReader sr;
             string output;
+            string variationName = null;
 
             try
             {
@@ -713,6 +714,7 @@ namespace eBayUtility
                     foreach (var v in variations)
                     {
                         var variation = (Variation)serializer.Deserialize(v.CreateReader());
+                        variationName = variation.VariationSpecifics.NameValueList.Name;
                         variationList.Add(variation);
                     }
 
@@ -739,6 +741,7 @@ namespace eBayUtility
                     var a = r.Shipping;
 
                     var sellerListing = new SellerListing();
+                    sellerListing.VariationName = variationName;
                     sellerListing.ItemSpecifics = itemSpecifics.ToList();
                     sellerListing.Variations = variationList;
                     /*
