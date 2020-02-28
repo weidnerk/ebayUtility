@@ -1041,12 +1041,12 @@ namespace Utility
             NVListVS1.Value = VSvaluecollection1;
             return NVListVS1;
         }
-        public static string GetVariationSpec(Variation variation)
+        public static string GetVariationSpec(SellerVariation variation)
         {
             var specName = variation.VariationSpecifics.NameValueList.Name;
             return specName;
         }
-        public static List<string> GetVariationNames(List<Variation> variations)
+        public static List<string> GetVariationNames(List<SellerVariation> variations)
         {
             var varNames = new List<string>();
             foreach (var variation in variations)
