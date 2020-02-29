@@ -42,14 +42,14 @@ namespace eBayUtility
         /// https://developer.ebay.com/DevZone/XML/Docs/Reference/ebay/GetSellerTransactions.html
         /// </summary>
         /// <param name="orderID">19-04026-11927</param>
-        public static GetOrdersResponse GetOrders(string orderID, int storeID, out string msg)
+        public static GetOrdersResponse GetOrders(UserSettingsView settings, string orderID, int storeID, out string msg)
         {
             msg = null;
             var eBayOrder = new GetOrdersResponse();
             ApiContext context = new ApiContext();
             try
             {
-                string token = models.GetToken(storeID);
+                string token = models.GetToken(settings, storeID);
                 context.ApiCredential.eBayToken = token;
 
                 // set the server url
@@ -322,7 +322,7 @@ namespace eBayUtility
             oContext.ApiCredential.ApiAccount.Developer = settings.DevID;
             oContext.ApiCredential.ApiAccount.Application = settings.AppID;
             oContext.ApiCredential.ApiAccount.Certificate = settings.CertID;
-            oContext.ApiCredential.eBayToken = db.GetToken(storeID);
+            oContext.ApiCredential.eBayToken = db.GetToken(settings, storeID);
 
             oContext.SoapApiServerUrl = "https://api.ebay.com/wsapi";
 

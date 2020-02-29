@@ -17,13 +17,13 @@ namespace Utility
         /// <summary>
         /// https://ebaydts.com/eBayKBDetails?KBid=1742
         /// </summary>
-        public static string AddFPItemWithVariations_closet(int storeID)
+        public static string AddFPItemWithVariations_closet(UserSettingsView settings, int storeID)
         {
             //create the context
             ApiContext context = new ApiContext();
 
             //set the User token
-            string token = db.GetToken(storeID);
+            string token = db.GetToken(settings, storeID);
             context.ApiCredential.eBayToken = token;
 
             //set the server url
@@ -405,13 +405,13 @@ namespace Utility
         /// <param name="storeID"></param>
         /// <param name="sellerListing"></param>
         /// <returns></returns>
-        public static string AddFPItemWithVariations_microwave(int storeID, SellerListing sellerListing)
+        public static string AddFPItemWithVariations_microwave(UserSettingsView settings, int storeID, SellerListing sellerListing)
         {
             //create the context
             ApiContext context = new ApiContext();
 
             //set the User token
-            string token = db.GetToken(storeID);
+            string token = db.GetToken(settings, storeID);
             context.ApiCredential.eBayToken = token;
 
             //set the server url
@@ -649,13 +649,13 @@ namespace Utility
             return result;
         }
 
-        public static string AddFPItemWithVariations_cutlery(int storeID, SellerListing sellerListing)
+        public static string AddFPItemWithVariations_cutlery(UserSettingsView settings, int storeID, SellerListing sellerListing)
         {
             //create the context
             ApiContext context = new ApiContext();
 
             //set the User token
-            string token = db.GetToken(storeID);
+            string token = db.GetToken(settings, storeID);
             context.ApiCredential.eBayToken = token;
 
             //set the server url
@@ -863,13 +863,13 @@ namespace Utility
         /// <param name="storeID"></param>
         /// <param name="sellerListing"></param>
         /// <returns></returns>
-        public static string AddFPItemWithVariations_potspans(int storeID, SellerListing sellerListing)
+        public static string AddFPItemWithVariations_potspans(UserSettingsView settings, int storeID, SellerListing sellerListing)
         {
             //create the context
             ApiContext context = new ApiContext();
 
             //set the User token
-            string token = db.GetToken(storeID);
+            string token = db.GetToken(settings, storeID);
             context.ApiCredential.eBayToken = token;
 
             //set the server url
@@ -1225,13 +1225,13 @@ namespace Utility
             Console.WriteLine(reviseFP.ApiResponse.Ack + " Revised SKU " + reviseFP.SKU);
         }
 
-        public static void ReviseFixedPriceItem(string listingItemID, string varSpecName, string varName)
+        public static void ReviseFixedPriceItem(UserSettingsView settings, string listingItemID, string varSpecName, string varName)
         {
             //create the context
             ApiContext context = new ApiContext();
 
             //set the User token
-            var token = db.GetToken(1);
+            var token = db.GetToken(settings, 1);
             context.ApiCredential.eBayToken = token;
 
             //set the server url

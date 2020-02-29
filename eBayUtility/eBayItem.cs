@@ -35,7 +35,7 @@ namespace Utility
         {
             var output = new List<string>();
             var listing = db.ListingGet(listingID);     // item has to be stored before it can be listed
-            var token = db.GetToken(listing.StoreID);
+            var token = db.GetToken(settings, listing.StoreID);
 
             if (listing != null)
             {
@@ -385,13 +385,13 @@ namespace Utility
         }
 
 
-        public static string EndFixedPriceItem(Listing listing)
+        public static string EndFixedPriceItem(UserSettingsView settings, Listing listing)
         {
             //create the context
             ApiContext context = new ApiContext();
 
             //set the User token
-            string token = db.GetToken(listing.StoreID);
+            string token = db.GetToken(settings, listing.StoreID);
             context.ApiCredential.eBayToken = token;
 
             //set the server url
@@ -525,14 +525,14 @@ namespace Utility
         /// </summary>
         /// <param name="listing"></param>
         /// <returns></returns>
-        public static List<string> ReviseItemSpecifics(Listing listing)
+        public static List<string> ReviseItemSpecifics(UserSettingsView settings, Listing listing)
         {
             var response = new List<string>();
             //create the context
             ApiContext context = new ApiContext();
 
             //set the User token
-            var token = db.GetToken(listing.StoreID);
+            var token = db.GetToken(settings, listing.StoreID);
             context.ApiCredential.eBayToken = token;
 
             //enable logging
@@ -584,7 +584,7 @@ namespace Utility
             sellerListingdb.ItemSpecifics.ForEach(c => c.Updated = DateTime.Now);
             listing.SellerListing = sellerListingdb;
             await db.SellerListingItemSpecificSave(sellerListing);
-            ReviseItemSpecifics(listing);
+            ReviseItemSpecifics(settings, listing);
         }
 
     }
