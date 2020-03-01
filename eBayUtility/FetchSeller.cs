@@ -740,21 +740,5 @@ namespace eBayUtility
             }
             return ret;
         }
-        /// <summary>
-        /// Server side supplier item validation - is this where function belongs?
-        /// </summary>
-        /// <param name="item"></param>
-        /// <param name="allowedDeliveryDays"></param>
-        public static void CanList(SupplierItem item, int allowedDeliveryDays)
-        {
-            if (item.Arrives.HasValue)
-            {
-                int days = dsutil.DSUtil.GetBusinessDays(DateTime.Now, item.Arrives.Value);
-                if (days > allowedDeliveryDays)
-                {
-                    item.CanList = 1;
-                }
-            }
-        }
     }
 }
