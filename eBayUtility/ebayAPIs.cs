@@ -49,7 +49,7 @@ namespace eBayUtility
             ApiContext context = new ApiContext();
             try
             {
-                string token = models.GetToken(settings, storeID);
+                string token = models.GetToken(settings);
                 context.ApiCredential.eBayToken = token;
 
                 // set the server url
@@ -311,7 +311,7 @@ namespace eBayUtility
         //
         // GetSellerTransactions
         // https://developer.ebay.com/DevZone/XML/Docs/Reference/ebay/GetSellerTransactions.html
-        public static TransactionTypeCollection GetItemTransactions(UserSettingsView settings, string itemID, DateTime ModTimeFrom, DateTime ModTimeTo, int storeID)
+        public static TransactionTypeCollection GetItemTransactions(UserSettingsView settings, string itemID, DateTime ModTimeFrom, DateTime ModTimeTo)
         {
             dsmodels.DataModelsDB db = new dsmodels.DataModelsDB();
 
@@ -322,7 +322,7 @@ namespace eBayUtility
             oContext.ApiCredential.ApiAccount.Developer = settings.DevID;
             oContext.ApiCredential.ApiAccount.Application = settings.AppID;
             oContext.ApiCredential.ApiAccount.Certificate = settings.CertID;
-            oContext.ApiCredential.eBayToken = db.GetToken(settings, storeID);
+            oContext.ApiCredential.eBayToken = db.GetToken(settings);
 
             oContext.SoapApiServerUrl = "https://api.ebay.com/wsapi";
 
@@ -1081,7 +1081,7 @@ namespace eBayUtility
 
         public static void ProcessTransactions(UserSettingsView settings, string itemID, DateTime ModTimeFrom, DateTime ModTimeTo)
         {
-            var transactions = eBayUtility.ebayAPIs.GetItemTransactions(settings, itemID, ModTimeFrom, ModTimeTo, 1);
+            var transactions = eBayUtility.ebayAPIs.GetItemTransactions(settings, itemID, ModTimeFrom, ModTimeTo);
             foreach (TransactionType item in transactions)
             {
                 // did it sell?

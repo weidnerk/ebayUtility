@@ -23,7 +23,7 @@ namespace Utility
             ApiContext context = new ApiContext();
 
             //set the User token
-            string token = db.GetToken(settings, storeID);
+            string token = db.GetToken(settings);
             context.ApiCredential.eBayToken = token;
 
             //set the server url
@@ -411,7 +411,7 @@ namespace Utility
             ApiContext context = new ApiContext();
 
             //set the User token
-            string token = db.GetToken(settings, storeID);
+            string token = db.GetToken(settings);
             context.ApiCredential.eBayToken = token;
 
             //set the server url
@@ -655,7 +655,7 @@ namespace Utility
             ApiContext context = new ApiContext();
 
             //set the User token
-            string token = db.GetToken(settings, storeID);
+            string token = db.GetToken(settings);
             context.ApiCredential.eBayToken = token;
 
             //set the server url
@@ -869,7 +869,7 @@ namespace Utility
             ApiContext context = new ApiContext();
 
             //set the User token
-            string token = db.GetToken(settings, storeID);
+            string token = db.GetToken(settings);
             context.ApiCredential.eBayToken = token;
 
             //set the server url
@@ -1231,7 +1231,7 @@ namespace Utility
             ApiContext context = new ApiContext();
 
             //set the User token
-            var token = db.GetToken(settings, 1);
+            var token = db.GetToken(settings);
             context.ApiCredential.eBayToken = token;
 
             //set the server url

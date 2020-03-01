@@ -35,7 +35,7 @@ namespace Utility
         {
             var output = new List<string>();
             var listing = db.ListingGet(listingID);     // item has to be stored before it can be listed
-            var token = db.GetToken(settings, listing.StoreID);
+            var token = db.GetToken(settings);
 
             if (listing != null)
             {
@@ -391,7 +391,7 @@ namespace Utility
             ApiContext context = new ApiContext();
 
             //set the User token
-            string token = db.GetToken(settings, listing.StoreID);
+            string token = db.GetToken(settings);
             context.ApiCredential.eBayToken = token;
 
             //set the server url
@@ -532,7 +532,7 @@ namespace Utility
             ApiContext context = new ApiContext();
 
             //set the User token
-            var token = db.GetToken(settings, listing.StoreID);
+            var token = db.GetToken(settings);
             context.ApiCredential.eBayToken = token;
 
             //enable logging
