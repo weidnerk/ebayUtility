@@ -17,11 +17,7 @@ namespace Utility
     {
         static dsmodels.DataModelsDB db = new dsmodels.DataModelsDB();
 
-        public static StoreProfile GetStoreProfile(int storeID)
-        {
-            var r = db.StoreProfiles.Where(p => p.ID == storeID).First();
-            return r;
-        }
+
 
         public static eBayAPIInterfaceService eBayServiceCall(UserSettingsView settings, string CallName)
         {
