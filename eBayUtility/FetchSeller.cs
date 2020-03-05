@@ -532,10 +532,11 @@ namespace eBayUtility
                 foreach (var row in mv.TimesSoldRpt)
                 {
                     loopItemID = row.ItemID;
-                    if (row.ItemID == "323976086179")
+                    if (row.ItemID == "312928190620")
                     {
                         int stop = 99;
                     }
+                    bool tryAgain = false;
                     WalmartSearchProdIDResponse response;
                     var walitem = new SupplierItem();
                     if (row.SellerUPC != null)
@@ -584,8 +585,16 @@ namespace eBayUtility
                                 }
                             }
                         }
+                        else
+                        {
+                            tryAgain = true;   
+                        }
                     }
                     else
+                    {
+                        tryAgain = true;
+                    }
+                    if (tryAgain)
                     {
                         if (row.SellerMPN != null)
                         {
