@@ -695,7 +695,11 @@ namespace eBayUtility
                         listing.Profit = 0;
                         listing.ProfitMargin = 0;
                         listing.StoreID = storeID;
-                        listing.Description = supplierItem.Description;
+                        var descr = supplierItem.Description;
+                        //if (supplierItem.SourceID == 1) {   
+                        //    descr = wallib.wmUtility.RemoveDisclaimer(descr);
+                        //}
+                        listing.Description = descr;
                         var upc = models.OrderHistoryItemSpecifics.AsNoTracking().Where(i => i.SellerItemID == ohObj.ItemID && i.ItemName == "UPC").SingleOrDefault();
                         if (upc != null)
                         {
