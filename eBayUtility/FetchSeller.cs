@@ -404,15 +404,16 @@ namespace eBayUtility
                     ret = "Invalid call to FillMatch.";
                     dsutil.DSUtil.WriteFile(_logfile, ret, "");
                 }
-                else if (rptNumber > 0)
+                else if (rptNumber > 0) // Called from Display Scans - run a single reportID
                 {
                     sh.ID = rptNumber;
                     sh.CalculateMatch = DateTime.Now;
                     models.SearchHistoryUpdate(sh, "CalculateMatch");
                     models.ClearOrderHistory(rptNumber);
-                    var mv = await FillMatch(settings, rptNumber, minSold, daysBack, minPrice, maxPrice, activeStatusOnly, isSellerVariation, itemID, pctProfit, wmShipping, wmFreeShippingMin, eBayPct, imgLimit);
+                    //await FillMatch(settings, rptNumber, minSold, daysBack, minPrice, maxPrice, activeStatusOnly, isSellerVariation, itemID, pctProfit, wmShipping, wmFreeShippingMin, eBayPct, imgLimit);
+                    await SearchEngineMatch(settings, rptNumber, minSold, daysBack, minPrice, maxPrice, activeStatusOnly, isSellerVariation, itemID, pctProfit, wmShipping, wmFreeShippingMin, eBayPct, imgLimit);
                 }
-                else if (storeID > 0)
+                else if (storeID > 0)   // Used by CalculateMatch console app to run entire store
                 {
                     var sellers = models.GetSellers();
                     bool runScan = false;
@@ -452,7 +453,9 @@ namespace eBayUtility
                                     sh.Updated = DateTime.Now;
                                     sh.ID = tgtSearchHistory.ID;
                                     models.SearchHistoryUpdate(sh, "CalculateMatch", "Updated");
-                                    var mv = await FetchSeller.FillMatch(settings, tgtSearchHistory.ID, minSold, daysBack, minPrice, maxPrice, activeStatusOnly, isSellerVariation, itemID, pctProfit, wmShipping, wmFreeShippingMin, eBayPct, imgLimit);
+                                    //await FetchSeller.FillMatch(settings, tgtSearchHistory.ID, minSold, daysBack, minPrice, maxPrice, activeStatusOnly, isSellerVariation, itemID, pctProfit, wmShipping, wmFreeShippingMin, eBayPct, imgLimit);
+                                    await SearchEngineMatch(settings, rptNumber, minSold, daysBack, minPrice, maxPrice, activeStatusOnly, isSellerVariation, itemID, pctProfit, wmShipping, wmFreeShippingMin, eBayPct, imgLimit);
+
                                     dsutil.DSUtil.WriteFile(_logfile, seller.Seller + ": Ran FillMatch", "");
                                 }
                                 Thread.Sleep(2000);
@@ -487,7 +490,7 @@ namespace eBayUtility
         /// <param name="itemID"></param>
         /// <param name="pctProfit"></param>
         /// <returns></returns>
-        private static async Task<ModelViewTimesSold> FillMatch(UserSettingsView settings, int rptNumber, int minSold, int daysBack, int? minPrice, int? maxPrice, bool? activeStatusOnly, bool? isSellerVariation, string itemID, double pctProfit, decimal wmShipping, decimal wmFreeShippingMin, double eBayPct, int imgLimit)
+        private static async Task FillMatch(UserSettingsView settings, int rptNumber, int minSold, int daysBack, int? minPrice, int? maxPrice, bool? activeStatusOnly, bool? isSellerVariation, string itemID, double pctProfit, decimal wmShipping, decimal wmFreeShippingMin, double eBayPct, int imgLimit)
         {
             string loopItemID = null;
             try
@@ -648,7 +651,6 @@ namespace eBayUtility
                         }
                     }
                 }
-                return mv;
             }
             catch (Exception exc)
             {
@@ -656,8 +658,156 @@ namespace eBayUtility
                 string header = "FillMatch RptNumber: " + rptNumber.ToString() + " " + msgItemID;
                 string msg = dsutil.DSUtil.ErrMsg(header, exc);
                 dsutil.DSUtil.WriteFile(_logfile, msg, "");
-                return null;
             }
+        }
+
+        private static async Task SearchEngineMatch(UserSettingsView settings, int rptNumber, int minSold, int daysBack, int? minPrice, int? maxPrice, bool? activeStatusOnly, bool? isSellerVariation, string itemID, double pctProfit, decimal wmShipping, decimal wmFreeShippingMin, double eBayPct, int imgLimit)
+        {
+            string loopItemID = null;
+            try
+            {
+                DateTime ModTimeTo = DateTime.Now.ToUniversalTime();
+                DateTime ModTimeFrom = ModTimeTo.AddDays(-daysBack);
+
+                itemID = (itemID == "null") ? null : itemID;
+                var x = models.GetSalesData(rptNumber, ModTimeFrom, settings.StoreID, itemID);
+
+                // filter by min and max price
+                if (minPrice.HasValue)
+                {
+                    x = x.Where(p => p.Price >= minPrice);
+                }
+                if (maxPrice.HasValue)
+                {
+                    x = x.Where(p => p.Price <= maxPrice);
+                }
+                x = x.Where(p => p.SoldQty >= minSold);
+                if (activeStatusOnly.HasValue)
+                {
+                    if (activeStatusOnly.Value)
+                    {
+                        x = x.Where(p => p.ListingStatus == "Active");
+                    }
+                }
+                if (isSellerVariation.HasValue)
+                {
+                    if (isSellerVariation.Value)
+                    {
+                        x = x.Where(p => !p.IsSellerVariation.Value);
+                    }
+                }
+
+                var mv = new ModelViewTimesSold();
+                mv.TimesSoldRpt = x.ToList();
+                foreach (var row in mv.TimesSoldRpt)
+                {
+                    loopItemID = row.ItemID;
+                    if (loopItemID == "352779481402")
+                    {
+                        int stop = 99;
+                    }
+                  
+                    var walitem = new SupplierItem();
+                    string descr = row.Description;
+                    string supplierURL = null;
+                    for (int i = 0; i < 5; i++)
+                    {
+                        string section = GetDescrSection(descr, i);
+                        if (!string.IsNullOrEmpty(section))
+                        {
+                            //supplierURL = wallib.wmUtility.DoSearch(section, 4);
+                            section = "walmart " + section;
+                            supplierURL = dsutil.DSUtil.BingSearch(section);
+                            if (!string.IsNullOrEmpty(supplierURL))
+                            {
+                                supplierURL = wallib.wmUtility.CleanURL(supplierURL);
+                                break;
+                            }
+                        }
+                    }
+                    
+                    if (!string.IsNullOrEmpty(supplierURL))
+                    {
+                        walitem = await wallib.wmUtility.GetDetail(supplierURL, imgLimit);
+
+                        // If can't get supplier pics, not much point in posting.
+                        // Can happen when not matching correctly on something like an eBook or giftcard where walmart
+                        // is not providing "standard" images. (error is logged in GetDetail()).
+                        if (!string.IsNullOrEmpty(walitem.SupplierPicURL))
+                        {
+                            walitem.UPC = row.SellerUPC;
+                            walitem.Updated = DateTime.Now;
+                            models.SupplierItemUpdateScrape(row.SellerUPC, "", walitem,
+                                "Updated",
+                                "ItemURL",
+                                "SoldAndShippedBySupplier",
+                                "SupplierBrand",
+                                "SupplierPrice",
+                                "IsVariation",
+                                "SupplierPicURL",
+                                "IsFreightShipping");
+
+                            var oh = new OrderHistory();
+                            oh.ItemID = row.ItemID;
+                            oh.MatchCount = 1;
+                            oh.MatchType = 3;
+                            oh.SourceID = walitem.SourceID;
+                            oh.SupplierItemID = walitem.ID;
+                            if (walitem.SupplierPrice.HasValue)
+                            {
+                                var p = wallib.wmUtility.wmNewPrice(walitem.SupplierPrice.Value, pctProfit, wmShipping, wmFreeShippingMin, eBayPct);
+                                oh.ProposePrice = p.ProposePrice;
+                                models.OrderHistoryUpdate(oh, "ProposePrice", "MatchType", "MatchCount", "SourceID", "SupplierItemID");
+                            }
+                            else
+                            {
+                                models.OrderHistoryUpdate(oh, "MatchType", "MatchCount", "SourceID", "SupplierItemID");
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception exc)
+            {
+                string msgItemID = (!string.IsNullOrEmpty(loopItemID)) ? "ItemID: " + loopItemID : "";
+                string header = "GoogleMatch RptNumber: " + rptNumber.ToString() + " " + msgItemID;
+                string msg = dsutil.DSUtil.ErrMsg(header, exc);
+                dsutil.DSUtil.WriteFile(_logfile, msg, "");
+            }
+        }
+
+        /// <summary>
+        /// Search part of description
+        /// </summary>
+        /// <param name="descr"></param>
+        /// <param name="iteration"></param>
+        /// <returns></returns>
+        private static string GetDescrSection(string descr, int iteration)
+        {
+            string section = null;
+            int skip = 150;
+            int sectionLen = 250;
+            try { 
+                int pos = skip * iteration;
+                if (pos < descr.Length)
+                {
+                    if (pos + sectionLen < descr.Length)
+                    {
+                        section = descr.Substring(pos, sectionLen);
+                    }
+                    else
+                    {
+                        section = descr.Substring(pos, descr.Length - pos);
+                    }
+                }
+            }
+             catch (Exception exc)
+            {
+                string header = "GetDescrSection";
+                string msg = dsutil.DSUtil.ErrMsg(header, exc);
+                dsutil.DSUtil.WriteFile(_logfile, msg, "");
+            }
+            return section;
         }
         /// <summary>
         /// This is where a SellerListing record is created.

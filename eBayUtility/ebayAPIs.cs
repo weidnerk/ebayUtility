@@ -643,7 +643,7 @@ namespace eBayUtility
 
                 // docs for IncludeSelector
                 // https://developer.ebay.com/devzone/shopping/docs/callref/getsingleitem.html
-                svc.Url = string.Format("http://open.api.ebay.com/shopping?callname=GetSingleItem&IncludeSelector=Details,Description,ItemSpecifics,Variations&appid={0}&version=515&ItemID={1}", settings.AppID, itemID);
+                svc.Url = string.Format("http://open.api.ebay.com/shopping?callname=GetSingleItem&IncludeSelector=Details,TextDescription,ItemSpecifics,Variations&appid={0}&version=515&ItemID={1}", settings.AppID, itemID);
                 // create a new request type
                 GetSingleItemRequestType request = new GetSingleItemRequestType();
                 // put in your own item number
