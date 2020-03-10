@@ -379,7 +379,7 @@ namespace eBayUtility
             }
         }
         /// <summary>
-        /// 
+        /// Are we calculating for just one seller or all active?
         /// </summary>
         /// <param name="settings"></param>
         /// <param name="rptNumber">Pass either rptNumber or storeID.</param>
@@ -393,7 +393,7 @@ namespace eBayUtility
         /// <param name="pctProfit"></param>
         /// <param name="storeID">Pass storeID to run all sellers in store.</param>
         /// <returns></returns>
-        public static async Task<string> CalculateMatch(UserSettingsView settings, int rptNumber, int minSold, int daysBack, int? minPrice, int? maxPrice, bool? activeStatusOnly, bool? isSellerVariation, string itemID, double pctProfit, int storeID, decimal wmShipping, decimal wmFreeShippingMin, double eBayPct, int imgLimit)
+        public static async Task<string> CalculateMatch(UserSettingsView settings, int rptNumber, int minSold, int daysBack, int? minPrice, int? maxPrice, bool? activeStatusOnly, bool? isSellerVariation, string itemID, double pctProfit, int storeID, decimal wmShipping, decimal wmFreeShippingMin, double eBayPct, int imgLimit, string supplierTag)
         {
             string ret = null;
             try
@@ -410,8 +410,9 @@ namespace eBayUtility
                     sh.CalculateMatch = DateTime.Now;
                     models.SearchHistoryUpdate(sh, "CalculateMatch");
                     models.ClearOrderHistory(rptNumber);
-                    //await FillMatch(settings, rptNumber, minSold, daysBack, minPrice, maxPrice, activeStatusOnly, isSellerVariation, itemID, pctProfit, wmShipping, wmFreeShippingMin, eBayPct, imgLimit);
-                    await SearchEngineMatch(settings, rptNumber, minSold, daysBack, minPrice, maxPrice, activeStatusOnly, isSellerVariation, itemID, pctProfit, wmShipping, wmFreeShippingMin, eBayPct, imgLimit);
+
+                    await UPCMatch(settings, rptNumber, minSold, daysBack, minPrice, maxPrice, activeStatusOnly, isSellerVariation, itemID, pctProfit, wmShipping, wmFreeShippingMin, eBayPct, imgLimit);
+                    await SearchEngineMatch(settings, rptNumber, minSold, daysBack, minPrice, maxPrice, activeStatusOnly, isSellerVariation, itemID, pctProfit, wmShipping, wmFreeShippingMin, eBayPct, imgLimit, supplierTag);
                 }
                 else if (storeID > 0)   // Used by CalculateMatch console app to run entire store
                 {
@@ -420,14 +421,7 @@ namespace eBayUtility
                     foreach (var seller in sellers)
                     {
                         Console.WriteLine(seller.Seller);
-                        //if (seller.Seller == "kermont-24")
-                        //{
-                        //    int stop = 99;
-                        //}
-                        //else
-                        //{
-                        //    continue;
-                        //}
+                     
                         runScan = false;
                         var sellerProfile = await models.SellerProfileGet(seller.Seller);
                         if (sellerProfile == null)
@@ -453,8 +447,9 @@ namespace eBayUtility
                                     sh.Updated = DateTime.Now;
                                     sh.ID = tgtSearchHistory.ID;
                                     models.SearchHistoryUpdate(sh, "CalculateMatch", "Updated");
-                                    //await FetchSeller.FillMatch(settings, tgtSearchHistory.ID, minSold, daysBack, minPrice, maxPrice, activeStatusOnly, isSellerVariation, itemID, pctProfit, wmShipping, wmFreeShippingMin, eBayPct, imgLimit);
-                                    await SearchEngineMatch(settings, rptNumber, minSold, daysBack, minPrice, maxPrice, activeStatusOnly, isSellerVariation, itemID, pctProfit, wmShipping, wmFreeShippingMin, eBayPct, imgLimit);
+                                    
+                                    await UPCMatch(settings, tgtSearchHistory.ID, minSold, daysBack, minPrice, maxPrice, activeStatusOnly, isSellerVariation, itemID, pctProfit, wmShipping, wmFreeShippingMin, eBayPct, imgLimit);
+                                    await SearchEngineMatch(settings, rptNumber, minSold, daysBack, minPrice, maxPrice, activeStatusOnly, isSellerVariation, itemID, pctProfit, wmShipping, wmFreeShippingMin, eBayPct, imgLimit, supplierTag);
 
                                     dsutil.DSUtil.WriteFile(_logfile, seller.Seller + ": Ran FillMatch", "");
                                 }
@@ -490,48 +485,14 @@ namespace eBayUtility
         /// <param name="itemID"></param>
         /// <param name="pctProfit"></param>
         /// <returns></returns>
-        private static async Task FillMatch(UserSettingsView settings, int rptNumber, int minSold, int daysBack, int? minPrice, int? maxPrice, bool? activeStatusOnly, bool? isSellerVariation, string itemID, double pctProfit, decimal wmShipping, decimal wmFreeShippingMin, double eBayPct, int imgLimit)
+        private static async Task UPCMatch(UserSettingsView settings, int rptNumber, int minSold, int daysBack, int? minPrice, int? maxPrice, bool? activeStatusOnly, bool? isSellerVariation, string itemID, double pctProfit, decimal wmShipping, decimal wmFreeShippingMin, double eBayPct, int imgLimit)
         {
             string loopItemID = null;
             try
             {
-                if (rptNumber == 14529)
-                {
-                    int stop = 99;
-                }
-                DateTime ModTimeTo = DateTime.Now.ToUniversalTime();
-                DateTime ModTimeFrom = ModTimeTo.AddDays(-daysBack);
-
-                itemID = (itemID == "null") ? null : itemID;
-                var x = models.GetSalesData(rptNumber, ModTimeFrom, settings.StoreID, itemID);
-
-                // filter by min and max price
-                if (minPrice.HasValue)
-                {
-                    x = x.Where(p => p.Price >= minPrice);
-                }
-                if (maxPrice.HasValue)
-                {
-                    x = x.Where(p => p.Price <= maxPrice);
-                }
-                x = x.Where(p => p.SoldQty >= minSold);
-                if (activeStatusOnly.HasValue)
-                {
-                    if (activeStatusOnly.Value)
-                    {
-                        x = x.Where(p => p.ListingStatus == "Active");
-                    }
-                }
-                if (isSellerVariation.HasValue)
-                {
-                    if (isSellerVariation.Value)
-                    {
-                        x = x.Where(p => !p.IsSellerVariation.Value);
-                    }
-                }
-                
                 var mv = new ModelViewTimesSold();
-                mv.TimesSoldRpt = x.ToList();
+                mv.TimesSoldRpt = FilterMatch(settings, rptNumber, minSold, daysBack, minPrice, maxPrice, activeStatusOnly, isSellerVariation, itemID);
+
                 foreach (var row in mv.TimesSoldRpt)
                 {
                     loopItemID = row.ItemID;
@@ -655,58 +616,62 @@ namespace eBayUtility
             catch (Exception exc)
             {
                 string msgItemID = (!string.IsNullOrEmpty(loopItemID)) ? "ItemID: " + loopItemID : "";
-                string header = "FillMatch RptNumber: " + rptNumber.ToString() + " " + msgItemID;
+                string header = "UPCMatch RptNumber: " + rptNumber.ToString() + " " + msgItemID;
                 string msg = dsutil.DSUtil.ErrMsg(header, exc);
                 dsutil.DSUtil.WriteFile(_logfile, msg, "");
             }
         }
 
-        private static async Task SearchEngineMatch(UserSettingsView settings, int rptNumber, int minSold, int daysBack, int? minPrice, int? maxPrice, bool? activeStatusOnly, bool? isSellerVariation, string itemID, double pctProfit, decimal wmShipping, decimal wmFreeShippingMin, double eBayPct, int imgLimit)
+        private static List<TimesSold> FilterMatch(UserSettingsView settings, int rptNumber, int minSold, int daysBack, int? minPrice, int? maxPrice, bool? activeStatusOnly, bool? isSellerVariation, string itemID)
+        {
+            DateTime ModTimeTo = DateTime.Now.ToUniversalTime();
+            DateTime ModTimeFrom = ModTimeTo.AddDays(-daysBack);
+
+            itemID = (itemID == "null") ? null : itemID;
+            var x = models.GetSalesData(rptNumber, ModTimeFrom, settings.StoreID, itemID);
+
+            // filter by min and max price
+            if (minPrice.HasValue)
+            {
+                x = x.Where(p => p.Price >= minPrice);
+            }
+            if (maxPrice.HasValue)
+            {
+                x = x.Where(p => p.Price <= maxPrice);
+            }
+            x = x.Where(p => p.SoldQty >= minSold);
+            if (activeStatusOnly.HasValue)
+            {
+                if (activeStatusOnly.Value)
+                {
+                    x = x.Where(p => p.ListingStatus == "Active");
+                }
+            }
+            if (isSellerVariation.HasValue)
+            {
+                if (isSellerVariation.Value)
+                {
+                    x = x.Where(p => !p.IsSellerVariation.Value);
+                }
+            }
+            return x.ToList();
+        }
+
+        private static async Task SearchEngineMatch(UserSettingsView settings, int rptNumber, int minSold, int daysBack, int? minPrice, int? maxPrice, bool? activeStatusOnly, bool? isSellerVariation, string itemID, double pctProfit, decimal wmShipping, decimal wmFreeShippingMin, double eBayPct, int imgLimit, string supplierTag)
         {
             string loopItemID = null;
             try
             {
-                DateTime ModTimeTo = DateTime.Now.ToUniversalTime();
-                DateTime ModTimeFrom = ModTimeTo.AddDays(-daysBack);
-
-                itemID = (itemID == "null") ? null : itemID;
-                var x = models.GetSalesData(rptNumber, ModTimeFrom, settings.StoreID, itemID);
-
-                // filter by min and max price
-                if (minPrice.HasValue)
-                {
-                    x = x.Where(p => p.Price >= minPrice);
-                }
-                if (maxPrice.HasValue)
-                {
-                    x = x.Where(p => p.Price <= maxPrice);
-                }
-                x = x.Where(p => p.SoldQty >= minSold);
-                if (activeStatusOnly.HasValue)
-                {
-                    if (activeStatusOnly.Value)
-                    {
-                        x = x.Where(p => p.ListingStatus == "Active");
-                    }
-                }
-                if (isSellerVariation.HasValue)
-                {
-                    if (isSellerVariation.Value)
-                    {
-                        x = x.Where(p => !p.IsSellerVariation.Value);
-                    }
-                }
-
                 var mv = new ModelViewTimesSold();
-                mv.TimesSoldRpt = x.ToList();
+                mv.TimesSoldRpt = FilterMatch(settings, rptNumber, minSold, daysBack, minPrice, maxPrice, activeStatusOnly, isSellerVariation, itemID);
+                
+                // Only search where MatchCount is null or does not equal 1
+                mv.TimesSoldRpt = mv.TimesSoldRpt.Where(p => !p.MatchCount.HasValue || (p.MatchCount.HasValue && p.MatchCount.Value != 1)).ToList();
+
                 foreach (var row in mv.TimesSoldRpt)
                 {
                     loopItemID = row.ItemID;
-                    if (loopItemID == "352779481402")
-                    {
-                        int stop = 99;
-                    }
-                  
+                   
                     var walitem = new SupplierItem();
                     string descr = row.Description;
                     string supplierURL = null;
@@ -716,8 +681,9 @@ namespace eBayUtility
                         if (!string.IsNullOrEmpty(section))
                         {
                             //supplierURL = wallib.wmUtility.DoSearch(section, 4);
-                            section = "walmart " + section;
-                            supplierURL = dsutil.DSUtil.BingSearch(section);
+                            section = supplierTag + " " + section;
+                            var links = dsutil.DSUtil.BingSearch(section);
+                            supplierURL = wallib.wmUtility.FirstMatchURL(links);
                             if (!string.IsNullOrEmpty(supplierURL))
                             {
                                 supplierURL = wallib.wmUtility.CleanURL(supplierURL);
@@ -725,7 +691,6 @@ namespace eBayUtility
                             }
                         }
                     }
-                    
                     if (!string.IsNullOrEmpty(supplierURL))
                     {
                         walitem = await wallib.wmUtility.GetDetail(supplierURL, imgLimit);
@@ -770,7 +735,7 @@ namespace eBayUtility
             catch (Exception exc)
             {
                 string msgItemID = (!string.IsNullOrEmpty(loopItemID)) ? "ItemID: " + loopItemID : "";
-                string header = "GoogleMatch RptNumber: " + rptNumber.ToString() + " " + msgItemID;
+                string header = "SearchEngineMatch RptNumber: " + rptNumber.ToString() + " " + msgItemID;
                 string msg = dsutil.DSUtil.ErrMsg(header, exc);
                 dsutil.DSUtil.WriteFile(_logfile, msg, "");
             }
