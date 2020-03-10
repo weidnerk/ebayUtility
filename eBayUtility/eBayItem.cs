@@ -25,6 +25,7 @@ namespace Utility
     {
         static dsmodels.DataModelsDB db = new dsmodels.DataModelsDB();
         const int _qtyToList = 2;
+        const string _logfile = "log.txt";
 
         /// <summary>
         /// 
@@ -279,9 +280,9 @@ namespace Utility
                 // If item is verified, the item will be added.
                 if (response.ItemID == "0")
                 {
-                    Console.WriteLine("=====================================");
-                    Console.WriteLine("Add Item Verified");
-                    Console.WriteLine("=====================================");
+                    //Console.WriteLine("=====================================");
+                    //Console.WriteLine("Add Item Verified");
+                    //Console.WriteLine("=====================================");
                     listedItemID = AddItemRequest(settings, item, ref errors);
                 }
                 else
@@ -428,20 +429,20 @@ namespace Utility
             string description = null)
         {
             var response = new List<string>();
-            //create the context
             ApiContext context = new ApiContext();
 
             //set the User token
             context.ApiCredential.eBayToken = token;
 
-            //set the server url
-            //string endpoint = AppSettingsHelper.Endpoint;
-            //context.SoapApiServerUrl = endpoint;
-
             //enable logging
             context.ApiLogManager = new ApiLogManager();
             context.ApiLogManager.ApiLoggerList.Add(new FileLogger("logebay.txt", true, true, true));
-            context.ApiLogManager.EnableLogging = true;
+            /*
+             * PLEASE NOTE:
+             * Long time issue of finishing the listing revise but then navigating to another page is slow.
+             * Turn off logging fixes this.  Not sure what ebay logger is doing
+             */
+            context.ApiLogManager.EnableLogging = false;
 
             //set the version
             context.Version = "817";
@@ -463,7 +464,6 @@ namespace Utility
                     currencyID = eBay.Service.Core.Soap.CurrencyCodeType.USD
                 };
             }
-
             if (!string.IsNullOrEmpty(title))
             {
                 item.Title = title;
@@ -472,6 +472,8 @@ namespace Utility
             {
                 item.Description = description;
             }
+
+            #region sample_code
             /*
             item.ItemSpecifics = new NameValueListTypeCollection();
 
@@ -503,6 +505,7 @@ namespace Utility
             pd.UPC = "Does not apply";
             item.ProductListingDetails = pd;
             */
+            #endregion
 
             reviseFP.Item = item;
 
