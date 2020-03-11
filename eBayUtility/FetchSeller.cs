@@ -521,7 +521,7 @@ namespace eBayUtility
                             {
                                 walitem.UPC = row.SellerUPC;
                                 walitem.Updated = DateTime.Now;
-                                models.SupplierItemUpdateScrape(row.SellerUPC, "", walitem,
+                                models.SupplierItemUpdateByProdID(row.SellerUPC, "", walitem,
                                     "Updated",
                                     "ItemURL",
                                     "SoldAndShippedBySupplier",
@@ -574,7 +574,7 @@ namespace eBayUtility
                                 {
                                     walitem.MPN = row.SellerMPN;
                                     walitem.Updated = DateTime.Now;
-                                    models.SupplierItemUpdateScrape("", row.SellerMPN, walitem,
+                                    models.SupplierItemUpdateByProdID("", row.SellerMPN, walitem,
                                         "Updated",
                                         "ItemURL",
                                         "SoldAndShippedBySupplier",
@@ -702,7 +702,7 @@ namespace eBayUtility
                             if (!string.IsNullOrEmpty(walitem.ItemID) || !string.IsNullOrEmpty(walitem.UPC) || !string.IsNullOrEmpty(walitem.MPN))
                             {
                                 walitem.Updated = DateTime.Now;
-                                models.SupplierItemUpdate(walitem,
+                                models.SupplierItemUpdateByID(walitem,
                                     "Updated",
                                     "ItemURL",
                                     "SoldAndShippedBySupplier",
