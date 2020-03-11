@@ -680,7 +680,6 @@ namespace eBayUtility
                         string section = GetDescrSection(descr, i);
                         if (!string.IsNullOrEmpty(section))
                         {
-                            //supplierURL = wallib.wmUtility.DoSearch(section, 4);
                             section = supplierTag + " " + section;
                             var links = dsutil.DSUtil.BingSearch(section);
                             supplierURL = wallib.wmUtility.FirstMatchURL(links);
@@ -700,33 +699,35 @@ namespace eBayUtility
                         // is not providing "standard" images. (error is logged in GetDetail()).
                         if (!string.IsNullOrEmpty(walitem.SupplierPicURL))
                         {
-                            walitem.UPC = row.SellerUPC;
-                            walitem.Updated = DateTime.Now;
-                            models.SupplierItemUpdateScrape(row.SellerUPC, "", walitem,
-                                "Updated",
-                                "ItemURL",
-                                "SoldAndShippedBySupplier",
-                                "SupplierBrand",
-                                "SupplierPrice",
-                                "IsVariation",
-                                "SupplierPicURL",
-                                "IsFreightShipping");
+                            if (!string.IsNullOrEmpty(walitem.ItemID) || !string.IsNullOrEmpty(walitem.UPC) || !string.IsNullOrEmpty(walitem.MPN))
+                            {
+                                walitem.Updated = DateTime.Now;
+                                models.SupplierItemUpdate(walitem,
+                                    "Updated",
+                                    "ItemURL",
+                                    "SoldAndShippedBySupplier",
+                                    "SupplierBrand",
+                                    "SupplierPrice",
+                                    "IsVariation",
+                                    "SupplierPicURL",
+                                    "IsFreightShipping");
 
-                            var oh = new OrderHistory();
-                            oh.ItemID = row.ItemID;
-                            oh.MatchCount = 1;
-                            oh.MatchType = 3;
-                            oh.SourceID = walitem.SourceID;
-                            oh.SupplierItemID = walitem.ID;
-                            if (walitem.SupplierPrice.HasValue)
-                            {
-                                var p = wallib.wmUtility.wmNewPrice(walitem.SupplierPrice.Value, pctProfit, wmShipping, wmFreeShippingMin, eBayPct);
-                                oh.ProposePrice = p.ProposePrice;
-                                models.OrderHistoryUpdate(oh, "ProposePrice", "MatchType", "MatchCount", "SourceID", "SupplierItemID");
-                            }
-                            else
-                            {
-                                models.OrderHistoryUpdate(oh, "MatchType", "MatchCount", "SourceID", "SupplierItemID");
+                                var oh = new OrderHistory();
+                                oh.ItemID = row.ItemID;
+                                oh.MatchCount = 1;
+                                oh.MatchType = 3;
+                                oh.SourceID = walitem.SourceID;
+                                oh.SupplierItemID = walitem.ID;
+                                if (walitem.SupplierPrice.HasValue)
+                                {
+                                    var p = wallib.wmUtility.wmNewPrice(walitem.SupplierPrice.Value, pctProfit, wmShipping, wmFreeShippingMin, eBayPct);
+                                    oh.ProposePrice = p.ProposePrice;
+                                    models.OrderHistoryUpdate(oh, "ProposePrice", "MatchType", "MatchCount", "SourceID", "SupplierItemID");
+                                }
+                                else
+                                {
+                                    models.OrderHistoryUpdate(oh, "MatchType", "MatchCount", "SourceID", "SupplierItemID");
+                                }
                             }
                         }
                     }
@@ -789,6 +790,8 @@ namespace eBayUtility
                 var recs = models.UpdateToListing.AsNoTracking().Where(p => p.StoreID == storeID && p.ToListing).ToList();
                 foreach (var updateToList in recs)
                 {
+                    var oh = models.OrderHistory.AsNoTracking().Where(p => p.ItemID == updateToList.ItemID).SingleOrDefault();
+
                     var ohObj = models.OrderHistory.AsNoTracking().Include("ItemSpecifics").AsNoTracking().Where(p => p.ItemID == updateToList.ItemID).SingleOrDefault();
 
                     var UPC = ohObj.ItemSpecifics.Where(p => p.ItemName == "UPC").Select(q => q.ItemValue).FirstOrDefault();
@@ -803,7 +806,8 @@ namespace eBayUtility
                         {
                             listing.ListingPrice = ohObj.ProposePrice.Value;
                         }
-                        var supplierItem = models.GetSupplierItem(ohObj.ItemID);
+                        //var supplierItem = models.GetSupplierItem(ohObj.ItemID);
+                        var supplierItem = models.GetSupplierItem(oh.SupplierItemID.Value);
                         listing.SupplierID = supplierItem.ID;
                         //listing.SupplierPrice = oh.WMPrice.Value;
                         //listing.PictureUrl = oh.WMPicUrl;
