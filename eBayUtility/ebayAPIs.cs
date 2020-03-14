@@ -902,14 +902,49 @@ namespace eBayUtility
             }
         }
 
+        public static int FindItemsMain(UserSettingsView settings, string seller, int daysBack)
+        {
+            int total = 0;
+            int currentPageNumber = 1;
+            var response = FindItems(settings, seller, currentPageNumber, daysBack);
+            total = response.searchResult.count;
+            dsutil.DSUtil.WriteFile(_logfile, "Retrieve sales complete", settings.UserName);
+
+            if (response.ack == AckValue.Success)
+            {
+                var result = response.searchResult;
+                if (result != null && result.count > 0)
+                {
+                    // are there more pages of results?
+                    for (var i = response.paginationOutput.pageNumber; i < response.paginationOutput.totalPages; i++)
+                    {
+                        currentPageNumber += 1;
+                        response = FindItems(settings, seller, currentPageNumber, daysBack);
+                        if (response.ack == AckValue.Success)
+                        {
+                            total += response.searchResult.count;
+                            result = response.searchResult;
+                        }
+                    }
+                }
+            }
+            return total;
+        }
+
         // uses operation 'findItemsAdvanced'
-        protected static void FindItems(string keyword)
+        protected static FindItemsAdvancedResponse FindItems(UserSettingsView settings, string seller, int pageNumber, int daysBack)
         {
             StringBuilder strResult = new StringBuilder();
             try
             {
+                DateTime ModTimeTo = DateTime.Now.ToUniversalTime();
+                DateTime ModTimeFrom = ModTimeTo.AddDays(-daysBack);
+                string ModTimeToStr = ModTimeTo.Year + "-" + ModTimeTo.Month.ToString("00") + "-" + ModTimeTo.Day.ToString("00") + "T00:00:00.000Z";
+                string ModTimeFromStr = ModTimeFrom.Year + "-" + ModTimeFrom.Month.ToString("00") + "-" + ModTimeFrom.Day.ToString("00") + "T00:00:00.000Z";
+
                 CustomFindAdvanced service = new CustomFindAdvanced();
                 service.Url = "http://svcs.ebay.com/services/search/FindingService/v1";
+                service.appID = settings.AppID;
                 FindItemsAdvancedRequest request = new FindItemsAdvancedRequest();
 
                 // Setting the required proterty value
@@ -922,10 +957,10 @@ namespace eBayUtility
 
                 //Set Values for each filter
                 filterEndTimeFrom.name = ItemFilterType.EndTimeFrom;
-                filterEndTimeFrom.value = new string[] { "" };
+                filterEndTimeFrom.value = new string[] { ModTimeFromStr };
 
                 filterEndTimeTo.name = ItemFilterType.EndTimeTo;
-                filterEndTimeTo.value = new string[] { "" };
+                filterEndTimeTo.value = new string[] { ModTimeToStr };
 
                 filterCatID.name = ItemFilterType.EndTimeFrom;
                 filterCatID.value = new string[] { "" };
@@ -934,7 +969,7 @@ namespace eBayUtility
                 filterSeller.name = ItemFilterType.Seller;
                 filterSeller.paramName = "name";
                 filterSeller.paramValue = "Seller";
-                filterSeller.value = new string[] { "**justforyou**" };
+                filterSeller.value = new string[] { seller };
 
                 //Create the filter array
                 ItemFilter[] itemFilters = new ItemFilter[1];
@@ -949,27 +984,36 @@ namespace eBayUtility
                 // Setting the pagination 
                 PaginationInput pagination = new PaginationInput();
                 pagination.entriesPerPageSpecified = true;
-                pagination.entriesPerPage = 25;
+                pagination.entriesPerPage = 50;
                 pagination.pageNumberSpecified = true;
-                pagination.pageNumber = 1;
+                pagination.pageNumber = pageNumber;
+              
                 request.paginationInput = pagination;
 
                 // Sorting the result
                 request.sortOrderSpecified = true;
-                request.sortOrder = SortOrderType.CurrentPriceHighest;
+                request.sortOrder = SortOrderType.StartTimeNewest;
 
                 FindItemsAdvancedResponse response = service.findItemsAdvanced(request);
                 if (response.searchResult.count > 0)
                 {
                     foreach (SearchItem searchItem in response.searchResult.item)
                     {
-                        strResult.AppendLine("ItemID: " + searchItem.itemId);
+                        //strResult.AppendLine("ItemID: " + searchItem.itemId);
                         strResult.AppendLine("Title: " + searchItem.title);
-                        strResult.AppendLine("Type: " + searchItem.listingInfo.listingType);
-                        strResult.AppendLine("View: " + searchItem.viewItemURL);
-                        strResult.AppendLine("Price: " + searchItem.sellingStatus.currentPrice.Value);
-                        strResult.AppendLine("Picture: " + searchItem.galleryURL);
-                        strResult.AppendLine("------------------------------------------------------------------------");
+                        //strResult.AppendLine("Variation: " + searchItem.isMultiVariationListing.ToString());
+                        //strResult.AppendLine("Type: " + searchItem.listingInfo.listingType);
+                        //strResult.AppendLine("View: " + searchItem.viewItemURL);
+                        //strResult.AppendLine("Price: " + searchItem.sellingStatus.currentPrice.Value);
+                        //strResult.AppendLine("Picture: " + searchItem.galleryURL);
+                        //strResult.AppendLine("SellingStatus: " + searchItem.sellingStatus.sellingState);
+                        //strResult.AppendLine("------------------------------------------------------------------------");
+
+                        using (System.IO.StreamWriter file =
+                            new System.IO.StreamWriter(@"C:\temp\WriteLines2.txt", true))
+                        {
+                            file.WriteLine(searchItem.title + "\t" + searchItem.isMultiVariationListing.ToString());
+                        }
                     }
                 }
                 else
@@ -979,10 +1023,12 @@ namespace eBayUtility
                 Console.WriteLine("");
                 Console.WriteLine(strResult.ToString());
                 Console.WriteLine("Total Pages: " + response.paginationOutput.totalPages);
+                return response;
             }
             catch (Exception ex)
             {
                 Console.WriteLine("Error: " + ex.Message);
+                return null;
             }
         }
 

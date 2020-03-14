@@ -147,7 +147,7 @@ namespace eBayUtility
             return service.findCompletedItems(request);
         }
 
-        private static PaginationInput GetNextPage(int pageNumber)
+        public static PaginationInput GetNextPage(int pageNumber)
         {
             return new PaginationInput
             {
@@ -660,6 +660,7 @@ namespace eBayUtility
         private static async Task SearchEngineMatch(UserSettingsView settings, int rptNumber, int minSold, int daysBack, int? minPrice, int? maxPrice, bool? activeStatusOnly, bool? isSellerVariation, string itemID, double pctProfit, decimal wmShipping, decimal wmFreeShippingMin, double eBayPct, int imgLimit, string supplierTag)
         {
             string loopItemID = null;
+            bool found = false;
             try
             {
                 var mv = new ModelViewTimesSold();
@@ -671,65 +672,77 @@ namespace eBayUtility
                 foreach (var row in mv.TimesSoldRpt)
                 {
                     loopItemID = row.ItemID;
-                   
+                    if (loopItemID == "392388202275")
+                    {
+                        var stop = 999;
+                    }
                     var walitem = new SupplierItem();
                     string descr = row.Description;
-                    string supplierURL = null;
+                    found = false;
+
+                    // Search sections of description since most search engines only use first part of query anyway
                     for (int i = 0; i < 5; i++)
                     {
                         string section = GetDescrSection(descr, i);
                         if (!string.IsNullOrEmpty(section))
                         {
                             section = supplierTag + " " + section;
-                            var links = dsutil.DSUtil.BingSearch(section);
-                            supplierURL = wallib.wmUtility.FirstMatchURL(links);
-                            if (!string.IsNullOrEmpty(supplierURL))
+                            
+                            //var links = dsutil.DSUtil.BingSearch(section);
+                            var links = dsutil.DSUtil.GoogleSearchSelenium(section);
+
+                            var validLinks = wallib.wmUtility.ValidURLs(links); // just get supplier links
+                            if (validLinks.Count > 0)
                             {
-                                supplierURL = wallib.wmUtility.CleanURL(supplierURL);
-                                break;
+                                // Collect valid supplier links from search engine result
+                                foreach (string supplierURL in validLinks)
+                                {
+                                    walitem = await wallib.wmUtility.GetDetail(supplierURL, imgLimit);
+                                    if (walitem != null)
+                                    {
+                                        // If can't get supplier pics, not much point in posting.
+                                        // Can happen when not matching correctly on something like an eBook or giftcard where walmart
+                                        // is not providing "standard" images. (error is logged in GetDetail()).
+                                        if (!string.IsNullOrEmpty(walitem.SupplierPicURL))
+                                        {
+                                            if (!string.IsNullOrEmpty(walitem.ItemID) || !string.IsNullOrEmpty(walitem.UPC) || !string.IsNullOrEmpty(walitem.MPN))
+                                            {
+                                                found = true;
+                                                walitem.Updated = DateTime.Now;
+                                                models.SupplierItemUpdateByID(walitem,
+                                                    "Updated",
+                                                    "ItemURL",
+                                                    "SoldAndShippedBySupplier",
+                                                    "SupplierBrand",
+                                                    "SupplierPrice",
+                                                    "IsVariation",
+                                                    "SupplierPicURL",
+                                                    "IsFreightShipping");
+
+                                                var oh = new OrderHistory();
+                                                oh.ItemID = row.ItemID;
+                                                oh.MatchCount = 1;
+                                                oh.MatchType = 3;
+                                                oh.SourceID = walitem.SourceID;
+                                                oh.SupplierItemID = walitem.ID;
+                                                if (walitem.SupplierPrice.HasValue)
+                                                {
+                                                    var p = wallib.wmUtility.wmNewPrice(walitem.SupplierPrice.Value, pctProfit, wmShipping, wmFreeShippingMin, eBayPct);
+                                                    oh.ProposePrice = p.ProposePrice;
+                                                    models.OrderHistoryUpdate(oh, "ProposePrice", "MatchType", "MatchCount", "SourceID", "SupplierItemID");
+                                                }
+                                                else
+                                                {
+                                                    models.OrderHistoryUpdate(oh, "MatchType", "MatchCount", "SourceID", "SupplierItemID");
+                                                }
+                                            }
+                                        }
+                                        if (found) break;
+                                    }
+                                }
                             }
                         }
-                    }
-                    if (!string.IsNullOrEmpty(supplierURL))
-                    {
-                        walitem = await wallib.wmUtility.GetDetail(supplierURL, imgLimit);
-
-                        // If can't get supplier pics, not much point in posting.
-                        // Can happen when not matching correctly on something like an eBook or giftcard where walmart
-                        // is not providing "standard" images. (error is logged in GetDetail()).
-                        if (!string.IsNullOrEmpty(walitem.SupplierPicURL))
-                        {
-                            if (!string.IsNullOrEmpty(walitem.ItemID) || !string.IsNullOrEmpty(walitem.UPC) || !string.IsNullOrEmpty(walitem.MPN))
-                            {
-                                walitem.Updated = DateTime.Now;
-                                models.SupplierItemUpdateByID(walitem,
-                                    "Updated",
-                                    "ItemURL",
-                                    "SoldAndShippedBySupplier",
-                                    "SupplierBrand",
-                                    "SupplierPrice",
-                                    "IsVariation",
-                                    "SupplierPicURL",
-                                    "IsFreightShipping");
-
-                                var oh = new OrderHistory();
-                                oh.ItemID = row.ItemID;
-                                oh.MatchCount = 1;
-                                oh.MatchType = 3;
-                                oh.SourceID = walitem.SourceID;
-                                oh.SupplierItemID = walitem.ID;
-                                if (walitem.SupplierPrice.HasValue)
-                                {
-                                    var p = wallib.wmUtility.wmNewPrice(walitem.SupplierPrice.Value, pctProfit, wmShipping, wmFreeShippingMin, eBayPct);
-                                    oh.ProposePrice = p.ProposePrice;
-                                    models.OrderHistoryUpdate(oh, "ProposePrice", "MatchType", "MatchCount", "SourceID", "SupplierItemID");
-                                }
-                                else
-                                {
-                                    models.OrderHistoryUpdate(oh, "MatchType", "MatchCount", "SourceID", "SupplierItemID");
-                                }
-                            }
-                        }
+                        if (found) break;
                     }
                 }
             }
@@ -852,7 +865,7 @@ namespace eBayUtility
                             sellerListing.ItemSpecifics = dsmodels.DataModelsDB.CopyFromOrderHistory(ohObj.ItemSpecifics);
                             listing.SellerListing = sellerListing;
                         }
-                        await models.ListingSaveAsync(listing, settings.UserID);
+                        await models.ListingSaveAsync(settings, listing);
 
                         var obj = new UpdateToListing() { StoreID = storeID, ItemID = ohObj.ItemID };
                         await models.UpdateToListingRemove(obj);
