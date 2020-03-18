@@ -412,7 +412,9 @@ namespace eBayUtility
                     models.ClearOrderHistory(rptNumber);
 
                     await UPCMatch(settings, rptNumber, minSold, daysBack, minPrice, maxPrice, activeStatusOnly, isSellerVariation, itemID, pctProfit, wmShipping, wmFreeShippingMin, eBayPct, imgLimit);
-                    await SearchEngineMatch(settings, rptNumber, minSold, daysBack, minPrice, maxPrice, activeStatusOnly, isSellerVariation, itemID, pctProfit, wmShipping, wmFreeShippingMin, eBayPct, imgLimit, supplierTag);
+                    
+                    // 03.17.2020 currently not happy with accuracy
+                    //await SearchEngineMatch(settings, rptNumber, minSold, daysBack, minPrice, maxPrice, activeStatusOnly, isSellerVariation, itemID, pctProfit, wmShipping, wmFreeShippingMin, eBayPct, imgLimit, supplierTag);
                 }
                 else if (storeID > 0)   // Used by CalculateMatch console app to run entire store
                 {
@@ -449,7 +451,8 @@ namespace eBayUtility
                                     models.SearchHistoryUpdate(sh, "CalculateMatch", "Updated");
                                     
                                     await UPCMatch(settings, tgtSearchHistory.ID, minSold, daysBack, minPrice, maxPrice, activeStatusOnly, isSellerVariation, itemID, pctProfit, wmShipping, wmFreeShippingMin, eBayPct, imgLimit);
-                                    await SearchEngineMatch(settings, rptNumber, minSold, daysBack, minPrice, maxPrice, activeStatusOnly, isSellerVariation, itemID, pctProfit, wmShipping, wmFreeShippingMin, eBayPct, imgLimit, supplierTag);
+                                    
+                                    //await SearchEngineMatch(settings, rptNumber, minSold, daysBack, minPrice, maxPrice, activeStatusOnly, isSellerVariation, itemID, pctProfit, wmShipping, wmFreeShippingMin, eBayPct, imgLimit, supplierTag);
 
                                     dsutil.DSUtil.WriteFile(_logfile, seller.Seller + ": Ran FillMatch", "");
                                 }
@@ -496,7 +499,7 @@ namespace eBayUtility
                 foreach (var row in mv.TimesSoldRpt)
                 {
                     loopItemID = row.ItemID;
-                    if (row.ItemID == "312928190620")
+                    if (row.ItemID == "392403638735")
                     {
                         int stop = 99;
                     }
