@@ -1,4 +1,9 @@
-﻿using dsmodels;
+﻿/*
+ * 
+ * Test code for working with eBay variations.
+ * 
+ */
+using dsmodels;
 using eBay.Service.Call;
 using eBay.Service.Core.Sdk;
 using eBay.Service.Core.Soap;
@@ -15,6 +20,7 @@ namespace Utility
         static dsmodels.DataModelsDB db = new dsmodels.DataModelsDB();
 
         /// <summary>
+        /// TEST CODE
         /// https://ebaydts.com/eBayKBDetails?KBid=1742
         /// </summary>
         public static string AddFPItemWithVariations_closet(UserSettingsView settings, int storeID)
@@ -398,7 +404,8 @@ namespace Utility
         }
 
         /// <summary>
-        /// I got an error bcs the name I was using for the variation spec was also included as a item specific.
+        /// TEST CODE
+        /// Received an error bcs the name I was using for the variation spec was also included as a item specific.
         /// In this case I was using "Color" as the variation spec but then I checked what the seller was using and he used "Choose Color".
         /// I did the same and then it listed.
         /// </summary>
@@ -649,6 +656,13 @@ namespace Utility
             return result;
         }
 
+        /// <summary>
+        /// TEST CODE
+        /// </summary>
+        /// <param name="settings"></param>
+        /// <param name="storeID"></param>
+        /// <param name="sellerListing"></param>
+        /// <returns></returns>
         public static string AddFPItemWithVariations_cutlery(UserSettingsView settings, int storeID, SellerListing sellerListing)
         {
             //create the context

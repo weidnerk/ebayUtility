@@ -265,46 +265,6 @@ namespace eBayUtility
             return oItems;
         }
 
-        //public static void GetSellerListPrint(string seller)
-        //{
-        //    var oItems = GetSellerList(seller, out string errMsg);
-        //    if (oItems == null)
-        //    {
-        //        Console.WriteLine(errMsg);
-        //        return;
-        //    }
-
-        //    int cnt = 0;
-        //    // output some of the data
-        //    foreach (ItemType oItem in oItems)
-        //    {
-        //        //if (oItem.SellingStatus.QuantitySold > 0)
-        //        //{
-
-        //        Console.WriteLine("ItemID: " + oItem.ItemID);
-        //        Console.WriteLine("Title: " + oItem.Title);
-        //        Console.WriteLine("Item type: " + oItem.ListingType.ToString());
-        //        Console.WriteLine("Listing status: " + oItem.SellingStatus.ListingStatus);
-        //        Console.WriteLine("Qty sold: " + oItem.SellingStatus.QuantitySold);
-        //        if (0 < oItem.SellingStatus.BidCount)
-        //        {
-        //            // The HighBidder element is valid only if there is at least 1 bid
-        //            Console.WriteLine("High Bidder is " + oItem.SellingStatus.HighBidder.UserID);
-        //        }
-        //        Console.WriteLine("Current Price is " + oItem.SellingStatus.CurrentPrice.currencyID.ToString() + " " + oItem.SellingStatus.CurrentPrice.Value.ToString());
-        //        Console.WriteLine("End Time is " + oItem.ListingDetails.EndTime.ToLongDateString() + " " + oItem.ListingDetails.EndTime.ToLongTimeString());
-        //        //}
-        //        Console.WriteLine("count: " + (++cnt));
-        //        Console.WriteLine("");
-
-        //        // the data that is accessible through the item object
-        //        // for different GranularityLevel and DetailLevel choices
-        //        // can be found at the following URL:
-        //        // http://developer.ebay.com/DevZone/SOAP/docs/WebHelp/GetSellerListCall-GetSellerList_Best_Practices.html
-        //    }
-        //    Console.WriteLine("Done");
-        //}
-
         // https://ebaydts.com/eBayKBDetails?KBid=1937
         //
         // also look at GetOrderTransactions()
@@ -472,8 +432,6 @@ namespace eBayUtility
             try
             {
                 dsmodels.DataModelsDB db = new dsmodels.DataModelsDB();
-                // var setting = db.UserSettings.Find(user.Id, 1);
-                // var profile = db.GetUserProfile(user.Id);
                 ApiContext oContext = new ApiContext();
 
                 //set the dev,app,cert information
@@ -520,14 +478,6 @@ namespace eBayUtility
         protected static void GetItem(string itemId)
         {
             ApiContext oContext = new ApiContext();
-
-            //set the dev,app,cert information
-            //oContext.ApiCredential.ApiAccount.Developer = ConfigurationManager.AppSettings["devID"];
-            //oContext.ApiCredential.ApiAccount.Application = ConfigurationManager.AppSettings["appID"];
-            //oContext.ApiCredential.ApiAccount.Certificate = ConfigurationManager.AppSettings["certID"];
-
-            //set the AuthToken
-            //oContext.ApiCredential.eBayToken = ConfigurationManager.AppSettings["ebayToken"];
 
             //set the endpoint (sandbox) use https://api.ebay.com/wsapi for production
             oContext.SoapApiServerUrl = "https://api.ebay.com/wsapi";
@@ -630,14 +580,6 @@ namespace eBayUtility
             {
                 DataModelsDB db = new DataModelsDB();
 
-                //CustomShoppingService service = new CustomShoppingService();
-                //service.Url = "http://open.api.ebay.com/shopping";
-                //service.appID = profile.AppID;
-                //var request = new GetSingleItemRequestType();
-                //request.ItemID = itemId;
-                //var response = service.GetSingleItem(request);
-                //return response;
-
                 Shopping svc = new Shopping();
                 // set the URL and it's parameters
 
@@ -668,7 +610,6 @@ namespace eBayUtility
                     {
                         throw new Exception(errMsg);
                     }
-
                     XElement root = XElement.Parse(output);
                     var qryRecords = from record in root.Elements("Item")
                                      select record;
@@ -804,8 +745,6 @@ namespace eBayUtility
 
             CustomFindAdvanced service = new CustomFindAdvanced();
             service.Url = "http://svcs.ebay.com/services/search/FindingService/v1";
-            //var profile = db.GetUserProfile(user.Id);
-            //var setting = db.UserSettings.Find(user.Id, 1);
             service.appID = settings.AppID;
             FindItemsAdvancedRequest request = new FindItemsAdvancedRequest();
             request.keywords = "302704549832";
@@ -851,14 +790,10 @@ namespace eBayUtility
 
                 ItemFilter filterEndTimeFrom = new ItemFilter();
                 filterEndTimeFrom.name = ItemFilterType.EndTimeFrom;
-                //filterEndTimeFrom.paramName = "name";
-                //filterEndTimeFrom.paramValue = "EndTimeFrom";
                 filterEndTimeFrom.value = new string[] { ModTimeFromStr };
 
                 ItemFilter filterEndTimeTo = new ItemFilter();
                 filterEndTimeTo.name = ItemFilterType.EndTimeTo;
-                //filterEndTimeTo.paramName = "name";
-                //filterEndTimeTo.paramValue = "filterEndTimeTo";
                 filterEndTimeTo.value = new string[] { ModTimeToStr };
 
                 ItemFilter filterSoldOnly = new ItemFilter();
@@ -890,7 +825,6 @@ namespace eBayUtility
                 FindCompletedItemsResponse response = service.findCompletedItems(request);
 
                 int totalPages = response.paginationOutput.totalPages;
-                //Console.WriteLine("Count: " + response.searchResult.count);
 
                 if (response.searchResult.item != null)
                     return response;
@@ -976,8 +910,6 @@ namespace eBayUtility
 
                 //Add Filters to the array
                 itemFilters[0] = filterSeller;
-                //itemFilters[1] = filterEndTimeFrom;
-                //itemFilters[2] = filterEndTimeTo;
 
                 request.itemFilter = itemFilters;
 
@@ -999,15 +931,15 @@ namespace eBayUtility
                 {
                     foreach (SearchItem searchItem in response.searchResult.item)
                     {
-                        //strResult.AppendLine("ItemID: " + searchItem.itemId);
+                        strResult.AppendLine("ItemID: " + searchItem.itemId);
                         strResult.AppendLine("Title: " + searchItem.title);
-                        //strResult.AppendLine("Variation: " + searchItem.isMultiVariationListing.ToString());
-                        //strResult.AppendLine("Type: " + searchItem.listingInfo.listingType);
-                        //strResult.AppendLine("View: " + searchItem.viewItemURL);
-                        //strResult.AppendLine("Price: " + searchItem.sellingStatus.currentPrice.Value);
-                        //strResult.AppendLine("Picture: " + searchItem.galleryURL);
-                        //strResult.AppendLine("SellingStatus: " + searchItem.sellingStatus.sellingState);
-                        //strResult.AppendLine("------------------------------------------------------------------------");
+                        strResult.AppendLine("Variation: " + searchItem.isMultiVariationListing.ToString());
+                        strResult.AppendLine("Type: " + searchItem.listingInfo.listingType);
+                        strResult.AppendLine("View: " + searchItem.viewItemURL);
+                        strResult.AppendLine("Price: " + searchItem.sellingStatus.currentPrice.Value);
+                        strResult.AppendLine("Picture: " + searchItem.galleryURL);
+                        strResult.AppendLine("SellingStatus: " + searchItem.sellingStatus.sellingState);
+                        strResult.AppendLine("------------------------------------------------------------------------");
 
                         using (System.IO.StreamWriter file =
                             new System.IO.StreamWriter(@"C:\temp\WriteLines2.txt", true))
@@ -1085,46 +1017,12 @@ namespace eBayUtility
         }
 
         /// <summary>
-        /// Returns Completed Items
+        /// BETA
         /// </summary>
-        /// <param name="seller"></param>
-        /// <param name="daysBack"></param>
-        /// <param name="user"></param>
-        /// <returns></returns>
-        //public static int ItemCount(string seller, int daysBack, UserSettingsView settings)
-        //{
-        //    dsmodels.DataModelsDB db = new dsmodels.DataModelsDB();
-        //    string _logfile = "scrape_log.txt";
-        //    int notSold = 0;
-        //    var listings = new List<Listing>();
-        //    int totalCount = 0;
-
-        //    CustomFindSold service = new CustomFindSold();
-        //    service.Url = "http://svcs.ebay.com/services/search/FindingService/v1";
-        //    service.appID = settings.AppID;
-        //    int currentPageNumber = 1;
-
-        //    var request = BuildReqest(seller, daysBack);    // creates FindCompletedItemsRequest
-        //    var response = GetCompletedItems(service, request, currentPageNumber);
-        //    if (response.ack == AckValue.Success)
-        //    {
-        //        var result = response.searchResult;
-        //        totalCount = result.count;
-        //        if (result != null && result.count > 0)
-        //        {
-        //            for (var i = response.paginationOutput.pageNumber; i < response.paginationOutput.totalPages; i++)
-        //            {
-        //                currentPageNumber += 1;
-
-        //                response = GetCompletedItems(service, request, currentPageNumber);
-        //                result = response.searchResult;
-        //                totalCount += result.count;
-        //            }
-        //        }
-        //    }
-        //    return totalCount;
-        //}
-
+        /// <param name="settings"></param>
+        /// <param name="itemID"></param>
+        /// <param name="ModTimeFrom"></param>
+        /// <param name="ModTimeTo"></param>
         public static void ProcessTransactions(UserSettingsView settings, string itemID, DateTime ModTimeFrom, DateTime ModTimeTo)
         {
             var transactions = eBayUtility.ebayAPIs.GetItemTransactions(settings, itemID, ModTimeFrom, ModTimeTo);
@@ -1143,13 +1041,11 @@ namespace eBayUtility
                     {
                         // is this bcs sellerPaidStatus="notpaid"?
                         order.Price = 0;
-                        // dsutil.DSUtil.WriteFile(_logfile, string.Format("StoreTransactions: item.TransactionPrice == null for item: {0}", searchItem.itemId), settings.UserName);
                     }
                     else
                     {
                         var sellerPrice = item.TransactionPrice.Value.ToString();
                     }
-                    // dsutil.DSUtil.WriteFile(_logfile, string.Format("Seller price: {0}", order.SellerPrice), user.UserName);
 
                     order.DateOfPurchase = item.CreatedDate;
 
@@ -1176,160 +1072,6 @@ namespace eBayUtility
             }
         }
 
-        ///// <summary>
-        ///// Store seller's transactions for a page of results 
-        ///// </summary>
-        ///// <param name="result"></param>
-        ///// <param name="daysBack"></param>
-        ///// <param name="user"></param>
-        ///// <param name="rptNumber"></param>
-        ///// <param name="listings"></param>
-        ///// <param name="pg"></param>
-        ///// <returns></returns>
-        //protected static async Task StoreTransactions_obsolete(SearchResult result, int daysBack, UserSettingsView settings, int rptNumber, List<Listing> listings, int pg)
-        //{
-        //    string _logfile = "scrape_log.txt";
-        //    int notSold = 0;
-
-        //    dsutil.DSUtil.WriteFile(_logfile, "StoreTransactions Start", settings.UserName);
-        //    UserSettingsView profile;
-
-        //    // Iterate completed items
-        //    foreach (SearchItem searchItem in result.item)
-        //    {
-        //        using (var db = new dsmodels.DataModelsDB())
-        //        {
-        //            var f = db.SearchHistory.Where(p => p.Id == rptNumber).FirstOrDefault();
-        //            if (f != null)
-        //            {
-        //                if (f.Running.HasValue)
-        //                {
-        //                    if (!f.Running.Value)
-        //                    {
-        //                        return;
-        //                    }
-        //                }
-        //            }
-        //        }
-
-        //        // The SearchResult that was passed to this method may have more than result per item number if different variations have sold.
-        //        // But when pulling Transactions, we pull all per item number so only need to process each item number once.
-        //        bool exists = listings.Any(item => item.ItemId == searchItem.itemId);
-        //        if (!exists)
-        //        {
-        //            var i = await ebayAPIs.GetSingleItem(searchItem.itemId, settings.AppID); // pulling this for ListingStatus
-        //                                                                                    //var a = searchItem.itemId;
-        //                                                                                    //var b = searchItem.title;
-        //                                                                                    //var c = searchItem.listingInfo.listingType;
-        //                                                                                    //var d = searchItem.viewItemURL;
-        //                                                                                    //var e = searchItem.sellingStatus.currentPrice.Value;
-        //                                                                                    //var f = searchItem.galleryURL;
-        //                                                                                    //var g = searchItem.sellingStatus;
-        //                                                                                    //var h = searchItem.sellingStatus.timeLeft;
-        //            var isVariation = searchItem.isMultiVariationListing;
-
-        //            var listing = new Listing();
-        //            listing.Title = searchItem.title;
-        //            listing.ItemId = searchItem.itemId;
-
-        //            // loop through each order
-        //            DateTime ModTimeTo = DateTime.Now.ToUniversalTime();
-        //            DateTime ModTimeFrom = ModTimeTo.AddDays(-daysBack);
-        //            TransactionTypeCollection transactions = null;
-        //            try
-        //            {
-        //                // We have queried for only sold times, but sometimes this returns nothing, possibly due to date range.
-        //                // Or may happen because of this:
-        //                // 'This listing was ended by the seller because the item is no longer available.'
-
-        //                dsutil.DSUtil.WriteFile(_logfile, "Get transactions for " + searchItem.itemId, settings.UserName);
-        //                transactions = ebayAPIs.GetItemTransactions(settings, searchItem.itemId, ModTimeFrom, ModTimeTo);
-        //                dsutil.DSUtil.WriteFile(_logfile, "Get transactions complete", settings.UserName);
-
-        //                var orderHistory = new List<OrderHistoryDetail>();
-
-        //                // Iterate transactions for an item
-        //                foreach (TransactionType item in transactions)
-        //                {
-        //                    // did it sell?
-        //                    if (item.MonetaryDetails != null)
-        //                    {
-        //                        var pmtTime = item.MonetaryDetails.Payments.Payment[0].PaymentTime;
-        //                        var pmtAmt = item.MonetaryDetails.Payments.Payment[0].PaymentAmount.Value;
-        //                        var order = new OrderHistoryDetail();
-        //                        // order.Title = searchItem.title;
-        //                        order.Qty = item.QuantityPurchased;
-
-        //                        if (item.TransactionPrice == null)
-        //                        {
-        //                            // is this bcs sellerPaidStatus="notpaid"?
-        //                            order.Price = 0;
-        //                            dsutil.DSUtil.WriteFile(_logfile, string.Format("StoreTransactions: item.TransactionPrice == null for item: {0}", searchItem.itemId), settings.UserName);
-        //                        }
-        //                        else
-        //                        {
-        //                            order.SellerPrice = item.TransactionPrice.Value.ToString();
-        //                        }
-        //                        // dsutil.DSUtil.WriteFile(_logfile, string.Format("Seller price: {0}", order.SellerPrice), user.UserName);
-
-        //                        order.DateOfPurchase = item.CreatedDate;
-
-        //                        //order.EbayUrl = searchItem.viewItemURL;
-        //                        // dsutil.DSUtil.WriteFile(_logfile, "order.EbayUrl complete", user.UserName);
-
-        //                        //order.ImageUrl = searchItem.galleryURL;
-        //                        dsutil.DSUtil.WriteFile(_logfile, "order.ImageUrl complete", settings.UserName);
-
-        //                        var pictures = searchItem.pictureURLLarge;
-        //                        // dsutil.DSUtil.WriteFile(_logfile, "pictures complete", user.UserName);
-
-        //                        //order.PageNumber = pg;
-        //                        //order.ItemId = searchItem.itemId;
-        //                        //order.SellingState = searchItem.sellingStatus.sellingState;
-        //                        //order.ListingStatus = i.ListingStatus;
-        //                        //order.IsMultiVariationListing = isVariation;
-
-        //                        // order.ShippingServiceCost = i.ShippingServiceCost;
-        //                        // order.ShippingServiceName = i.ShippingServiceName;
-
-        //                        orderHistory.Add(order);
-        //                    }
-        //                    else
-        //                    {
-        //                        // i don't see this ever being executed which makes sense if querying only sold items
-        //                        dsutil.DSUtil.WriteFile(_logfile, "Unexpected: item.MonetaryDetails == null", settings.UserName);
-        //                    }
-        //                }
-        //                if (transactions.Count == 0)
-        //                {
-        //                    // Despite filtering for only sold items, we may still meet this condition (which doesn't make a whole lot of sense)
-        //                    // in testing, I would see an item like 
-        //                    // 'Test listing - DO NOT BID OR BUY362254235623'
-        //                    //
-        //                    ++notSold;
-        //                }
-
-        //                using (var db = new dsmodels.DataModelsDB())
-        //                {
-        //                    db.OrderHistoryDetailSave(orderHistory, rptNumber, false);
-        //                }
-        //                dsutil.DSUtil.WriteFile(_logfile, "OrderHistorySave complete", settings.UserName);
-        //                listing.Orders = orderHistory;
-        //                listings.Add(listing);
-
-        //                dsutil.DSUtil.WriteFile(_logfile, "StoreTransactions Complete", settings.UserName);
-
-        //            }
-        //            catch (Exception exc)
-        //            {
-        //                string msg = " StoreTransactions " + exc.Message;
-        //                dsutil.DSUtil.WriteFile(_logfile, msg, settings.UserName);
-        //                throw;
-        //            }
-        //        }
-        //    }
-        //}
-
         public static string FormateBayTime(DateTime dt)
         {
             string dtStr = dt.Year + "-" + dt.Month.ToString("00") + "-" + dt.Day.ToString("00") + "T" + dt.Hour.ToString("00") + ":" + dt.Minute.ToString("00") + ":00.000Z";
@@ -1350,30 +1092,18 @@ namespace eBayUtility
 
             ItemFilter filterSeller = new ItemFilter();
             filterSeller.name = ItemFilterType.Seller;
-            //filterSeller.paramName = "name";
-            //filterSeller.paramValue = "Seller";
             filterSeller.value = new string[] { seller };
 
             DateTime ModTimeTo = DateTime.Now.ToUniversalTime();
-            //DateTime ModTimeFrom = ModTimeTo.AddDays(-daysBack);
             string ModTimeToStr = FormateBayTime(ModTimeTo);
             string ModTimeFromStr = FormateBayTime(fromDate);
 
-            //DateTime ModTimeTo = DateTime.Now;
-            //DateTime ModTimeFrom = ModTimeTo.AddDays(-daysBack);
-            //string ModTimeToStr = ModTimeTo.ToString();
-            //string ModTimeFromStr = ModTimeFrom.ToString();
-
             ItemFilter filterEndTimeFrom = new ItemFilter();
             filterEndTimeFrom.name = ItemFilterType.EndTimeFrom;
-            //filterEndTimeFrom.paramName = "name";
-            //filterEndTimeFrom.paramValue = "EndTimeFrom";
             filterEndTimeFrom.value = new string[] { ModTimeFromStr };
 
             ItemFilter filterEndTimeTo = new ItemFilter();
             filterEndTimeTo.name = ItemFilterType.EndTimeTo;
-            //filterEndTimeTo.paramName = "name";
-            //filterEndTimeTo.paramValue = "filterEndTimeTo";
             filterEndTimeTo.value = new string[] { ModTimeToStr };
 
             ItemFilter filterSoldOnly = new ItemFilter();
@@ -1387,23 +1117,10 @@ namespace eBayUtility
             itemFilters[0] = filterSeller;
             itemFilters[1] = filterEndTimeFrom;
             itemFilters[2] = filterEndTimeTo;
-            //itemFilters[3] = filterSoldOnly;
 
             request.itemFilter = itemFilters;
             return request;
         }
-
-        //public static FindCompletedItemsResponse GetSoldItems(UserSettingsView settings, string seller, int daysBack)
-        //{
-        //    CustomFindSold service = new CustomFindSold();
-        //    service.Url = "http://svcs.ebay.com/services/search/FindingService/v1";
-
-        //    service.appID = settings.AppID;
-        //    int currentPageNumber = 1;
-
-        //    var request = ebayAPIs.BuildReqest(seller, daysBack);
-        //    return GetCompletedItems(service, request, currentPageNumber);
-        //}
 
         protected static eBay.Service.Core.Soap.ShippingDetailsType GetShippingDetail()
         {

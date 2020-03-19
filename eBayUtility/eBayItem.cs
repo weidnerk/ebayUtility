@@ -250,11 +250,10 @@ namespace Utility
                 sp.SellerReturnProfile = srp;
                 sp.SellerShippingProfile = ssp;
                 item.SellerProfiles = sp;
-                // item.SellerProfiles.SellerPaymentProfile = spp;
-                // item.SellerProfiles.SellerReturnProfile = srp;
-                // item.SellerProfiles.SellerShippingProfile = ssp;
 
                 /*
+                 * How to create policy in place:
+                 * 
                 item.ReturnPolicy = new ReturnPolicyType
                 {
                     ReturnsAcceptedOption = "ReturnsAccepted",
@@ -280,9 +279,6 @@ namespace Utility
                 // If item is verified, the item will be added.
                 if (response.ItemID == "0")
                 {
-                    //Console.WriteLine("=====================================");
-                    //Console.WriteLine("Add Item Verified");
-                    //Console.WriteLine("=====================================");
                     listedItemID = AddItemRequest(settings, item, ref errors);
                 }
                 else
@@ -379,7 +375,6 @@ namespace Utility
             {
                 errors.Add(e.LongMessage);
             }
-
             Console.WriteLine("Item Added");
             Console.WriteLine("ItemID: {0}", response.ItemID); // Item ID
             return response.ItemID;
@@ -396,8 +391,6 @@ namespace Utility
             context.ApiCredential.eBayToken = token;
 
             //set the server url
-            //string endpoint = AppSettingsHelper.Endpoint;
-            //context.SoapApiServerUrl = endpoint;
 
             //enable logging
             context.ApiLogManager = new ApiLogManager();
@@ -570,7 +563,6 @@ namespace Utility
             {
                 foreach (eBay.Service.Core.Soap.ErrorType e in r.Errors)
                 {
-                    // msg += " " + e.LongMessage;
                     response.Add(e.LongMessage);
                 }
             }
@@ -578,11 +570,9 @@ namespace Utility
         }
         public async static Task RefreshItemSpecifics(UserSettingsView settings, int ID)
         {
-            //var listing = db.Listings.Where(p => p.ID == ID).Include(t => t.SellerListing).SingleOrDefault();
             var listing = db.Listings.Where(p => p.ID == ID).SingleOrDefault();
             var sellerListing = await ebayAPIs.GetSingleItem(settings, listing.SellerListing.ItemID);
 
-            //sellerListing.Updated = DateTime.Now;
             var sellerListingdb = db.SellerListings.Find(sellerListing.ItemID);
             sellerListingdb.ItemSpecifics.ForEach(c => c.Updated = DateTime.Now);
             listing.SellerListing = sellerListingdb;

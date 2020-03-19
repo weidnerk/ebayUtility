@@ -46,10 +46,6 @@ namespace eBayUtility
                 // Iterate completed items
                 foreach (SearchItem searchItem in result.item)
                 {
-                    //if (searchItem.itemId == "303200616411")
-                    //{
-                    //    int stop = 99;
-                    //}
                     var listing = new Listing();
                     var sellerListing = new SellerListing();
 
@@ -248,14 +244,7 @@ namespace eBayUtility
             DateTime dateTime;
             bool r = DateTime.TryParse(dateTimeStr, out dateTime);
             TimeZoneInfo timeZone = null;
-            //if (timeZoneStr == "PDT")
-            //{
-            //    timeZone = TimeZoneInfo.FindSystemTimeZoneById("Pacific Daylight Time");
-            //}
-            //if (timeZoneStr == "PST")
-            //{
             timeZone = TimeZoneInfo.FindSystemTimeZoneById("Pacific Standard Time");
-            //}
             var databaseUtcTime = TimeZoneInfo.ConvertTimeToUtc(dateTime, timeZone);
             return databaseUtcTime;
         }
@@ -357,7 +346,6 @@ namespace eBayUtility
                                             tran.Price = price;
                                             tran.Qty = qty;
                                             dateSold = dateSold.Replace(" PST", "");
-                                            //tran.DateSold = DateTime.ParseExact(dateSold, "MMM-dd-yy hh:mm:ss", CultureInfo.InvariantCulture);
                                             DateTime dateTime;
                                             bool r = DateTime.TryParse("Nov-14-19 18:06:07", out dateTime);
                                             tran.DateSold = dateTime;
@@ -499,10 +487,6 @@ namespace eBayUtility
                 foreach (var row in mv.TimesSoldRpt)
                 {
                     loopItemID = row.ItemID;
-                    if (row.ItemID == "392403638735")
-                    {
-                        int stop = 99;
-                    }
                     bool tryAgain = false;
                     WalmartSearchProdIDResponse response;
                     var walitem = new SupplierItem();
@@ -511,10 +495,6 @@ namespace eBayUtility
                         response = wallib.wmUtility.SearchProdID(row.SellerUPC);
                         if (response.Count == 1)
                         {
-                            //if (row.SellerUPC == "081483818559")
-                            //{
-                            //    int stop = 99;
-                            //}
                             walitem = await wallib.wmUtility.GetDetail(response.URL, imgLimit);
 
                             // If can't get supplier pics, not much point in posting.
@@ -822,18 +802,12 @@ namespace eBayUtility
                         {
                             listing.ListingPrice = ohObj.ProposePrice.Value;
                         }
-                        //var supplierItem = models.GetSupplierItem(ohObj.ItemID);
                         var supplierItem = models.GetSupplierItem(oh.SupplierItemID.Value);
                         listing.SupplierID = supplierItem.ID;
-                        //listing.SupplierPrice = oh.WMPrice.Value;
-                        //listing.PictureUrl = oh.WMPicUrl;
                         listing.Profit = 0;
                         listing.ProfitMargin = 0;
                         listing.StoreID = storeID;
                         var descr = supplierItem.Description;
-                        //if (supplierItem.SourceID == 1) {   
-                        //    descr = wallib.wmUtility.RemoveDisclaimer(descr);
-                        //}
                         listing.Description = descr;
                         var upc = models.OrderHistoryItemSpecifics.AsNoTracking().Where(i => i.SellerItemID == ohObj.ItemID && i.ItemName == "UPC").SingleOrDefault();
                         if (upc != null)

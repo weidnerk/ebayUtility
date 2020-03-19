@@ -17,8 +17,6 @@ namespace Utility
     {
         static dsmodels.DataModelsDB db = new dsmodels.DataModelsDB();
 
-
-
         public static eBayAPIInterfaceService eBayServiceCall(UserSettingsView settings, string CallName)
         {
             string endpoint = "https://api.ebay.com/wsapi";
