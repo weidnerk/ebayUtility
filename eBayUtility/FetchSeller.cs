@@ -495,7 +495,7 @@ namespace eBayUtility
                         response = wallib.wmUtility.SearchProdID(row.SellerUPC);
                         if (response.Count == 1)
                         {
-                            walitem = await wallib.wmUtility.GetDetail(response.URL, imgLimit);
+                            walitem = await wallib.wmUtility.GetDetail(response.URL, imgLimit, false);
 
                             // If can't get supplier pics, not much point in posting.
                             // Can happen when not matching correctly on something like an eBook or giftcard where walmart
@@ -548,7 +548,7 @@ namespace eBayUtility
                             response = wallib.wmUtility.SearchProdID(row.SellerMPN);
                             if (response.Count == 1)
                             {
-                                walitem = await wallib.wmUtility.GetDetail(response.URL, imgLimit);
+                                walitem = await wallib.wmUtility.GetDetail(response.URL, imgLimit, false);
 
                                 // If can't get supplier pics, not much point in posting.
                                 // Can happen when not matching correctly on something like an eBook or giftcard where walmart
@@ -680,7 +680,7 @@ namespace eBayUtility
                                 // Collect valid supplier links from search engine result
                                 foreach (string supplierURL in validLinks)
                                 {
-                                    walitem = await wallib.wmUtility.GetDetail(supplierURL, imgLimit);
+                                    walitem = await wallib.wmUtility.GetDetail(supplierURL, imgLimit, false);
                                     if (walitem != null)
                                     {
                                         // If can't get supplier pics, not much point in posting.
