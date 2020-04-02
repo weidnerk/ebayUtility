@@ -422,96 +422,104 @@ namespace Utility
             string description = null)
         {
             var response = new List<string>();
-            ApiContext context = new ApiContext();
-
-            //set the User token
-            context.ApiCredential.eBayToken = token;
-
-            //enable logging
-            context.ApiLogManager = new ApiLogManager();
-            context.ApiLogManager.ApiLoggerList.Add(new FileLogger("logebay.txt", true, true, true));
-            /*
-             * PLEASE NOTE:
-             * Long time issue of finishing the listing revise but then navigating to another page is slow.
-             * Turn off logging fixes this.  Not sure what ebay logger is doing
-             */
-            context.ApiLogManager.EnableLogging = false;
-
-            //set the version
-            context.Version = "817";
-            context.Site = eBay.Service.Core.Soap.SiteCodeType.US;
-
-            ReviseFixedPriceItemCall reviseFP = new ReviseFixedPriceItemCall(context);
-
-            ItemType item = new ItemType();
-            item.ItemID = listedItemID;
-
-            if (qty.HasValue)
-                item.Quantity = qty.Value;
-
-            if (price.HasValue)
+            try
             {
-                item.StartPrice = new eBay.Service.Core.Soap.AmountType
+                ApiContext context = new ApiContext();
+
+                //set the User token
+                context.ApiCredential.eBayToken = token;
+
+                //enable logging
+                context.ApiLogManager = new ApiLogManager();
+                context.ApiLogManager.ApiLoggerList.Add(new FileLogger("logebay.txt", true, true, true));
+                /*
+                 * PLEASE NOTE:
+                 * Long time issue of finishing the listing revise but then navigating to another page is slow.
+                 * Turn off logging fixes this.  Not sure what ebay logger is doing
+                 */
+                context.ApiLogManager.EnableLogging = false;
+
+                //set the version
+                context.Version = "817";
+                context.Site = eBay.Service.Core.Soap.SiteCodeType.US;
+
+                ReviseFixedPriceItemCall reviseFP = new ReviseFixedPriceItemCall(context);
+
+                ItemType item = new ItemType();
+                item.ItemID = listedItemID;
+
+                if (qty.HasValue)
+                    item.Quantity = qty.Value;
+
+                if (price.HasValue)
                 {
-                    Value = price.Value,
-                    currencyID = eBay.Service.Core.Soap.CurrencyCodeType.USD
-                };
-            }
-            if (!string.IsNullOrEmpty(title))
-            {
-                item.Title = title;
-            }
-            if (!string.IsNullOrEmpty(description))
-            {
-                item.Description = description;
-            }
-
-            #region sample_code
-            /*
-            item.ItemSpecifics = new NameValueListTypeCollection();
-
-            NameValueListTypeCollection ItemSpecs = new NameValueListTypeCollection();
-
-            var nv1 = new eBay.Service.Core.Soap.NameValueListType();
-            var nv2 = new eBay.Service.Core.Soap.NameValueListType();
-
-            StringCollection valueCol1 = new StringCollection();
-            StringCollection valueCol2 = new StringCollection();
-
-            nv1.Name = "Brand";
-            valueCol1.Add("Unbranded");
-            nv1.Value = valueCol1;
-
-            nv2.Name = "MPN";
-            valueCol2.Add("Does Not Apply");
-            nv2.Value = valueCol2;
-
-            ItemSpecs.Add(nv1);
-            ItemSpecs.Add(nv2);
-            item.ItemSpecifics = ItemSpecs;
-
-            var pd = new ProductListingDetailsType();
-            //var brand = new BrandMPNType();
-            //brand.Brand = "Unbranded";
-            //brand.MPN = unavailable;
-            //pd.BrandMPN = brand;
-            pd.UPC = "Does not apply";
-            item.ProductListingDetails = pd;
-            */
-            #endregion
-
-            reviseFP.Item = item;
-
-            reviseFP.Execute();
-            var r = reviseFP.ApiResponse;
-            string msg = r.Ack.ToString();
-            if (r.Errors.Count > 0)
-            {
-                foreach (eBay.Service.Core.Soap.ErrorType e in r.Errors)
-                {
-                    // msg += " " + e.LongMessage;
-                    response.Add(e.LongMessage);
+                    item.StartPrice = new eBay.Service.Core.Soap.AmountType
+                    {
+                        Value = price.Value,
+                        currencyID = eBay.Service.Core.Soap.CurrencyCodeType.USD
+                    };
                 }
+                if (!string.IsNullOrEmpty(title))
+                {
+                    item.Title = title;
+                }
+                if (!string.IsNullOrEmpty(description))
+                {
+                    item.Description = description;
+                }
+
+                #region sample_code
+                /*
+                item.ItemSpecifics = new NameValueListTypeCollection();
+
+                NameValueListTypeCollection ItemSpecs = new NameValueListTypeCollection();
+
+                var nv1 = new eBay.Service.Core.Soap.NameValueListType();
+                var nv2 = new eBay.Service.Core.Soap.NameValueListType();
+
+                StringCollection valueCol1 = new StringCollection();
+                StringCollection valueCol2 = new StringCollection();
+
+                nv1.Name = "Brand";
+                valueCol1.Add("Unbranded");
+                nv1.Value = valueCol1;
+
+                nv2.Name = "MPN";
+                valueCol2.Add("Does Not Apply");
+                nv2.Value = valueCol2;
+
+                ItemSpecs.Add(nv1);
+                ItemSpecs.Add(nv2);
+                item.ItemSpecifics = ItemSpecs;
+
+                var pd = new ProductListingDetailsType();
+                //var brand = new BrandMPNType();
+                //brand.Brand = "Unbranded";
+                //brand.MPN = unavailable;
+                //pd.BrandMPN = brand;
+                pd.UPC = "Does not apply";
+                item.ProductListingDetails = pd;
+                */
+                #endregion
+
+                reviseFP.Item = item;
+
+                reviseFP.Execute();
+                var r = reviseFP.ApiResponse;
+                string msg = r.Ack.ToString();
+                if (r.Errors.Count > 0)
+                {
+                    foreach (eBay.Service.Core.Soap.ErrorType e in r.Errors)
+                    {
+                        // msg += " " + e.LongMessage;
+                        response.Add(e.LongMessage);
+                    }
+                }
+            }
+            catch (Exception exc)
+            {
+                string msg = "ERROR ReviseItem listedItemID -> " + listedItemID + " -> " + exc.Message;
+                dsutil.DSUtil.WriteFile(_logfile, msg, "");
             }
             return response;
         }
