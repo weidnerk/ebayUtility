@@ -176,7 +176,7 @@ namespace eBayUtility
 
             // very important, let's setup the logging
             ApiLogManager oLogManager = new ApiLogManager();
-            oLogManager.ApiLoggerList.Add(new eBay.Service.Util.FileLogger("logebay.txt", true, true, true));
+            oLogManager.ApiLoggerList.Add(new eBay.Service.Util.FileLogger("logebay.txt", false, false, false));
             oLogManager.EnableLogging = true;
             oContext.ApiLogManager = oLogManager;
 
@@ -294,7 +294,7 @@ namespace eBayUtility
 
             //very important, let's setup the logging
             ApiLogManager oLogManager = new ApiLogManager();
-            oLogManager.ApiLoggerList.Add(new eBay.Service.Util.FileLogger("logebay.txt", false, false, true));
+            oLogManager.ApiLoggerList.Add(new eBay.Service.Util.FileLogger("logebay.txt", false, false, false));
             oLogManager.EnableLogging = true;
             oContext.ApiLogManager = oLogManager;
 
@@ -490,7 +490,7 @@ namespace eBayUtility
 
             //very important, let's setup the logging
             ApiLogManager oLogManager = new ApiLogManager();
-            oLogManager.ApiLoggerList.Add(new eBay.Service.Util.FileLogger("logebay.txt", true, true, true));
+            oLogManager.ApiLoggerList.Add(new eBay.Service.Util.FileLogger("logebay.txt", false, false, false));
             oLogManager.EnableLogging = true;
             oContext.ApiLogManager = oLogManager;
 

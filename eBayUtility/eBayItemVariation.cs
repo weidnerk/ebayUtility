@@ -37,7 +37,7 @@ namespace Utility
 
             //enable logging
             context.ApiLogManager = new ApiLogManager();
-            context.ApiLogManager.ApiLoggerList.Add(new FileLogger("logebay.txt", true, true, true));
+            context.ApiLogManager.ApiLoggerList.Add(new FileLogger("logebay.txt", false, false, false));
             context.ApiLogManager.EnableLogging = true;
 
             //set the version
@@ -426,7 +426,7 @@ namespace Utility
 
             //enable logging
             context.ApiLogManager = new ApiLogManager();
-            context.ApiLogManager.ApiLoggerList.Add(new FileLogger("logebay.txt", true, true, true));
+            context.ApiLogManager.ApiLoggerList.Add(new FileLogger("logebay.txt", false, false, false));
             context.ApiLogManager.EnableLogging = true;
 
             //set the version
@@ -677,7 +677,7 @@ namespace Utility
 
             //enable logging
             context.ApiLogManager = new ApiLogManager();
-            context.ApiLogManager.ApiLoggerList.Add(new FileLogger("logebay.txt", true, true, true));
+            context.ApiLogManager.ApiLoggerList.Add(new FileLogger("logebay.txt", false, false, false));
             context.ApiLogManager.EnableLogging = true;
 
             //set the version
@@ -891,7 +891,7 @@ namespace Utility
 
             //enable logging
             context.ApiLogManager = new ApiLogManager();
-            context.ApiLogManager.ApiLoggerList.Add(new FileLogger("logebay.txt", true, true, true));
+            context.ApiLogManager.ApiLoggerList.Add(new FileLogger("logebay.txt", false, false, false));
             context.ApiLogManager.EnableLogging = true;
 
             //set the version
@@ -1113,7 +1113,7 @@ namespace Utility
 
             //enable logging
             context.ApiLogManager = new ApiLogManager();
-            context.ApiLogManager.ApiLoggerList.Add(new FileLogger("logebay.txt", true, true, true));
+            context.ApiLogManager.ApiLoggerList.Add(new FileLogger("logebay.txt", false, false, false));
             context.ApiLogManager.EnableLogging = true;
 
             //set the version
@@ -1192,7 +1192,7 @@ namespace Utility
 
             //enable logging
             context.ApiLogManager = new ApiLogManager();
-            context.ApiLogManager.ApiLoggerList.Add(new FileLogger("logebay.txt", true, true, true));
+            context.ApiLogManager.ApiLoggerList.Add(new FileLogger("logebay.txt", false, false, false));
             context.ApiLogManager.EnableLogging = true;
 
             //set the version
@@ -1253,7 +1253,7 @@ namespace Utility
 
             //enable logging
             context.ApiLogManager = new ApiLogManager();
-            context.ApiLogManager.ApiLoggerList.Add(new FileLogger("logebay.txt", true, true, true));
+            context.ApiLogManager.ApiLoggerList.Add(new FileLogger("logebay.txt", false, false, false));
             context.ApiLogManager.EnableLogging = true;
 
             //set the version
