@@ -431,7 +431,7 @@ namespace Utility
 
                 //enable logging
                 context.ApiLogManager = new ApiLogManager();
-                context.ApiLogManager.ApiLoggerList.Add(new FileLogger("logebay.txt", true, true, true));
+                context.ApiLogManager.ApiLoggerList.Add(new FileLogger("logebay.txt", false, false, false));
                 /*
                  * PLEASE NOTE:
                  * Long time issue of finishing the listing revise but then navigating to another page is slow.
