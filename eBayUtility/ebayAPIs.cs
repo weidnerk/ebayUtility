@@ -724,10 +724,13 @@ namespace eBayUtility
             {
                 var elem = XElement.Parse(output);
                 string xmlErr = null;
-                xmlErr = (string)elem.Element("Errors").Element("ShortMessage");
-                if (!string.IsNullOrEmpty(xmlErr))
+                if (elem.Element("Errors") != null)
                 {
-                    errMsg = xmlErr;
+                    xmlErr = (string)elem.Element("Errors").Element("ShortMessage");
+                    if (!string.IsNullOrEmpty(xmlErr))
+                    {
+                        errMsg = xmlErr;
+                    }
                 }
             }
             catch { }
