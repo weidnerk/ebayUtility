@@ -575,6 +575,8 @@ namespace eBayUtility
             StringReader sr;
             string output;
             string variationName = null;
+            var sellerListing = new SellerListing();
+            const string notfound = "Invalid item ID.";
 
             try
             {
@@ -606,107 +608,113 @@ namespace eBayUtility
                     output = s.Replace(" xmlns='urn:ebay:apis:eBLBaseComponents'", string.Empty);
 
                     errMsg = GetSingleItemError(output);
-                    if (!string.IsNullOrEmpty(errMsg))
+                    if (errMsg != notfound)
                     {
-                        throw new Exception(errMsg);
+                        if (!string.IsNullOrEmpty(errMsg))
+                        {
+                            throw new Exception(errMsg);
+                        }
+                        XElement root = XElement.Parse(output);
+                        var qryRecords = from record in root.Elements("Item")
+                                         select record;
+                        if (qryRecords.Count() == 0)
+                        {
+                            return null;
+                        }
+                        var r = (from r2 in qryRecords
+                                 select new
+                                 {
+                                     Description = r2.Element("Description"),
+                                     Title = r2.Element("Title"),
+                                     Price = r2.Element("ConvertedCurrentPrice"),
+                                     ListingUrl = r2.Element("ViewItemURLForNaturalSearch"),
+                                     PrimaryCategoryID = r2.Element("PrimaryCategoryID"),
+                                     PrimaryCategoryName = r2.Element("PrimaryCategoryName").ElementValueNull(),
+                                     Quantity = r2.Element("Quantity"),
+                                     QuantitySold = r2.Element("QuantitySold"),
+                                     ListingStatus = r2.Element("ListingStatus"),
+                                     Seller = r2.Element("Seller").Element("UserID"),
+                                     Shipping = r2.Element("ShippingCostSummary").ElementValueNull()
+                                 }).Single();
+
+                        // 10.10.2019 had case where no pictures being returned for a seller's listing - idk
+                        // again, probably has something to do with variation listing?
+                        // https://www.ebay.com/itm/XXL-Folding-Padded-Director-Chair-Heavy-Duty-W-Side-Table-Drink-Holder-500-Lb-/352687221867?var=
+                        //
+                        var list = qryRecords.Elements("PictureURL")
+                                .Select(element => element.Value)
+                                .ToArray();
+                        if (list.Count() == 0)
+                        {
+                            list = qryRecords.Elements("Variations").Elements("Pictures").Elements("VariationSpecificPictureSet").Elements("PictureURL")
+                                .Select(element => element.Value)
+                                .ToArray();
+                        }
+
+                        #region Generate list of Variation objects
+                        var variations = qryRecords.Elements("Variations").Elements("Variation")
+                                .ToArray();
+                        XmlSerializer serializer = new XmlSerializer(typeof(Variation));
+                        var variationList = new List<Variation>();
+                        foreach (var v in variations)
+                        {
+                            var variation = (Variation)serializer.Deserialize(v.CreateReader());
+                            variationName = variation.VariationSpecifics.NameValueList.Name;
+                            variationList.Add(variation);
+                        }
+
+                        #endregion
+
+                        var specifics = (from r3 in qryRecords.Elements("ItemSpecifics").Elements("NameValueList")
+                                         select new
+                                         {
+                                             Name = r3.Element("Name").Value,
+                                             Value = r3.Element("Value").Value
+                                         }).ToArray();
+
+                        var itemSpecifics = new List<SellerListingItemSpecific>();
+                        foreach (var i in specifics)
+                        {
+                            string n = i.Name;
+                            string v = i.Value;
+                            var specific = new SellerListingItemSpecific();
+                            specific.SellerItemID = itemID;
+                            specific.ItemName = n;
+                            specific.ItemValue = v;
+                            itemSpecifics.Add(specific);
+                        }
+                        var a = r.Shipping;
+
+
+                        sellerListing.VariationName = variationName;
+                        sellerListing.ItemSpecifics = itemSpecifics.ToList();
+                        sellerListing.Variations = variationList;
+                        /*
+                         * 10.07.2019
+                         * Good to know how to do this but not necessary since can mostly just look up the seller and see what his
+                         * shipping policy is.  Don't need to exhaust API calls on this.
+                        var shippingCost = await GetShippingCosts(itemId, appid);
+                        si.ShippingServiceCost = shippingCost.ShippingServiceCost;
+                        si.ShippingServiceName = shippingCost.ShippingServiceName;
+                        */
+                        sellerListing.ItemID = itemID;
+                        sellerListing.PictureURL = DSUtil.ListToDelimited(list, ';');
+                        sellerListing.Title = r.Title.Value;
+                        sellerListing.Description = r.Description.Value;
+                        sellerListing.SellerPrice = Convert.ToDecimal(r.Price.Value);
+                        sellerListing.EbayURL = r.ListingUrl.Value;
+                        sellerListing.PrimaryCategoryID = r.PrimaryCategoryID.Value;
+                        sellerListing.PrimaryCategoryName = r.PrimaryCategoryName;
+                        int x1 = Convert.ToInt32(r.Quantity.Value);
+                        int x2 = Convert.ToInt32(r.QuantitySold.Value);
+                        sellerListing.Qty = x1 - x2;   // available qty; https://forums.developer.ebay.com/questions/11293/how-to-get-item-quantity-available.html
+                        sellerListing.ListingStatus = r.ListingStatus.Value;
+                        sellerListing.Seller = r.Seller.Value;
                     }
-                    XElement root = XElement.Parse(output);
-                    var qryRecords = from record in root.Elements("Item")
-                                     select record;
-                    if (qryRecords.Count() == 0)
+                    else
                     {
-                        return null;
+                        sellerListing = null;
                     }
-                    var r = (from r2 in qryRecords
-                             select new
-                             {
-                                 Description = r2.Element("Description"),
-                                 Title = r2.Element("Title"),
-                                 Price = r2.Element("ConvertedCurrentPrice"),
-                                 ListingUrl = r2.Element("ViewItemURLForNaturalSearch"),
-                                 PrimaryCategoryID = r2.Element("PrimaryCategoryID"),
-                                 PrimaryCategoryName = r2.Element("PrimaryCategoryName").ElementValueNull(),
-                                 Quantity = r2.Element("Quantity"),
-                                 QuantitySold = r2.Element("QuantitySold"),
-                                 ListingStatus = r2.Element("ListingStatus"),
-                                 Seller = r2.Element("Seller").Element("UserID"),
-                                 Shipping = r2.Element("ShippingCostSummary").ElementValueNull()
-                             }).Single();
-
-                    // 10.10.2019 had case where no pictures being returned for a seller's listing - idk
-                    // again, probably has something to do with variation listing?
-                    // https://www.ebay.com/itm/XXL-Folding-Padded-Director-Chair-Heavy-Duty-W-Side-Table-Drink-Holder-500-Lb-/352687221867?var=
-                    //
-                    var list = qryRecords.Elements("PictureURL")
-                            .Select(element => element.Value)
-                            .ToArray();
-                    if (list.Count() == 0)
-                    {
-                        list = qryRecords.Elements("Variations").Elements("Pictures").Elements("VariationSpecificPictureSet").Elements("PictureURL")
-                            .Select(element => element.Value)
-                            .ToArray();
-                    }
-
-                    #region Generate list of Variation objects
-                    var variations = qryRecords.Elements("Variations").Elements("Variation")
-                            .ToArray();
-                    XmlSerializer serializer = new XmlSerializer(typeof(Variation));
-                    var variationList = new List<Variation>();
-                    foreach (var v in variations)
-                    {
-                        var variation = (Variation)serializer.Deserialize(v.CreateReader());
-                        variationName = variation.VariationSpecifics.NameValueList.Name;
-                        variationList.Add(variation);
-                    }
-
-                    #endregion
-
-                    var specifics = (from r3 in qryRecords.Elements("ItemSpecifics").Elements("NameValueList")
-                                     select new
-                                     {
-                                         Name = r3.Element("Name").Value,
-                                         Value = r3.Element("Value").Value
-                                     }).ToArray();
-
-                    var itemSpecifics = new List<SellerListingItemSpecific>();
-                    foreach (var i in specifics)
-                    {
-                        string n = i.Name;
-                        string v = i.Value;
-                        var specific = new SellerListingItemSpecific();
-                        specific.SellerItemID = itemID;
-                        specific.ItemName = n;
-                        specific.ItemValue = v;
-                        itemSpecifics.Add(specific);
-                    }
-                    var a = r.Shipping;
-
-                    var sellerListing = new SellerListing();
-                    sellerListing.VariationName = variationName;
-                    sellerListing.ItemSpecifics = itemSpecifics.ToList();
-                    sellerListing.Variations = variationList;
-                    /*
-                     * 10.07.2019
-                     * Good to know how to do this but not necessary since can mostly just look up the seller and see what his
-                     * shipping policy is.  Don't need to exhaust API calls on this.
-                    var shippingCost = await GetShippingCosts(itemId, appid);
-                    si.ShippingServiceCost = shippingCost.ShippingServiceCost;
-                    si.ShippingServiceName = shippingCost.ShippingServiceName;
-                    */
-                    sellerListing.ItemID = itemID;
-                    sellerListing.PictureURL = DSUtil.ListToDelimited(list, ';');
-                    sellerListing.Title = r.Title.Value;
-                    sellerListing.Description = r.Description.Value;
-                    sellerListing.SellerPrice = Convert.ToDecimal(r.Price.Value);
-                    sellerListing.EbayURL = r.ListingUrl.Value;
-                    sellerListing.PrimaryCategoryID = r.PrimaryCategoryID.Value;
-                    sellerListing.PrimaryCategoryName = r.PrimaryCategoryName;
-                    int x1 = Convert.ToInt32(r.Quantity.Value);
-                    int x2 = Convert.ToInt32(r.QuantitySold.Value);
-                    sellerListing.Qty = x1 - x2;   // available qty; https://forums.developer.ebay.com/questions/11293/how-to-get-item-quantity-available.html
-                    sellerListing.ListingStatus = r.ListingStatus.Value;
-                    sellerListing.Seller = r.Seller.Value;
-                    return sellerListing;
                 }
             }
             catch (Exception exc)
@@ -715,6 +723,7 @@ namespace eBayUtility
                 dsutil.DSUtil.WriteFile(_logfile, msg, "nousername");
                 throw;
             }
+            return sellerListing;
         }
 
         protected static string GetSingleItemError(string output)
@@ -922,7 +931,7 @@ namespace eBayUtility
                 pagination.entriesPerPage = 50;
                 pagination.pageNumberSpecified = true;
                 pagination.pageNumber = pageNumber;
-              
+
                 request.paginationInput = pagination;
 
                 // Sorting the result
