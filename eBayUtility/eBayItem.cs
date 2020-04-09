@@ -202,14 +202,14 @@ namespace Utility
                 StringCollection valueCol1 = new StringCollection();
                 StringCollection valueCol2 = new StringCollection();
 
-                if (!ItemSpecificExists(listing.SellerListing.ItemSpecifics, "Brand"))
+                if (!ItemSpecificExists(listing.ItemSpecifics, "Brand"))
                 {
                     nv1.Name = "Brand";
                     valueCol1.Add("Unbranded");
                     nv1.Value = valueCol1;
                     ItemSpecs.Add(nv1);
                 }
-                if (!ItemSpecificExists(listing.SellerListing.ItemSpecifics, "MPN"))
+                if (!ItemSpecificExists(listing.ItemSpecifics, "MPN"))
                 {
                     nv2.Name = "MPN";
                     valueCol2.Add("Does Not Apply");
@@ -217,7 +217,7 @@ namespace Utility
                     ItemSpecs.Add(nv2);
                 }
 
-                var revisedItemSpecs = ModifyItemSpecific(listing.SellerListing.ItemSpecifics);
+                var revisedItemSpecs = ModifyItemSpecific(listing.ItemSpecifics);
                 foreach (var i in revisedItemSpecs)
                 {
                     var n = AddItemSpecifics(i);
@@ -304,7 +304,7 @@ namespace Utility
             }
         }
 
-        public static eBay.Service.Core.Soap.NameValueListType AddItemSpecifics(SellerListingItemSpecific item)
+        public static eBay.Service.Core.Soap.NameValueListType AddItemSpecifics(ListingItemSpecific item)
         {
             var nv2 = new eBay.Service.Core.Soap.NameValueListType();
             StringCollection valueCol2 = new StringCollection();
@@ -315,9 +315,9 @@ namespace Utility
 
             return nv2;
         }
-        public static List<SellerListingItemSpecific> ModifyItemSpecific(List<SellerListingItemSpecific> itemSpecifics)
+        public static List<ListingItemSpecific> ModifyItemSpecific(List<ListingItemSpecific> itemSpecifics)
         {
-            var specifics = new List<SellerListingItemSpecific>();
+            var specifics = new List<ListingItemSpecific>();
             foreach (var s in itemSpecifics)
             {
                 if (!OmitSpecific(s.ItemName))
@@ -327,7 +327,7 @@ namespace Utility
             }
             return specifics;
         }
-        protected static bool ItemSpecificExists(List<SellerListingItemSpecific> itemSpecifics, string itemName)
+        protected static bool ItemSpecificExists(List<ListingItemSpecific> itemSpecifics, string itemName)
         {
             foreach (var s in itemSpecifics)
             {
@@ -554,7 +554,7 @@ namespace Utility
             item.ItemID = listing.ListedItemID;
 
             NameValueListTypeCollection ItemSpecs = new NameValueListTypeCollection();
-            var revisedItemSpecs = ModifyItemSpecific(listing.SellerListing.ItemSpecifics);
+            var revisedItemSpecs = ModifyItemSpecific(listing.ItemSpecifics);
             foreach (var i in revisedItemSpecs)
             {
                 var n = AddItemSpecifics(i);
@@ -579,11 +579,11 @@ namespace Utility
         public async static Task RefreshItemSpecifics(UserSettingsView settings, int ID)
         {
             var listing = db.Listings.Where(p => p.ID == ID).SingleOrDefault();
-            var sellerListing = await ebayAPIs.GetSingleItem(settings, listing.SellerListing.ItemID);
+            var sellerListing = await ebayAPIs.GetSingleItem(settings, listing.ItemID);
 
             var sellerListingdb = db.SellerListings.Find(sellerListing.ItemID);
             sellerListingdb.ItemSpecifics.ForEach(c => c.Updated = DateTime.Now);
-            listing.SellerListing = sellerListingdb;
+            //listing.SellerListing = sellerListingdb;
             await db.SellerListingItemSpecificSave(sellerListing);
             ReviseItemSpecifics(settings, listing);
         }

@@ -56,7 +56,7 @@ namespace eBayUtility
                     listing.PrimaryCategoryName = searchItem.primaryCategory.categoryName;
                     sellerListing.SellerPrice = (decimal)searchItem.sellingStatus.currentPrice.Value;
                     sellerListing.Variation = searchItem.isMultiVariationListing;
-                    listing.SellerListing = sellerListing;
+                    //listing.SellerListing = sellerListing;
                     listings.Add(listing);
                 }
                 return listings;
@@ -840,7 +840,7 @@ namespace eBayUtility
                             sellerListing.SellerPrice = si.SellerPrice;
                             sellerListing.Updated = DateTime.Now;
                             sellerListing.ItemSpecifics = dsmodels.DataModelsDB.CopyFromOrderHistory(ohObj.ItemSpecifics);
-                            listing.SellerListing = sellerListing;
+                            //listing.SellerListing = sellerListing;
                         }
                         await models.ListingSaveAsync(settings, listing);
 

@@ -539,6 +539,8 @@ namespace Utility
 
             //Add Item Specifics
             NameValueListTypeCollection ItemSpecs = new NameValueListTypeCollection();
+
+            /*
             var revisedItemSpecs = Utility.eBayItem.ModifyItemSpecific(sellerListing.ItemSpecifics);
             foreach (var i in revisedItemSpecs)
             {
@@ -546,7 +548,7 @@ namespace Utility
                 ItemSpecs.Add(n);
             }
             item.ItemSpecifics = ItemSpecs;
-
+            */
 
             //Specify VariationSpecificsSet
             item.Variations = new VariationsType();
@@ -753,6 +755,7 @@ namespace Utility
 
             //Add Item Specifics
             NameValueListTypeCollection ItemSpecs = new NameValueListTypeCollection();
+            /*
             var revisedItemSpecs = Utility.eBayItem.ModifyItemSpecific(sellerListing.ItemSpecifics);
             foreach (var i in revisedItemSpecs)
             {
@@ -760,7 +763,7 @@ namespace Utility
                 ItemSpecs.Add(n);
             }
             item.ItemSpecifics = ItemSpecs;
-
+            */
             //Specify VariationSpecificsSet
             item.Variations = new VariationsType();
 
@@ -960,6 +963,7 @@ namespace Utility
 
             //Add Item Specifics
             NameValueListTypeCollection ItemSpecs = new NameValueListTypeCollection();
+            /*
             var revisedItemSpecs = Utility.eBayItem.ModifyItemSpecific(sellerListing.ItemSpecifics);
             foreach (var i in revisedItemSpecs)
             {
@@ -967,6 +971,7 @@ namespace Utility
                 ItemSpecs.Add(n);
             }
             item.ItemSpecifics = ItemSpecs;
+            */
 
             //Specify VariationSpecificsSet
             item.Variations = new VariationsType();
