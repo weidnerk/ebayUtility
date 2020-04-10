@@ -430,14 +430,14 @@ namespace Utility
                 context.ApiCredential.eBayToken = token;
 
                 //enable logging
-                context.ApiLogManager = new ApiLogManager();
-                context.ApiLogManager.ApiLoggerList.Add(new FileLogger("logebay.txt", false, false, false));
+                //context.ApiLogManager = new ApiLogManager();
+                //context.ApiLogManager.ApiLoggerList.Add(new FileLogger("logebay.txt", false, false, false));
                 /*
                  * PLEASE NOTE:
                  * Long time issue of finishing the listing revise but then navigating to another page is slow.
                  * Turn off logging fixes this.  Not sure what ebay logger is doing
                  */
-                context.ApiLogManager.EnableLogging = false;
+                //context.ApiLogManager.EnableLogging = false;
 
                 //set the version
                 context.Version = "817";
