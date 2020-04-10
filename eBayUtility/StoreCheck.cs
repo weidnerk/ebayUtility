@@ -45,9 +45,6 @@ namespace Utility
                     if (!r)
                     {
                         items.Add(oItem.Title);
-                        Console.WriteLine(oItem.ItemID);
-                        Console.WriteLine(oItem.Title);
-                        Console.WriteLine();
                         ++cnt;
                     }
                 }
