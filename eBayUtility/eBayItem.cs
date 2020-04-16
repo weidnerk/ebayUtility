@@ -357,6 +357,184 @@ namespace Utility
                 return null;
             }
         }
+        public static string VerifyAddItemRequest(UserSettingsView settings,
+            string title,
+            string description,
+            string categoryID,
+            double price,
+            List<string> pictureURLs,
+            ref List<string> errors,
+            int qtyToList,
+            Listing listing)
+        {
+            //errors = null;
+            string listedItemID = null;
+            try
+            {
+                eBayAPIInterfaceService service = EbayCalls.eBayServiceCall(settings, "VerifyAddItem");
+
+                VerifyAddItemRequestType request = new VerifyAddItemRequestType();
+                request.Version = "949";
+                request.ErrorLanguage = "en_US";
+                request.WarningLevel = WarningLevelCodeType.High;
+
+                var item = new ItemType();
+
+                item.Title = title;
+                item.Description = description;
+                item.PrimaryCategory = new CategoryType
+                {
+                    CategoryID = categoryID
+                };
+                item.StartPrice = new AmountType
+                {
+                    Value = price,
+                    currencyID = CurrencyCodeType.USD
+                };
+
+                // To view ConditionIDs follow the URL
+                // http://developer.ebay.com/devzone/guides/ebayfeatures/Development/Desc-ItemCondition.html#HelpingSellersChoosetheRightCondition
+                item.ConditionID = 1000;    // new
+                item.Country = CountryCodeType.US;
+                item.Currency = CurrencyCodeType.USD;
+                // item.DispatchTimeMax = 2;       // pretty sure this is handling time
+
+                // https://developer.ebay.com/devzone/xml/docs/reference/ebay/types/ListingDurationCodeType.html
+                item.ListingDuration = "Days_30";
+                item.ListingDuration = "GTC";
+
+                // Buy It Now fixed price
+                item.ListingType = ListingTypeCodeType.FixedPriceItem;
+                // Auction
+                //item.ListingType = ListingTypeCodeType.Chinese; 
+
+                item.PaymentMethods = new BuyerPaymentMethodCodeTypeCollection
+                {
+                    BuyerPaymentMethodCodeType.PayPal
+                };
+                item.AutoPay = true;    // require immediate payment
+                                        // Default testing paypal email address
+                item.PayPalEmailAddress = "ventures2019@gmail.com";
+
+                item.PictureDetails = new PictureDetailsType();
+                item.PictureDetails.PictureURL = new StringCollection();
+                item.PictureDetails.PictureURL.AddRange(pictureURLs.ToArray());
+                // item.PostalCode = "33772";
+                item.Location = "Multiple locations";
+                item.Quantity = qtyToList;
+
+                item.ItemSpecifics = new NameValueListTypeCollection();
+
+                NameValueListTypeCollection ItemSpecs = new NameValueListTypeCollection();
+
+                var nv1 = new eBay.Service.Core.Soap.NameValueListType();
+                var nv2 = new eBay.Service.Core.Soap.NameValueListType();
+                StringCollection valueCol1 = new StringCollection();
+                StringCollection valueCol2 = new StringCollection();
+
+                if (!ItemSpecificExists(listing.ItemSpecifics, "Brand"))
+                {
+                    nv1.Name = "Brand";
+                    valueCol1.Add("Unbranded");
+                    nv1.Value = valueCol1;
+                    ItemSpecs.Add(nv1);
+                }
+                if (!ItemSpecificExists(listing.ItemSpecifics, "MPN"))
+                {
+                    nv2.Name = "MPN";
+                    valueCol2.Add("Does Not Apply");
+                    nv2.Value = valueCol2;
+                    ItemSpecs.Add(nv2);
+                }
+
+                var revisedItemSpecs = ModifyItemSpecific(listing.ItemSpecifics);
+                foreach (var i in revisedItemSpecs)
+                {
+                    var n = AddItemSpecifics(i);
+                    ItemSpecs.Add(n);
+                }
+                item.ItemSpecifics = ItemSpecs;
+
+                var pd = new ProductListingDetailsType();
+                //var brand = new BrandMPNType();
+                //brand.Brand = "Unbranded";
+                //brand.MPN = unavailable;
+                //pd.BrandMPN = brand;
+                pd.UPC = "Does not apply";
+                item.ProductListingDetails = pd;
+
+                string returnDescr = "Please return if unstatisfied.";
+                // returnDescr = "30 day returns. Buyer pays for return shipping";
+                var sp = new SellerProfilesType();
+
+                /*
+                var spp = new SellerPaymentProfileType();
+                spp.PaymentProfileName = paymentProfile;
+
+                var srp = new SellerReturnProfileType();
+                srp.ReturnProfileName = returnProfile;
+
+                var ssp = new SellerShippingProfileType();
+                ssp.ShippingProfileName = shippingProfile;
+
+                sp.SellerPaymentProfile = spp;
+                sp.SellerReturnProfile = srp;
+                sp.SellerShippingProfile = ssp;
+                item.SellerProfiles = sp;
+                */
+
+                /*
+                 * How to create policy in place:
+                 */
+                item.ReturnPolicy = new ReturnPolicyType
+                {
+                    ReturnsAcceptedOption = "ReturnsAccepted",
+                    ReturnsWithinOption = "Days_30",
+                    //RefundOption = "MoneyBack",
+                    //Description = returnDescr,
+                    ShippingCostPaidByOption = "Seller"
+                    //,
+                    //RestockingFeeValue = "Percent_20",
+                    //RestockingFeeValueOption = "Percent_20"
+                };
+                item.ShippingDetails = eBayUtility.ebayAPIs.GetShippingDetail();
+                
+                item.DispatchTimeMax = 3;   // aka handling time
+
+                item.Site = SiteCodeType.US;
+
+                request.Item = item;
+
+                VerifyAddItemResponseType response = service.VerifyAddItem(request);
+                Console.WriteLine("ItemID: {0}", response.ItemID);
+
+                // If item is verified, the item will be added.
+                if (response.ItemID == "0")
+                {
+                    listedItemID = AddItemRequest(settings, item, ref errors);
+                }
+                else
+                {
+                    foreach (ErrorType e in response.Errors)
+                    {
+                        errors.Add(e.LongMessage);
+                    }
+                }
+                return listedItemID;
+            }
+            catch (SoapException exc)
+            {
+                string s = exc.Message;
+                errors.Add(exc.Detail.InnerText);
+                return null;
+            }
+            catch (Exception exc)
+            {
+                string s = exc.Message;
+                errors.Add(s);
+                return null;
+            }
+        }
 
         public static eBay.Service.Core.Soap.NameValueListType AddItemSpecifics(ListingItemSpecific item)
         {

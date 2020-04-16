@@ -1169,7 +1169,7 @@ namespace eBayUtility
             return request;
         }
 
-        protected static eBay.Service.Core.Soap.ShippingDetailsType GetShippingDetail()
+        public static eBay.Service.Core.Soap.ShippingDetailsType GetShippingDetail()
         {
             eBay.Service.Core.Soap.ShippingDetailsType sd = new eBay.Service.Core.Soap.ShippingDetailsType();
 
