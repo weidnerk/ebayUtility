@@ -15,6 +15,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -94,6 +95,11 @@ namespace eBayUtility
             return eBayOrder;
         }
 
+        /// <summary>
+        /// Gives you info about eBay as a whole
+        /// </summary>
+        /// <param name="settings"></param>
+        /// <returns></returns>
         public static string GetebayDetails(UserSettingsView settings)
         {
             string unavailable = null;
@@ -109,13 +115,20 @@ namespace eBayUtility
 
                 GeteBayDetailsCall request = new GeteBayDetailsCall(context);
                 request.DetailNameList = new DetailNameCodeTypeCollection();
-                request.DetailNameList.Add(DetailNameCodeType.ProductDetails);
+                //request.DetailNameList.Add(DetailNameCodeType.ProductDetails);
+                //request.DetailNameList.Add(DetailNameCodeType.ReturnPolicyDetails);
+
+                // No, this gives you all of eBay's shipping options
+                request.DetailNameList.Add(DetailNameCodeType.ShippingServiceDetails);
                 GeteBayDetailsResponseType response = new GeteBayDetailsResponseType();
                 request.Execute();
                 response = request.ApiResponse;
                 if (response.Ack == eBay.Service.Core.Soap.AckCodeType.Success)
                 {
-                    unavailable = response.ProductDetails.ProductIdentifierUnavailableText;
+                    //unavailable = response.ProductDetails.ProductIdentifierUnavailableText;
+
+
+                    var s = response.ShippingServiceDetails.ToArray();
                 }
             }
             catch (Exception ex)
@@ -567,6 +580,28 @@ namespace eBayUtility
             }
         }
 
+        // not working - trying to get my store's shipping policy
+        public static async Task GetShippingPolicy(UserSettingsView settings)
+        {
+            try
+            {
+                Shopping svc = new Shopping();
+                // set the URL and it's parameters
+                svc.Url = string.Format("https://svcs.ebay.com/services/selling/v1/SellerProfilesManagementService?X-EBAY-SOA-OPERATION-NAME=getSellerProfiles&X-EBAY-SOA-SERVICE-NAME=SellerProfilesManagementService&X-EBAY-SOA-SERVICE-VERSION=1.0.0&X-EBAY-SOA-SECURITY-TOKEN={0}&X-EBAY-SOA-RESPONSE-DATA-FORMAT=XML&REST-PAYLOAD&includeDetails=true", settings.Token);
+                string uri = svc.Url;
+                string errMsg;
+                using (HttpClient httpClient = new HttpClient())
+                {
+                    string s = await httpClient.GetStringAsync(uri);
+                 
+                }
+            }
+            catch (Exception exc)
+            {
+                string msg = exc.Message;
+            }
+        }
+      
         // Purpose of GetSingleItem is to fetch properties such as a listing's description and photos
         // it is used when performing an auto-listing
         public static async Task<SellerListing> GetSingleItem(UserSettingsView settings, string itemID)

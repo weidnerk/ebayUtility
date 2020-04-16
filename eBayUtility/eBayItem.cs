@@ -15,9 +15,12 @@ using eBayUtility;
 using System;
 using System.Collections.Generic;
 using System.Data.Entity;
+using System.IO;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using System.Web.Services.Protocols;
+using System.Xml.Linq;
 
 namespace Utility
 {
@@ -28,11 +31,62 @@ namespace Utility
         const string _logfile = "log.txt";
 
         /// <summary>
+        /// https://developer.ebay.com/devzone/finding/concepts/MakingACall.html
+        /// https://developer.ebay.com/Devzone/business-policies/Concepts/MakingACall.html#TestingOverview
+        /// </summary>
+        /// <param name="settings"></param>
+        public static void GetSellerBusinessPolicy(UserSettingsView settings)
+        {
+            // gotta look at this, GetShippingCosts()
+            var uri = new Uri("https://svcs.ebay.com/services/selling/v1/SellerProfilesManagementService");
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(uri);
+
+            request.Headers.Add("X-EBAY-SOA-SECURITY-TOKEN", settings.Token);
+            request.Headers.Add("X-EBAY-SOA-OPERATION-NAME", "getSellerProfiles");
+            request.Headers.Add("X-EBAY-SOA-SERVICE-NAME", "SellerProfilesManagementService");
+            request.Headers.Add("X-EBAY-SOA-SERVICE-VERSION", "1.0.0");
+            request.Headers.Add("X-EBAY-SOA-GLOBAL-ID", "EBAY-US");
+
+            using (WebResponse Serviceres = request.GetResponse())
+            {
+                using (StreamReader rd = new StreamReader(Serviceres.GetResponseStream()))
+                {
+                    // reading stream    
+                    // https://stackoverflow.com/questions/692342/net-httpwebrequest-getresponse-raises-exception-when-http-status-code-400-ba
+
+                    var ServiceResult = rd.ReadToEnd();
+                    //writting stream result on console    
+                    var s = ServiceResult.Replace("\"", "'");
+                    var output = s.Replace(" xmlns='http://www.ebay.com/marketplace/selling/v1/services'", string.Empty);
+                    XElement root = XElement.Parse(output);
+                    var qryRecords = from record in root.Elements("shippingPolicyProfile").Elements("ShippingPolicyProfile").Elements("shippingPolicyInfo")
+                                     select record;
+                    if (qryRecords.Count() == 0)
+                    {
+                        //return null;
+                    }
+                    else
+                    {
+                        int y = qryRecords.Count();
+                        foreach(var item in qryRecords)
+                        {
+                            var x = item.Element("shippingPolicyName").Value;
+                        }
+                    }
+                }
+            }
+        }
+        /// <summary>
         /// 
         /// </summary>
         /// <param name="itemID">ebay seller listing id</param>
         /// <returns></returns>
-        public static async Task<List<string>> ListingCreateAsync(UserSettingsView settings, int listingID, string shippingProfile, string returnProfile, string paymentProfile)
+        public static async Task<List<string>> ListingCreateAsync(
+            UserSettingsView settings, 
+            int listingID, 
+            string shippingProfile, 
+            string returnProfile, 
+            string paymentProfile)
         {
             var output = new List<string>();
             var listing = db.ListingGet(listingID, settings.StoreID);     // item has to be stored before it can be listed
@@ -140,7 +194,7 @@ namespace Utility
             try
             {
                 eBayAPIInterfaceService service = EbayCalls.eBayServiceCall(settings, "VerifyAddItem");
-
+                
                 VerifyAddItemRequestType request = new VerifyAddItemRequestType();
                 request.Version = "949";
                 request.ErrorLanguage = "en_US";

@@ -6,16 +6,11 @@
  */
 using dsmodels;
 using eBay.Service.Core.Soap;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
 
 namespace Utility
 {
     public class EbayCalls
     {
-        static dsmodels.DataModelsDB db = new dsmodels.DataModelsDB();
 
         public static eBayAPIInterfaceService eBayServiceCall(UserSettingsView settings, string CallName)
         {
