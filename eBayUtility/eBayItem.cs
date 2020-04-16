@@ -83,10 +83,7 @@ namespace Utility
         /// <returns></returns>
         public static async Task<List<string>> ListingCreateAsync(
             UserSettingsView settings, 
-            int listingID, 
-            string shippingProfile, 
-            string returnProfile, 
-            string paymentProfile)
+            int listingID)
         {
             var output = new List<string>();
             var listing = db.ListingGet(listingID, settings.StoreID);     // item has to be stored before it can be listed
@@ -103,17 +100,35 @@ namespace Utility
                         return output;
                     }
                     List<string> pictureURLs = dsutil.DSUtil.DelimitedToList(listing.PictureURL, ';');
-                    string verifyItemID = eBayItem.VerifyAddItemRequest(settings, listing.ListingTitle,
-                        listing.Description,
-                        listing.PrimaryCategoryID,
-                        (double)listing.ListingPrice,
-                        pictureURLs,
-                        ref output,
-                        listing.Qty,
-                        listing,
-                        shippingProfile,
-                        returnProfile,
-                        paymentProfile);
+
+                    string verifyItemID = null;
+
+                    // Is the user setup with Business Policies?  Probably not best way to do it.
+                    if (!string.IsNullOrEmpty(settings.ShippingProfile))
+                    {
+                        verifyItemID = eBayItem.VerifyAddItemRequest(settings, listing.ListingTitle,
+                            listing.Description,
+                            listing.PrimaryCategoryID,
+                            (double)listing.ListingPrice,
+                            pictureURLs,
+                            ref output,
+                            listing.Qty,
+                            listing,
+                            settings.ShippingProfile,
+                            settings.ReturnProfile,
+                            settings.PaymentProfile);
+                    }
+                    else
+                    {
+                        verifyItemID = eBayItem.VerifyAddItemRequest(settings, listing.ListingTitle,
+                            listing.Description,
+                            listing.PrimaryCategoryID,
+                            (double)listing.ListingPrice,
+                            pictureURLs,
+                            ref output,
+                            listing.Qty,
+                            listing);
+                    }
                     // at this point, 'output' will be populated with errors if any occurred
 
                     if (!string.IsNullOrEmpty(verifyItemID))
