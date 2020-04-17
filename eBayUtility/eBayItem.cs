@@ -35,9 +35,11 @@ namespace Utility
         /// https://developer.ebay.com/Devzone/business-policies/Concepts/MakingACall.html#TestingOverview
         /// </summary>
         /// <param name="settings"></param>
-        public static void GetSellerBusinessPolicy(UserSettingsView settings)
+        public static List<string> GetSellerBusinessPolicy(UserSettingsView settings)
         {
             // gotta look at this, GetShippingCosts()
+
+            var policies = new List<string>();
             var uri = new Uri("https://svcs.ebay.com/services/selling/v1/SellerProfilesManagementService");
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(uri);
 
@@ -63,7 +65,7 @@ namespace Utility
                                      select record;
                     if (qryRecords.Count() == 0)
                     {
-                        //return null;
+                        policies = null;
                     }
                     else
                     {
@@ -71,10 +73,12 @@ namespace Utility
                         foreach(var item in qryRecords)
                         {
                             var x = item.Element("shippingPolicyName").Value;
+                            policies.Add(x);
                         }
                     }
                 }
             }
+            return policies;
         }
         /// <summary>
         /// 
