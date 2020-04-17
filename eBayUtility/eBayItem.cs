@@ -2,6 +2,7 @@
  * Listing functions.
  * 
  * This file is heavily dependent on the .NET SDK (References/eBay.Service)
+ * (download here: https://developer.ebay.com/tools/netsdk)
  * but different in that calls go through the eBayAPIInterfaceService object.
  * 
  * 
@@ -40,43 +41,51 @@ namespace Utility
             // gotta look at this, GetShippingCosts()
 
             var policies = new List<string>();
-            var uri = new Uri("https://svcs.ebay.com/services/selling/v1/SellerProfilesManagementService");
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(uri);
-
-            request.Headers.Add("X-EBAY-SOA-SECURITY-TOKEN", settings.Token);
-            request.Headers.Add("X-EBAY-SOA-OPERATION-NAME", "getSellerProfiles");
-            request.Headers.Add("X-EBAY-SOA-SERVICE-NAME", "SellerProfilesManagementService");
-            request.Headers.Add("X-EBAY-SOA-SERVICE-VERSION", "1.0.0");
-            request.Headers.Add("X-EBAY-SOA-GLOBAL-ID", "EBAY-US");
-
-            using (WebResponse Serviceres = request.GetResponse())
+            try
             {
-                using (StreamReader rd = new StreamReader(Serviceres.GetResponseStream()))
-                {
-                    // reading stream    
-                    // https://stackoverflow.com/questions/692342/net-httpwebrequest-getresponse-raises-exception-when-http-status-code-400-ba
+                var uri = new Uri("https://svcs.ebay.com/services/selling/v1/SellerProfilesManagementService");
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(uri);
 
-                    var ServiceResult = rd.ReadToEnd();
-                    //writting stream result on console    
-                    var s = ServiceResult.Replace("\"", "'");
-                    var output = s.Replace(" xmlns='http://www.ebay.com/marketplace/selling/v1/services'", string.Empty);
-                    XElement root = XElement.Parse(output);
-                    var qryRecords = from record in root.Elements("shippingPolicyProfile").Elements("ShippingPolicyProfile").Elements("shippingPolicyInfo")
-                                     select record;
-                    if (qryRecords.Count() == 0)
+                request.Headers.Add("X-EBAY-SOA-SECURITY-TOKEN", settings.Token);
+                request.Headers.Add("X-EBAY-SOA-OPERATION-NAME", "getSellerProfiles");
+                request.Headers.Add("X-EBAY-SOA-SERVICE-NAME", "SellerProfilesManagementService");
+                request.Headers.Add("X-EBAY-SOA-SERVICE-VERSION", "1.0.0");
+                request.Headers.Add("X-EBAY-SOA-GLOBAL-ID", "EBAY-US");
+
+                using (WebResponse Serviceres = request.GetResponse())
+                {
+                    using (StreamReader rd = new StreamReader(Serviceres.GetResponseStream()))
                     {
-                        policies = null;
-                    }
-                    else
-                    {
-                        int y = qryRecords.Count();
-                        foreach(var item in qryRecords)
+                        // reading stream    
+                        // https://stackoverflow.com/questions/692342/net-httpwebrequest-getresponse-raises-exception-when-http-status-code-400-ba
+
+                        var ServiceResult = rd.ReadToEnd();
+                        //writting stream result on console    
+                        var s = ServiceResult.Replace("\"", "'");
+                        var output = s.Replace(" xmlns='http://www.ebay.com/marketplace/selling/v1/services'", string.Empty);
+                        XElement root = XElement.Parse(output);
+                        var qryRecords = from record in root.Elements("shippingPolicyProfile").Elements("ShippingPolicyProfile").Elements("shippingPolicyInfo")
+                                         select record;
+                        if (qryRecords.Count() == 0)
                         {
-                            var x = item.Element("shippingPolicyName").Value;
-                            policies.Add(x);
+                            policies = null;
+                        }
+                        else
+                        {
+                            int y = qryRecords.Count();
+                            foreach (var item in qryRecords)
+                            {
+                                var x = item.Element("shippingPolicyName").Value;
+                                policies.Add(x);
+                            }
                         }
                     }
                 }
+            }
+            catch (Exception exc)
+            {
+                string msg = dsutil.DSUtil.ErrMsg("GetSellerBusinessPolicy", exc);
+                dsutil.DSUtil.WriteFile(_logfile, msg, settings.UserName);
             }
             return policies;
         }
