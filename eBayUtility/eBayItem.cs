@@ -86,6 +86,7 @@ namespace Utility
             {
                 string msg = dsutil.DSUtil.ErrMsg("GetSellerBusinessPolicy", exc);
                 dsutil.DSUtil.WriteFile(_logfile, msg, settings.UserName);
+                throw;
             }
             return policies;
         }
