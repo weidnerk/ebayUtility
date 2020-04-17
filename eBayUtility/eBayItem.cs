@@ -133,8 +133,9 @@ namespace Utility
 
                     if (!string.IsNullOrEmpty(verifyItemID))
                     {
-                        output.Insert(0, verifyItemID);
+                        // make sure listedItemID is first in list
                         output.Insert(0, "Listed: YES");
+                        output.Insert(0, verifyItemID);
                         if (!listing.Listed.HasValue)
                         {
                             listing.Listed = DateTime.Now;
@@ -160,6 +161,7 @@ namespace Utility
                     {
                         response = FlattenList(output);
                     }
+                    // update the 'updatedby' fields
                     await db.ListedItemIDUpdate(listing, listing.ListedItemID, settings.UserID, true, response, updated: DateTime.Now);
                     output.Insert(0, listing.ListedItemID);
                 }
