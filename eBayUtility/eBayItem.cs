@@ -556,6 +556,7 @@ namespace Utility
             catch (SoapException exc)
             {
                 string s = exc.Message;
+                errors.Add(exc.Message);    // both errors are informative
                 errors.Add(exc.Detail.InnerText);
                 return null;
             }
@@ -643,35 +644,51 @@ namespace Utility
             return response.ItemID;
         }
 
-
+        /// <summary>
+        /// Had case in Jennifer account where ebay removed the listings in the store (2) I guess because it was trying
+        /// to verify security.
+        /// But ds109 doesn't know that so try to end listing and get error.  In this case, the error is:
+        /// "For security reasons, please log in again"
+        /// </summary>
+        /// <param name="settings"></param>
+        /// <param name="listing"></param>
+        /// <returns></returns>
         public static string EndFixedPriceItem(UserSettingsView settings, Listing listing)
         {
-            //create the context
-            ApiContext context = new ApiContext();
+            try { 
+                //create the context
+                ApiContext context = new ApiContext();
 
-            //set the User token
-            string token = db.GetToken(settings);
-            context.ApiCredential.eBayToken = token;
+                //set the User token
+                string token = db.GetToken(settings);
+                context.ApiCredential.eBayToken = token;
 
-            //set the server url
+                //set the server url
 
-            //enable logging
-            context.ApiLogManager = new ApiLogManager();
-            context.ApiLogManager.ApiLoggerList.Add(new FileLogger("logebay.txt", false, false, false));
-            context.ApiLogManager.EnableLogging = true;
+                //enable logging
+                context.ApiLogManager = new ApiLogManager();
+                context.ApiLogManager.ApiLoggerList.Add(new FileLogger("logebay.txt", false, false, false));
+                context.ApiLogManager.EnableLogging = true;
 
-            //set the version
-            context.Version = "817";
-            context.Site = eBay.Service.Core.Soap.SiteCodeType.US;
+                //set the version
+                context.Version = "817";
+                context.Site = eBay.Service.Core.Soap.SiteCodeType.US;
 
-            EndFixedPriceItemCall endFP = new EndFixedPriceItemCall(context);
+                EndFixedPriceItemCall endFP = new EndFixedPriceItemCall(context);
 
-            endFP.ItemID = listing.ListedItemID;
-            endFP.EndingReason = EndReasonCodeType.NotAvailable;
+                endFP.ItemID = listing.ListedItemID;
+                endFP.EndingReason = EndReasonCodeType.NotAvailable;
 
-            endFP.Execute();
-            string result = endFP.ApiResponse.Ack + " Ended ItemID " + endFP.ItemID;
-            return result;
+                endFP.Execute();
+                string result = endFP.ApiResponse.Ack + " Ended ItemID " + endFP.ItemID;
+                return result;
+            }
+            catch (Exception exc)
+            {
+                string msg = "ERROR EndFixedPriceItem (eBay removed listing?  Token problem?) listedItemID -> " + listing.ListedItemID + " -> " + exc.Message;
+                dsutil.DSUtil.WriteFile(_logfile, msg, settings.UserName);
+                throw;
+            }
         }
 
         // use this for itemspecifics:
