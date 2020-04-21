@@ -171,6 +171,11 @@ namespace Utility
                                         price: Convert.ToDouble(listing.ListingPrice),
                                         title: listing.ListingTitle,
                                         description: listing.Description);
+                    var log = new ListingLog();
+                    log.MsgID = 800;
+                    log.Note = "revised listing by " + settings.UserName;
+                    log.ListingID = listing.ID;
+                    await db.ListingLogAdd(log);
                     if (output.Count > 0)
                     {
                         response = FlattenList(output);
