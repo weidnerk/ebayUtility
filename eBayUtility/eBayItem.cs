@@ -183,9 +183,16 @@ namespace Utility
                     // update the 'updatedby' fields
                     await db.ListedItemIDUpdate(listing, listing.ListedItemID, settings.UserID, true, response, updated: DateTime.Now);
                     output.Insert(0, listing.ListedItemID);
+
+                    LogListingResponse(output);
                 }
             }
             return output;
+        }
+        protected static void LogListingResponse(List<string> response)
+        {
+            var output = dsutil.DSUtil.ListToDelimited(response.ToArray(), ';');
+
         }
         protected static string FlattenList(List<string> errors)
         {
