@@ -41,6 +41,10 @@ namespace Utility
                 // scan each item in store - is it in db?
                 foreach (ItemType oItem in storeItems)
                 {
+                    if (oItem.Quantity > 0)
+                    {
+                        int stop = 99;
+                    }
                     bool r = Utility.StoreCheck.LookupItemid(settings, oItem.ItemID);
                     if (!r)
                     {
