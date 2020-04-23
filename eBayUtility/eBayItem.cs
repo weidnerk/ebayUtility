@@ -40,7 +40,8 @@ namespace Utility
         {
             // gotta look at this, GetShippingCosts()
 
-            var policies = new List<string>();
+            var shippingPolicies = new List<string>();
+            var returnPolicies = new List<string>();
             try
             {
                 var uri = new Uri("https://svcs.ebay.com/services/selling/v1/SellerProfilesManagementService");
@@ -64,11 +65,13 @@ namespace Utility
                         var s = ServiceResult.Replace("\"", "'");
                         var output = s.Replace(" xmlns='http://www.ebay.com/marketplace/selling/v1/services'", string.Empty);
                         XElement root = XElement.Parse(output);
+
+                        // SHIPPING POLICIES
                         var qryRecords = from record in root.Elements("shippingPolicyProfile").Elements("ShippingPolicyProfile").Elements("shippingPolicyInfo")
                                          select record;
                         if (qryRecords.Count() == 0)
                         {
-                            policies = null;
+                            shippingPolicies = null;
                         }
                         else
                         {
@@ -76,7 +79,24 @@ namespace Utility
                             foreach (var item in qryRecords)
                             {
                                 var x = item.Element("shippingPolicyName").Value;
-                                policies.Add(x);
+                                shippingPolicies.Add(x);
+                            }
+                        }
+
+                        // RETURN POLICIES
+                        qryRecords = from record in root.Elements("returnPolicyProfileList").Elements("ReturnPolicyProfile")
+                                         select record;
+                        if (qryRecords.Count() == 0)
+                        {
+                            returnPolicies = null;
+                        }
+                        else
+                        {
+                            int y = qryRecords.Count();
+                            foreach (var item in qryRecords)
+                            {
+                                var x = item.Element("profileName").Value;
+                                returnPolicies.Add(x);
                             }
                         }
                     }
@@ -88,7 +108,7 @@ namespace Utility
                 dsutil.DSUtil.WriteFile(_logfile, msg, settings.UserName);
                 throw;
             }
-            return policies;
+            return shippingPolicies;
         }
         /// <summary>
         /// 
@@ -161,6 +181,10 @@ namespace Utility
                     {
                         output.Add("Listing not created.");
                     }
+                    if (output.Count > 0)
+                    {
+                        LogListingResponse(output);
+                    }
                 }
                 else
                 {
@@ -184,7 +208,10 @@ namespace Utility
                     await db.ListedItemIDUpdate(listing, listing.ListedItemID, settings.UserID, true, response, updated: DateTime.Now);
                     output.Insert(0, listing.ListedItemID);
 
-                    LogListingResponse(output);
+                    if (output.Count > 0)
+                    {
+                        LogListingResponse(output);
+                    }
                 }
             }
             return output;
