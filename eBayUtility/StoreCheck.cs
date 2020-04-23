@@ -55,5 +55,38 @@ namespace Utility
             }
             return items;
         }
+        public static StoreAnalysis Analysis(UserSettingsView settings, ref ItemTypeCollection storeItems)
+        {
+            var analysis = new StoreAnalysis();
+            var items = new List<string>();
+            var qtyMismatch = new List<string>();
+            int cnt = 0;
+            int qtyMismatchCnt = 0;
+            if (storeItems.Count == 0)
+            {
+                storeItems = ebayAPIs.GetSellerList(settings, out string errMsg);
+            }
+            if (storeItems != null)
+            {
+                // scan each item in store - is it in db?
+                foreach (ItemType oItem in storeItems)
+                {
+                    if (oItem.Quantity > 0)
+                    {
+                        qtyMismatch.Add(oItem.Title);
+                        ++qtyMismatchCnt;
+                    }
+                    bool r = Utility.StoreCheck.LookupItemid(settings, oItem.ItemID);
+                    if (!r)
+                    {
+                        items.Add(oItem.Title);
+                        ++cnt;
+                    }
+                }
+                analysis.DBIsMissingItems = items;
+                analysis.QtyMismatch = qtyMismatch;
+            }
+            return analysis;
+        }
     }
 }
