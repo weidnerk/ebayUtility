@@ -36,10 +36,11 @@ namespace Utility
         /// https://developer.ebay.com/Devzone/business-policies/Concepts/MakingACall.html#TestingOverview
         /// </summary>
         /// <param name="settings"></param>
-        public static List<string> GetSellerBusinessPolicy(UserSettingsView settings)
+        public static eBayBusinessPolicies GetSellerBusinessPolicy(UserSettingsView settings)
         {
             // gotta look at this, GetShippingCosts()
 
+            var policies = new eBayBusinessPolicies();
             var shippingPolicies = new List<string>();
             var returnPolicies = new List<string>();
             try
@@ -101,6 +102,8 @@ namespace Utility
                         }
                     }
                 }
+                policies.ShippingPolicies = shippingPolicies;
+                policies.ReturnPolicies = returnPolicies;
             }
             catch (Exception exc)
             {
@@ -108,7 +111,7 @@ namespace Utility
                 dsutil.DSUtil.WriteFile(_logfile, msg, settings.UserName);
                 throw;
             }
-            return shippingPolicies;
+            return policies;
         }
         /// <summary>
         /// 
