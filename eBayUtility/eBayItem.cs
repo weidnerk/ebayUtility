@@ -188,7 +188,7 @@ namespace Utility
                     }
                     if (output.Count > 0)
                     {
-                        LogListingResponse(output);
+                        await LogListingResponse(settings, listing, output);
                     }
                 }
                 else
@@ -201,6 +201,7 @@ namespace Utility
                                         title: listing.ListingTitle,
                                         description: listing.Description);
                     var log = new ListingLog();
+                    log.UserID = settings.UserID;
                     log.MsgID = 800;
                     log.Note = "revised listing by " + settings.UserName;
                     log.ListingID = listing.ID;
@@ -215,16 +216,28 @@ namespace Utility
 
                     if (output.Count > 0)
                     {
-                        LogListingResponse(output);
+                        await LogListingResponse(settings, listing, output);
                     }
                 }
             }
             return output;
         }
-        protected static void LogListingResponse(List<string> response)
+        protected static async Task LogListingResponse(UserSettingsView settings, Listing listing, List<string> response)
         {
-            var output = dsutil.DSUtil.ListToDelimited(response.ToArray(), ';');
-
+            try
+            {
+                var output = dsutil.DSUtil.ListToDelimited(response.ToArray(), ';');
+                var log = new ListingLog();
+                log.MsgID = 800;
+                log.Note = output;
+                log.UserID = settings.UserID;
+                log.ListingID = listing.ID;
+                await db.ListingLogAdd(log);
+            }
+            catch
+            {
+                throw;
+            }
         }
         protected static string FlattenList(List<string> errors)
         {
