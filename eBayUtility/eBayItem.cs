@@ -625,7 +625,7 @@ namespace Utility
             }
         }
 
-        public static eBay.Service.Core.Soap.NameValueListType AddItemSpecifics(ListingItemSpecific item)
+        protected static eBay.Service.Core.Soap.NameValueListType AddItemSpecifics(ListingItemSpecific item)
         {
             var nv2 = new eBay.Service.Core.Soap.NameValueListType();
             StringCollection valueCol2 = new StringCollection();

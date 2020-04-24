@@ -720,7 +720,6 @@ namespace eBayUtility
                         }
                         var a = r.Shipping;
 
-
                         sellerListing.VariationName = variationName;
                         sellerListing.ItemSpecifics = itemSpecifics.ToList();
                         sellerListing.Variations = variationList;
