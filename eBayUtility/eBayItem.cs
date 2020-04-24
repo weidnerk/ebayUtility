@@ -723,6 +723,8 @@ namespace Utility
                 endFP.ItemID = listing.ListedItemID;
                 endFP.EndingReason = EndReasonCodeType.NotAvailable;
 
+                // if you try to end a listing that was already ended using the ebay website, then an exception is thrown:
+                // "The auction has already been closed."
                 endFP.Execute();
                 string result = endFP.ApiResponse.Ack + " Ended ItemID " + endFP.ItemID;
                 return result;
