@@ -41,7 +41,7 @@ namespace Utility
             // gotta look at this, GetShippingCosts()
 
             var policies = new eBayBusinessPolicies();
-            var shippingPolicies = new List<string>();
+            var shippingPolicies = new List<ShippingPolicy>();
             var returnPolicies = new List<string>();
             try
             {
@@ -79,8 +79,10 @@ namespace Utility
                             int y = qryRecords.Count();
                             foreach (var item in qryRecords)
                             {
-                                var x = item.Element("shippingPolicyName").Value;
-                                shippingPolicies.Add(x);
+                                var shippingPolicy = new ShippingPolicy();
+                                shippingPolicy.Name = item.Element("shippingPolicyName").Value;
+                                shippingPolicy.HandlingTime = Convert.ToInt32(item.Element("dispatchTimeMax").Value);
+                                shippingPolicies.Add(shippingPolicy);
                             }
                         }
 
