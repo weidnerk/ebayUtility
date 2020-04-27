@@ -710,9 +710,14 @@ namespace Utility
         /// <param name="settings"></param>
         /// <param name="listing"></param>
         /// <returns></returns>
-        public static string EndFixedPriceItem(UserSettingsView settings, Listing listing)
+        public static string EndFixedPriceItem(UserSettingsView settings, Listing listing, out bool auctionWasEnded)
         {
-            try { 
+            const string actionEndedMarker = "The auction has already been closed.";
+
+            try
+            {
+                auctionWasEnded = false;
+
                 //create the context
                 ApiContext context = new ApiContext();
 
@@ -744,9 +749,20 @@ namespace Utility
             }
             catch (Exception exc)
             {
-                string msg = "ERROR EndFixedPriceItem (eBay removed listing?  Token problem?) listedItemID -> " + listing.ListedItemID + " -> " + exc.Message;
-                dsutil.DSUtil.WriteFile(_logfile, msg, settings.UserName);
-                throw;
+                int pos = exc.Message.IndexOf(actionEndedMarker);
+                if (pos > -1)
+                {
+                    auctionWasEnded = true;
+                    string msg = exc.Message;
+                    dsutil.DSUtil.WriteFile(_logfile, msg, settings.UserName);
+                    return msg;
+                }
+                else
+                {
+                    string msg = "ERROR EndFixedPriceItem (eBay removed listing?  Token problem?) listedItemID -> " + listing.ListedItemID + " -> " + exc.Message;
+                    dsutil.DSUtil.WriteFile(_logfile, msg, settings.UserName);
+                    throw;
+                }
             }
         }
 
