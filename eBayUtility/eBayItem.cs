@@ -5,6 +5,7 @@
  * (download here: https://developer.ebay.com/tools/netsdk)
  * but different in that calls go through the eBayAPIInterfaceService object.
  * 
+ * https://www.yumpu.com/en/document/read/6321452/trading-api-ebay-developers
  * 
  */
 using dsmodels;
@@ -30,6 +31,48 @@ namespace Utility
         static dsmodels.DataModelsDB db = new dsmodels.DataModelsDB();
         const int _qtyToList = 2;
         const string _logfile = "log.txt";
+
+        public static string GetStore(int storeID, string userID)
+        {
+            /*
+             * https://developer.ebay.com/devzone/xml/docs/reference/ebay/GetStore.html
+             * https://developer.ebay.com/devzone/xml/docs/reference/ebay/types/StoreSubscriptionLevelCodeType.html
+             * For some reason, home-decor retuns CustomCode subscription but supposed to be Starter.
+             * Returns Basic for eagle which is correct.
+             * 
+             */
+            string marker = "User must have a store subscription";
+            try
+            {
+                ApiContext context = new ApiContext();
+
+                //set the User token
+                string token = db.GetToken(storeID, userID);
+                context.ApiCredential.eBayToken = token;
+
+                //set the version
+                context.Version = "817";
+                context.Site = eBay.Service.Core.Soap.SiteCodeType.US;
+                var request = new GetStoreCall(context);
+
+                request.Execute();
+                // eagle came back as 'Basic'
+                string result = request.Store.SubscriptionLevel.ToString();
+                return result;
+                // string result = request.ApiResponse.Ack + " Ended ItemID " + request.;
+            }
+            catch (Exception exc)
+            {
+                int pos = exc.Message.ToUpper().IndexOf(marker.ToUpper());
+                if (pos > -1)
+                {
+                    return "nostore";
+                }
+                string msg = dsutil.DSUtil.ErrMsg("GetStore", exc);
+                dsutil.DSUtil.WriteFile(_logfile, msg, "");
+                throw;
+            }
+        }
 
         /// <summary>
         /// https://developer.ebay.com/devzone/finding/concepts/MakingACall.html
