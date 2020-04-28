@@ -32,6 +32,12 @@ namespace Utility
         const int _qtyToList = 2;
         const string _logfile = "log.txt";
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="storeID"></param>
+        /// <param name="userID"></param>
+        /// <returns>subscription name or 'nostore' if no subscription</returns>
         public static string GetStore(int storeID, string userID)
         {
             /*
