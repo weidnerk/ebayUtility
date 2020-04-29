@@ -79,7 +79,7 @@ namespace Utility
         public static eBayStore GetStore(int storeID, string userID)
         {
             string token = db.GetToken(storeID, userID);
-            return GetStore(token);
+            return GetStore(token);     // if get null here, means no subscription
         }
         /// <summary>
         /// 
@@ -96,6 +96,7 @@ namespace Utility
              * Returns Basic for eagle which is correct.
              * 
              */
+            string storeName = null;
             string marker = "User must have a store subscription";
             try
             {
@@ -112,10 +113,10 @@ namespace Utility
                 request.Execute();
                 // eagle came back as 'Basic'
                 string result = request.Store.SubscriptionLevel.ToString();
-                string name = request.Store.Name;
+                storeName = request.Store.Name;
                 var store = new eBayStore
                 {
-                    StoreName = name,
+                    StoreName = storeName,
                     Subscription = result
                 };
                 return store;
@@ -126,7 +127,12 @@ namespace Utility
                 int pos = exc.Message.ToUpper().IndexOf(marker.ToUpper());
                 if (pos > -1)
                 {
-                    return null;
+                    var store = new eBayStore
+                    {
+                        StoreName = storeName,
+                        Subscription = "No subscription"
+                    };
+                    return store;
                 }
                 string msg = dsutil.DSUtil.ErrMsg("GetStore", exc);
                 dsutil.DSUtil.WriteFile(_logfile, msg, "");
