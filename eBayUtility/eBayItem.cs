@@ -64,6 +64,7 @@ namespace Utility
                 request.Execute();
                 // eagle came back as 'Basic'
                 string result = request.Store.SubscriptionLevel.ToString();
+                string name = request.Store.Name;
                 return result;
                 // string result = request.ApiResponse.Ack + " Ended ItemID " + request.;
             }
