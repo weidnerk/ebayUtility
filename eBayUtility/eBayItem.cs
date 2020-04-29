@@ -32,13 +32,62 @@ namespace Utility
         const int _qtyToList = 2;
         const string _logfile = "log.txt";
 
+        public static eBayUser GetUser(int storeID, string userID)
+        {
+            string token = db.GetToken(storeID, userID);
+            return GetUser(token);
+        }
+
+        public static eBayUser GetUser(string token)
+        {
+            /*
+             * https://developer.ebay.com/devzone/xml/docs/reference/ebay/GetUser.html
+             * 
+             */
+            try
+            {
+                ApiContext context = new ApiContext();
+
+                //set the User token
+                
+                context.ApiCredential.eBayToken = token;
+
+                //set the version
+                context.Version = "817";
+                context.Site = eBay.Service.Core.Soap.SiteCodeType.US;
+                var request = new GetUserCall(context);
+
+                request.Execute();
+                // eagle came back as 'Basic'
+                string result = request.User.Email;
+                bool newUser = request.User.NewUser;
+                string name = request.User.UserID;
+                var user = new eBayUser
+                {
+                    eBayUserID = name
+                };
+                return user;
+                // string result = request.ApiResponse.Ack + " Ended ItemID " + request.;
+            }
+            catch (Exception exc)
+            {
+                string msg = dsutil.DSUtil.ErrMsg("GetUser", exc);
+                dsutil.DSUtil.WriteFile(_logfile, msg, "");
+                throw;
+            }
+        }
+        public static eBayStore GetStore(int storeID, string userID)
+        {
+            string token = db.GetToken(storeID, userID);
+            return GetStore(token);
+        }
         /// <summary>
         /// 
         /// </summary>
         /// <param name="storeID"></param>
         /// <param name="userID"></param>
-        /// <returns>subscription name or 'nostore' if no subscription</returns>
-        public static string GetStore(int storeID, string userID)
+        /// <returns>subscription name, or null if no subscription</returns>
+        public static eBayStore GetStore(string token)
         {
             /*
              * https://developer.ebay.com/devzone/xml/docs/reference/ebay/GetStore.html
@@ -53,7 +102,6 @@ namespace Utility
                 ApiContext context = new ApiContext();
 
                 //set the User token
-                string token = db.GetToken(storeID, userID);
                 context.ApiCredential.eBayToken = token;
 
                 //set the version
@@ -65,7 +113,12 @@ namespace Utility
                 // eagle came back as 'Basic'
                 string result = request.Store.SubscriptionLevel.ToString();
                 string name = request.Store.Name;
-                return result;
+                var store = new eBayStore
+                {
+                    StoreName = name,
+                    Subscription = result
+                };
+                return store;
                 // string result = request.ApiResponse.Ack + " Ended ItemID " + request.;
             }
             catch (Exception exc)
@@ -73,7 +126,7 @@ namespace Utility
                 int pos = exc.Message.ToUpper().IndexOf(marker.ToUpper());
                 if (pos > -1)
                 {
-                    return "nostore";
+                    return null;
                 }
                 string msg = dsutil.DSUtil.ErrMsg("GetStore", exc);
                 dsutil.DSUtil.WriteFile(_logfile, msg, "");
