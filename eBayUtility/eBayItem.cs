@@ -26,6 +26,16 @@ using System.Xml.Linq;
 
 namespace Utility
 {
+    public enum ShippingCostPaidBy
+    {
+        Buyer,
+        Seller
+    }
+    public enum ShippingService
+    {
+        Standard,
+        Economy
+    }
     public class eBayItem
     {
         static dsmodels.DataModelsDB db = new dsmodels.DataModelsDB();
@@ -275,7 +285,10 @@ namespace Utility
                             pictureURLs,
                             ref output,
                             listing.Qty,
-                            listing);
+                            listing,
+                            4,
+                            ShippingCostPaidBy.Buyer,
+                            ShippingService.Economy);
                     }
                     // at this point, 'output' will be populated with errors if any occurred
 
@@ -562,7 +575,10 @@ namespace Utility
             List<string> pictureURLs,
             ref List<string> errors,
             int qtyToList,
-            Listing listing)
+            Listing listing,
+            int handlingTime,
+            ShippingCostPaidBy shippingCostPaidByOption,
+            ShippingService shippingService)
         {
             //errors = null;
             string listedItemID = null;
@@ -594,7 +610,7 @@ namespace Utility
                 item.ConditionID = 1000;    // new
                 item.Country = CountryCodeType.US;
                 item.Currency = CurrencyCodeType.USD;
-                // item.DispatchTimeMax = 2;       // pretty sure this is handling time
+                item.DispatchTimeMax = handlingTime;       // handling time
 
                 // https://developer.ebay.com/devzone/xml/docs/reference/ebay/types/ListingDurationCodeType.html
                 item.ListingDuration = "Days_30";
@@ -665,39 +681,22 @@ namespace Utility
                 var sp = new SellerProfilesType();
 
                 /*
-                var spp = new SellerPaymentProfileType();
-                spp.PaymentProfileName = paymentProfile;
-
-                var srp = new SellerReturnProfileType();
-                srp.ReturnProfileName = returnProfile;
-
-                var ssp = new SellerShippingProfileType();
-                ssp.ShippingProfileName = shippingProfile;
-
-                sp.SellerPaymentProfile = spp;
-                sp.SellerReturnProfile = srp;
-                sp.SellerShippingProfile = ssp;
-                item.SellerProfiles = sp;
-                */
-
-                /*
                  * How to create policy in place:
                  */
+                string shippingCostPaidByStr = ShippingCostPaidByToStr(shippingCostPaidByOption);
                 item.ReturnPolicy = new ReturnPolicyType
                 {
                     ReturnsAcceptedOption = "ReturnsAccepted",
                     ReturnsWithinOption = "Days_30",
                     //RefundOption = "MoneyBack",
                     //Description = returnDescr,
-                    ShippingCostPaidByOption = "Seller"
+                    ShippingCostPaidByOption = shippingCostPaidByStr
                     //,
                     //RestockingFeeValue = "Percent_20",
                     //RestockingFeeValueOption = "Percent_20"
                 };
-                item.ShippingDetails = eBayUtility.ebayAPIs.GetShippingDetail();
+                item.ShippingDetails = eBayUtility.ebayAPIs.GetShippingDetail(shippingService);
                 
-                item.DispatchTimeMax = 3;   // aka handling time
-
                 item.Site = SiteCodeType.US;
 
                 request.Item = item;
@@ -733,7 +732,21 @@ namespace Utility
                 return null;
             }
         }
+        protected static string ShippingCostPaidByToStr(ShippingCostPaidBy shippingCostPaidBy)
+        {
+            string shippingCostPaidByStr =  null;
+            switch (shippingCostPaidBy)
+            {
+                case ShippingCostPaidBy.Buyer:
+                    shippingCostPaidByStr = "Buyer";
+                    break;
 
+                case ShippingCostPaidBy.Seller:
+                    shippingCostPaidByStr = "Seller";
+                    break;
+            }
+            return shippingCostPaidByStr;
+        }
         protected static eBay.Service.Core.Soap.NameValueListType AddItemSpecifics(ListingItemSpecific item)
         {
             var nv2 = new eBay.Service.Core.Soap.NameValueListType();
@@ -877,7 +890,24 @@ namespace Utility
 
         // use this for itemspecifics:
         // https://ebaydts.com/eBayKBDetails?KBid=1647
+
+
         //
+        /// <summary>
+        /// use this for itemspecifics:
+        /// https://ebaydts.com/eBayKBDetails?KBid=1647
+        /// 
+        /// In order to set an item qty to 0, need to follow this:
+        /// https://help.zentail.com/en/articles/2086059-error-the-quantity-must-be-a-valid-number-greater-than-0
+        /// 
+        /// </summary>
+        /// <param name="token"></param>
+        /// <param name="listedItemID"></param>
+        /// <param name="qty"></param>
+        /// <param name="price"></param>
+        /// <param name="title"></param>
+        /// <param name="description"></param>
+        /// <returns></returns>
         public static List<string> ReviseItem(string token,
             string listedItemID,
             int? qty = null,
@@ -984,6 +1014,7 @@ namespace Utility
             {
                 string msg = "ERROR ReviseItem listedItemID -> " + listedItemID + " -> " + exc.Message;
                 dsutil.DSUtil.WriteFile(_logfile, msg, "");
+                throw;
             }
             return response;
         }

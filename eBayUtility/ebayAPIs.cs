@@ -1168,7 +1168,7 @@ namespace eBayUtility
             return request;
         }
 
-        public static eBay.Service.Core.Soap.ShippingDetailsType GetShippingDetail()
+        public static eBay.Service.Core.Soap.ShippingDetailsType GetShippingDetail(ShippingService shippingService)
         {
             eBay.Service.Core.Soap.ShippingDetailsType sd = new eBay.Service.Core.Soap.ShippingDetailsType();
 
@@ -1180,19 +1180,24 @@ namespace eBayUtility
 
             ShippingServiceOptionsType domesticShipping1 = new ShippingServiceOptionsType();
 
-            // see my notes in google doc
-            domesticShipping1.ShippingService = ShippingServiceCodeType.ShippingMethodStandard.ToString();    // displays as "Standard Shipping" but for my account FAST 'N FREE
-            //domesticShipping1.ShippingService = ShippingServiceCodeType.Other.ToString();                       // displays as "Economy Shipping" (slower shipping time)
-
+            if (shippingService == ShippingService.Standard)
+            {
+                domesticShipping1.ShippingService = ShippingServiceCodeType.ShippingMethodStandard.ToString();    // displays as "Standard Shipping" but for my account FAST 'N FREE
+            }
+            if (shippingService == ShippingService.Economy)
+            {
+                domesticShipping1.ShippingService = ShippingServiceCodeType.Other.ToString();                       // displays as "Economy Shipping" (slower shipping time)
+            }
             domesticShipping1.ShippingServiceCost = new eBay.Service.Core.Soap.AmountType { Value = 0, currencyID = eBay.Service.Core.Soap.CurrencyCodeType.USD };
             domesticShipping1.ShippingInsuranceCost = new eBay.Service.Core.Soap.AmountType { Value = 0, currencyID = eBay.Service.Core.Soap.CurrencyCodeType.USD };
             domesticShipping1.ShippingServicePriority = 4;
             domesticShipping1.LocalPickup = false;
             domesticShipping1.FreeShipping = true;
 
-            // var s = new DispatchTimeMaxDetailsType();
-            // s.DispatchTimeMax = 3;
+            var s = new DispatchTimeMaxDetailsType();
+            s.DispatchTimeMax = 3;
 
+            
             sd.ShippingServiceOptions = new ShippingServiceOptionsTypeCollection(new[] { domesticShipping1 });
             sd.ShippingType = eBay.Service.Core.Soap.ShippingTypeCodeType.Flat;
 
