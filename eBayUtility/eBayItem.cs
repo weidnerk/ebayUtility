@@ -42,6 +42,26 @@ namespace Utility
         const int _qtyToList = 2;
         const string _logfile = "log.txt";
 
+        /// <summary>
+        /// Get both eBay user id and paypal address
+        /// </summary>
+        /// <param name="storeID"></param>
+        /// <param name="userID"></param>
+        /// <returns></returns>
+        public static eBayUser GeteBayUser(int storeID, string userID)
+        {
+            string token = db.GetToken(storeID, userID);
+            var eBayUser = GeteBayUser(token);
+            return eBayUser;
+        }
+        public static eBayUser GeteBayUser(string token)
+        {
+            var eBayUser = GetUser(token);
+            var pref = GetUserPreferences(token);
+            eBayUser.PayPalEmail = pref.PayPalEmail;
+            return eBayUser;
+        }
+
         public static eBayUser GetUser(int storeID, string userID)
         {
             string token = db.GetToken(storeID, userID);
@@ -82,6 +102,50 @@ namespace Utility
             catch (Exception exc)
             {
                 string msg = dsutil.DSUtil.ErrMsg("GetUser", exc);
+                dsutil.DSUtil.WriteFile(_logfile, msg, "");
+                throw;
+            }
+        }
+        public static eBayUser GetUserPreferences(int storeID, string userID)
+        {
+            string token = db.GetToken(storeID, userID);
+            return GetUserPreferences(token);
+        }
+        /// <summary>
+        /// https://developer.ebay.com/devzone/xml/docs/reference/ebay/GetUserPreferences.html
+        /// </summary>
+        /// <param name="userID"></param>
+        public static eBayUser GetUserPreferences(string token)
+        {
+            try
+            {
+                ApiContext context = new ApiContext();
+
+                //set the User token
+
+                context.ApiCredential.eBayToken = token;
+
+                //set the version
+                context.Version = "817";
+                context.Site = eBay.Service.Core.Soap.SiteCodeType.US;
+                var request = new GetUserPreferencesCall(context);
+
+                request.ShowSellerPaymentPreferences = true;
+                request.Execute();
+
+                // per the documenation, "Specifies the default email address the seller uses for receiving PayPal payments."
+                string result = request.SellerPaymentPreferences.DefaultPayPalEmailAddress;
+                // eagle came back as 'Basic'
+                //string result = request.ApiResponse.Ack;
+                var user = new eBayUser
+                {
+                    PayPalEmail = result
+                };
+                return user;
+            }
+            catch (Exception exc)
+            {
+                string msg = dsutil.DSUtil.ErrMsg("GetUserPreferences", exc);
                 dsutil.DSUtil.WriteFile(_logfile, msg, "");
                 throw;
             }
@@ -161,7 +225,8 @@ namespace Utility
 
             var policies = new eBayBusinessPolicies();
             var shippingPolicies = new List<ShippingPolicy>();
-            var returnPolicies = new List<string>();
+            var returnPolicies = new List<ReturnPolicy>();
+            var paymentPolicies = new List<PaymentPolicy>();
             try
             {
                 var uri = new Uri("https://svcs.ebay.com/services/selling/v1/SellerProfilesManagementService");
@@ -201,6 +266,7 @@ namespace Utility
                                 var shippingPolicy = new ShippingPolicy();
                                 shippingPolicy.Name = item.Element("shippingPolicyName").Value;
                                 shippingPolicy.HandlingTime = Convert.ToInt32(item.Element("dispatchTimeMax").Value);
+                                shippingPolicy.ShippingService = item.Element("domesticShippingPolicyInfoService").Element("shippingService").Value;
                                 shippingPolicies.Add(shippingPolicy);
                             }
                         }
@@ -217,14 +283,35 @@ namespace Utility
                             int y = qryRecords.Count();
                             foreach (var item in qryRecords)
                             {
-                                var x = item.Element("profileName").Value;
-                                returnPolicies.Add(x);
+                                var returnPolicy = new ReturnPolicy();
+                                returnPolicy.Name = item.Element("profileName").Value;
+                                returnPolicy.ShippingCostPaidByOption = item.Element("returnPolicyInfo").Element("shippingCostPaidByOption").Value;
+                                returnPolicies.Add(returnPolicy);
+                            }
+                        }
+                        // PAYMENT POLICIES
+                        qryRecords = from record in root.Elements("paymentProfileList").Elements("PaymentProfile")
+                                     select record;
+                        if (qryRecords.Count() == 0)
+                        {
+                            paymentPolicies = null;
+                        }
+                        else
+                        {
+                            int y = qryRecords.Count();
+                            foreach (var item in qryRecords)
+                            {
+                                var paymentPolicy = new PaymentPolicy();
+                                paymentPolicy.Name = item.Element("profileName").Value;
+                                paymentPolicy.PaypalEmailAddress = item.Element("paymentInfo").Element("paypalEmailAddress").Value;
+                                paymentPolicies.Add(paymentPolicy);
                             }
                         }
                     }
                 }
                 policies.ShippingPolicies = shippingPolicies;
                 policies.ReturnPolicies = returnPolicies;
+                policies.PaymentPolicies = paymentPolicies;
             }
             catch (Exception exc)
             {
@@ -288,7 +375,8 @@ namespace Utility
                             listing,
                             4,
                             ShippingCostPaidBy.Buyer,
-                            ShippingService.Economy);
+                            ShippingService.Economy,
+                            "ventures2019@gmail.com");
                     }
                     // at this point, 'output' will be populated with errors if any occurred
 
@@ -578,7 +666,8 @@ namespace Utility
             Listing listing,
             int handlingTime,
             ShippingCostPaidBy shippingCostPaidByOption,
-            ShippingService shippingService)
+            ShippingService shippingService,
+            string payPalEmail)
         {
             //errors = null;
             string listedItemID = null;
@@ -627,7 +716,7 @@ namespace Utility
                 };
                 item.AutoPay = true;    // require immediate payment
                                         // Default testing paypal email address
-                item.PayPalEmailAddress = "ventures2019@gmail.com";
+                item.PayPalEmailAddress = payPalEmail;
 
                 item.PictureDetails = new PictureDetailsType();
                 item.PictureDetails.PictureURL = new StringCollection();
