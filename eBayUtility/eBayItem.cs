@@ -9,6 +9,7 @@
  * 
  */
 using dsmodels;
+using dsutil;
 using eBay.Service.Call;
 using eBay.Service.Core.Sdk;
 using eBay.Service.Core.Soap;
@@ -285,7 +286,7 @@ namespace Utility
                             {
                                 var returnPolicy = new ReturnPolicy();
                                 returnPolicy.Name = item.Element("profileName").Value;
-                                returnPolicy.ShippingCostPaidByOption = item.Element("returnPolicyInfo").Element("shippingCostPaidByOption").Value;
+                                returnPolicy.ShippingCostPaidByOption = item.Element("returnPolicyInfo").Element("shippingCostPaidByOption").ElementValueNull(); ;
                                 returnPolicies.Add(returnPolicy);
                             }
                         }
