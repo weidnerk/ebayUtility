@@ -268,6 +268,7 @@ namespace Utility
                                 shippingPolicy.Name = item.Element("shippingPolicyName").Value;
                                 shippingPolicy.HandlingTime = Convert.ToInt32(item.Element("dispatchTimeMax").Value);
                                 shippingPolicy.ShippingService = item.Element("domesticShippingPolicyInfoService").Element("shippingService").Value;
+                                shippingPolicy.GlobalShipping = Convert.ToBoolean(item.Element("GlobalShipping").Value);
                                 shippingPolicies.Add(shippingPolicy);
                             }
                         }
