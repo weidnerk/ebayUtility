@@ -350,9 +350,17 @@ namespace Utility
 
                     string verifyItemID = null;
 
+                    string shippingProfile = settings.ShippingProfile;
+                    string paymentProfile = settings.PaymentProfile;
+                    string returnProfile = settings.ReturnProfile;
+
+                    //shippingProfile = "Flat:Economy Shippi(Free),4 business days";
+                    //paymentProfile = "PayPal:Immediate pay#0";
+                    //returnProfile = "Returns Accepted,Buyer,30 Days,Money Back";
+
                     // Is the user setup with Business Policies?  Probably not best way to do it.
-                    if (!string.IsNullOrEmpty(settings.ShippingProfile))
-                    {
+                    //if (!string.IsNullOrEmpty(settings.ShippingProfile))
+                    //{
                         verifyItemID = eBayItem.VerifyAddItemRequest(settings, listing.ListingTitle,
                             listing.Description,
                             listing.PrimaryCategoryID,
@@ -361,25 +369,25 @@ namespace Utility
                             ref output,
                             listing.Qty,
                             listing,
-                            settings.ShippingProfile,
-                            settings.ReturnProfile,
-                            settings.PaymentProfile);
-                    }
-                    else
-                    {
-                        verifyItemID = eBayItem.VerifyAddItemRequest(settings, listing.ListingTitle,
-                            listing.Description,
-                            listing.PrimaryCategoryID,
-                            (double)listing.ListingPrice,
-                            pictureURLs,
-                            ref output,
-                            listing.Qty,
-                            listing,
-                            4,
-                            ShippingCostPaidBy.Buyer,
-                            ShippingService.Economy,
-                            "ventures2019@gmail.com");
-                    }
+                            shippingProfile,
+                            returnProfile,
+                            paymentProfile);
+                    //}
+                    //else
+                    //{
+                    //    verifyItemID = eBayItem.VerifyAddItemRequest(settings, listing.ListingTitle,
+                    //        listing.Description,
+                    //        listing.PrimaryCategoryID,
+                    //        (double)listing.ListingPrice,
+                    //        pictureURLs,
+                    //        ref output,
+                    //        listing.Qty,
+                    //        listing,
+                    //        4,
+                    //        ShippingCostPaidBy.Buyer,
+                    //        ShippingService.Economy,
+                    //        "ventures2019@gmail.com");
+                    //}
                     // at this point, 'output' will be populated with errors if any occurred
 
                     if (!string.IsNullOrEmpty(verifyItemID))
@@ -657,7 +665,7 @@ namespace Utility
                 return null;
             }
         }
-        public static string VerifyAddItemRequest(UserSettingsView settings,
+        public static string VerifyAddItemRequest_notused(UserSettingsView settings,
             string title,
             string description,
             string categoryID,
