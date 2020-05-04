@@ -665,7 +665,7 @@ namespace Utility
                 return null;
             }
         }
-        public static string VerifyAddItemRequest_notused(UserSettingsView settings,
+        public static string VerifyAddItemRequest_no_policies(UserSettingsView settings,
             string title,
             string description,
             string categoryID,
