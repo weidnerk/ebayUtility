@@ -43,7 +43,7 @@ namespace eBayUtility
         /// https://developer.ebay.com/DevZone/XML/Docs/Reference/ebay/GetSellerTransactions.html
         /// </summary>
         /// <param name="orderID">19-04026-11927</param>
-        public static GetOrdersResponse GetOrders(UserSettingsView settings, string orderID, int storeID, out string msg)
+        public static GetOrdersResponse GetOrders(UserSettingsView settings, string orderID, out string msg)
         {
             msg = null;
             var eBayOrder = new GetOrdersResponse();
@@ -94,7 +94,121 @@ namespace eBayUtility
             }
             return eBayOrder;
         }
+        public static List<SalesOrder> GetOrdersByDate(UserSettingsView settings, DateTime fromDate, DateTime toDate)
+        {
+            var eBayOrders = new List<SalesOrder>();
+            ApiContext context = new ApiContext();
+            try
+            {
+                string token = models.GetToken(settings);
+                context.ApiCredential.eBayToken = token;
 
+                // set the server url
+                string endpoint = "https://api.ebay.com/wsapi";
+                context.SoapApiServerUrl = endpoint;
+
+                GetOrdersCall call = new GetOrdersCall(context);
+                call.DetailLevelList = new DetailLevelCodeTypeCollection();
+                call.DetailLevelList.Add(DetailLevelCodeType.ReturnAll);
+                call.CreateTimeFrom = fromDate;
+                call.CreateTimeTo = toDate;
+                call.Execute();
+
+                var a = call.ApiResponse.Ack;
+                foreach (var r in call.ApiResponse.OrderArray.ToArray())
+                {
+                    var response = new SalesOrder();
+                    response.BuyerHandle = r.BuyerUserID;     // customer eBay handle
+                    response.DatePurchased = r.PaidTime;
+                    var ShippingAddress = r.ShippingAddress;
+                    // Name
+                    response.Buyer = ShippingAddress.Name;
+                    // PostalCode
+                    // StateOrProvince
+                    // Street1
+                    // Phone
+                    // CityName
+                    var SubTotal = r.Subtotal;
+                    var Total = r.Total;
+                    response.BuyerPaid = (decimal)r.AmountPaid.Value;
+                    response.BuyerState = ShippingAddress.StateOrProvince;
+
+                    // orderID is returned as a hyphenated string like:
+                    // 223707436249-2329703153012
+                    // first number is the itemID
+                    var orderID = r.OrderID;
+                    response.ListedItemID = GetItemIDFromGetOrders(orderID);
+                    eBayOrders.Add(response);
+                }
+                return eBayOrders;
+            }
+            catch (Exception exc)
+            {
+                string msg = dsutil.DSUtil.ErrMsg("GetOrdersByDate", exc);
+                dsutil.DSUtil.WriteFile(_logfile, msg, "nousername");
+                throw;
+            }
+        }
+        protected static string GetItemIDFromGetOrders(string orderID)
+        {
+            int pos = orderID.IndexOf("-");
+            string ret = orderID.Substring(0, pos);
+            return ret;
+        }
+        public static void GetOrderTransactions(UserSettingsView settings, string itemID)
+        {
+            //create the context
+            ApiContext context = new ApiContext();
+
+            string token = models.GetToken(settings);
+            context.ApiCredential.eBayToken = token;
+
+            // set the server url
+            string endpoint = "https://api.ebay.com/wsapi";
+            context.SoapApiServerUrl = endpoint;
+
+            //context.ApiLogManager = newApiLogManager();
+            //context.ApiLogManager.ApiLoggerList.Add(new eBay.Service.Util.FileLogger("Messages.log", true, true, true));
+            //context.ApiLogManager.EnableLogging = true;
+
+            // Set the version
+            context.Version = "581";
+
+            GetOrderTransactionsCall call = new GetOrderTransactionsCall(context);
+            call.ItemTransactionIDArrayList = new ItemTransactionIDTypeCollection();
+
+            //add as many ItemID TransactionID objects as required
+            ItemTransactionIDType itemTrans1 = new ItemTransactionIDType();
+            itemTrans1.ItemID = itemID;
+            itemTrans1.TransactionID = "0";
+            call.ItemTransactionIDArrayList.Add(itemTrans1);
+
+            //ItemTransactionIDType itemTrans2 = new ItemTransactionIDType();
+            //itemTrans2.ItemID = "110035634592";
+            //itemTrans2.TransactionID = "1234567890";
+            //call.ItemTransactionIDArrayList.Add(itemTrans2);
+
+            //set DetailLevel to ReturnAll to get the ExternalTransactionID call.DetailLevelList.Add(DetailLevelCodeType.ReturnAll);
+
+            call.Execute();
+
+            //Process the response
+            foreach (OrderType order in call.OrderList)
+            {
+                //some sample information retrieved
+                string buyerUserID = order.BuyerUserID;
+                if (order.ShippingDetails.SalesTax != null)
+                {
+                    string salesTaxState = order.ShippingDetails.SalesTax.SalesTaxState;
+                    float salesTaxPercent = order.ShippingDetails.SalesTax.SalesTaxPercent;
+                    double salesTaxAmt = order.ShippingDetails.SalesTax.SalesTaxAmount.Value;
+                }
+
+                TransactionType transaction = order.TransactionArray[0];
+                string buyerEmail = transaction.Buyer.Email;
+                double amtPaid = transaction.AmountPaid.Value;
+            }
+        }
         /// <summary>
         /// Gives you info about eBay as a whole
         /// </summary>
