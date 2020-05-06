@@ -118,6 +118,13 @@ namespace eBayUtility
                 foreach (var r in call.ApiResponse.OrderArray.ToArray())
                 {
                     var response = new SalesOrder();
+                    if (r.TransactionArray.Count == 1) {                                // i'm not expecting a value other than 1 here
+                        response.Qty = r.TransactionArray[0].QuantityPurchased;
+                        response.DatePurchased = r.TransactionArray[0].CreatedDate;     // there are various dates to use - let's see how close this one is
+                        //r.TransactionArray[0].Taxes.TotalTaxAmount;
+                        response.SalesTax = (decimal)r.TransactionArray[0].Taxes.TotalTaxAmount.Value;
+                        response.ShippingCost = (decimal)r.TransactionArray[0].ActualShippingCost.Value;
+                    }
                     response.BuyerHandle = r.BuyerUserID;     // customer eBay handle
                     response.DatePurchased = r.PaidTime;
                     var ShippingAddress = r.ShippingAddress;
@@ -129,9 +136,12 @@ namespace eBayUtility
                     // Phone
                     // CityName
                     var SubTotal = r.Subtotal;
+                    response.SubTotal = (decimal)SubTotal.Value;
                     var Total = r.Total;
+                    response.Total = (decimal)Total.Value;
                     response.BuyerPaid = (decimal)r.AmountPaid.Value;
                     response.BuyerState = ShippingAddress.StateOrProvince;
+
 
                     // orderID is returned as a hyphenated string like:
                     // 223707436249-2329703153012
