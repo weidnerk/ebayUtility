@@ -123,7 +123,10 @@ namespace eBayUtility
                         response.DatePurchased = r.TransactionArray[0].CreatedDate;     // there are various dates to use - let's see how close this one is
                         //r.TransactionArray[0].Taxes.TotalTaxAmount;
                         response.SalesTax = (decimal)r.TransactionArray[0].Taxes.TotalTaxAmount.Value;
-                        response.ShippingCost = (decimal)r.TransactionArray[0].ActualShippingCost.Value;
+                        if (r.TransactionArray[0].ActualShippingCost != null)
+                        {
+                            response.ShippingCost = (decimal)r.TransactionArray[0].ActualShippingCost.Value;
+                        }
                     }
                     response.BuyerHandle = r.BuyerUserID;     // customer eBay handle
                     response.DatePurchased = r.PaidTime;
@@ -141,7 +144,8 @@ namespace eBayUtility
                     response.Total = (decimal)Total.Value;
                     response.BuyerPaid = (decimal)r.AmountPaid.Value;
                     response.BuyerState = ShippingAddress.StateOrProvince;
-
+                    response.FinalValueFee = (response.SubTotal + response.ShippingCost) * 0.0915m;
+                    response.PayPalFee = (response.Total * 0.029m) + 0.30m;
 
                     // orderID is returned as a hyphenated string like:
                     // 223707436249-2329703153012
