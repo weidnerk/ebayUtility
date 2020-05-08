@@ -333,7 +333,7 @@ namespace Utility
             int listingID)
         {
             var output = new List<string>();
-            var listing = db.ListingGet(listingID, settings.StoreID);     // item has to be stored before it can be listed
+            var listing = db.ListingGet(listingID);     // item has to be stored before it can be listed
             var token = db.GetToken(settings);
 
             if (listing != null)
