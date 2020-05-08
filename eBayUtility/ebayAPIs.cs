@@ -94,6 +94,20 @@ namespace eBayUtility
             }
             return eBayOrder;
         }
+
+        public static List<SalesOrder> GetOrdersByDate(UserSettingsView settings, string itemID, DateTime fromDate, DateTime toDate)
+        {
+            var orders = ebayAPIs.GetOrdersByDate(settings, fromDate, toDate);
+            var eBayOrders = new List<SalesOrder>();
+            foreach (var order in orders)
+            {
+                if (order.ListedItemID == itemID)
+                {
+                    eBayOrders.Add(order);
+                }
+            }
+            return eBayOrders;
+        }
         public static List<SalesOrder> GetOrdersByDate(UserSettingsView settings, DateTime fromDate, DateTime toDate)
         {
             var eBayOrders = new List<SalesOrder>();
@@ -123,11 +137,16 @@ namespace eBayUtility
                         response.DatePurchased = r.TransactionArray[0].CreatedDate;     // there are various dates to use - let's see how close this one is
                         //r.TransactionArray[0].Taxes.TotalTaxAmount;
                         response.SalesTax = (decimal)r.TransactionArray[0].Taxes.TotalTaxAmount.Value;
+
+                        var c = r.TransactionArray.Count;
+                        //var x = r.TransactionArray[0].MonetaryDetails.Refunds.Refund[0].RefundAmount.Value;
+                        //var y = r.TransactionArray[0].RefundAmount.Value;
                         if (r.TransactionArray[0].ActualShippingCost != null)
                         {
                             response.ShippingCost = (decimal)r.TransactionArray[0].ActualShippingCost.Value;
                         }
                     }
+                    //var x = r.RefundAmount.Value;
                     response.BuyerHandle = r.BuyerUserID;     // customer eBay handle
                     response.DatePurchased = r.PaidTime;
                     var ShippingAddress = r.ShippingAddress;
