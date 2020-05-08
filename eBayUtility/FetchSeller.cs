@@ -862,5 +862,16 @@ namespace eBayUtility
             }
             return ret;
         }
+
+        public static decimal CalcProfit(SalesOrder salesOrder)
+        {
+            var profit = (salesOrder.SubTotal + salesOrder.ShippingCost) - salesOrder.FinalValueFee - salesOrder.PayPalFee - salesOrder.I_Paid;
+            return profit;
+        }
+        public static double CalcProfitMargin(SalesOrder salesOrder)
+        {
+            var profit = (salesOrder.Profit / salesOrder.Total) * 100;
+            return (double)profit;
+        }
     }
 }
