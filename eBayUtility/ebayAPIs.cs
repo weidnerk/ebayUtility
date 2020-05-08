@@ -138,6 +138,11 @@ namespace eBayUtility
                         //r.TransactionArray[0].Taxes.TotalTaxAmount;
                         response.SalesTax = (decimal)r.TransactionArray[0].Taxes.TotalTaxAmount.Value;
 
+                        if (r.TransactionArray[0].ShippingDetails.ShipmentTrackingDetails.Count > 0)
+                        {
+                            response.TrackingNumber = r.TransactionArray[0].ShippingDetails.ShipmentTrackingDetails[0].ShipmentTrackingNumber;
+                        }
+
                         var c = r.TransactionArray.Count;
                         //var x = r.TransactionArray[0].MonetaryDetails.Refunds.Refund[0].RefundAmount.Value;
                         //var y = r.TransactionArray[0].RefundAmount.Value;
@@ -171,6 +176,7 @@ namespace eBayUtility
                     // first number is the itemID
                     var orderID = r.OrderID;
                     response.ListedItemID = GetItemIDFromGetOrders(orderID);
+                    response.OrderStatus = r.OrderStatus.ToString();
                     eBayOrders.Add(response);
                 }
                 return eBayOrders;
