@@ -865,7 +865,9 @@ namespace eBayUtility
 
         public static decimal CalcProfit(SalesOrder salesOrder)
         {
-            var profit = (salesOrder.SubTotal + salesOrder.ShippingCost) - salesOrder.FinalValueFee - salesOrder.PayPalFee - salesOrder.I_Paid;
+            var revenue = salesOrder.SubTotal + salesOrder.ShippingCost;
+            var expenses = salesOrder.FinalValueFee + salesOrder.PayPalFee + salesOrder.I_Paid;
+            var profit = revenue - expenses;
             return profit;
         }
         public static double CalcProfitMargin(SalesOrder salesOrder)
