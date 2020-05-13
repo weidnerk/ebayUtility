@@ -842,7 +842,7 @@ namespace eBayUtility
                             sellerListing.ItemSpecifics = dsmodels.DataModelsDB.CopyFromOrderHistory(ohObj.ItemSpecifics);
                             //listing.SellerListing = sellerListing;
                         }
-                        await models.ListingSaveAsync(settings, listing);
+                        await models.ListingSaveAsync(settings, listing, true);
 
                         var obj = new UpdateToListing() { StoreID = storeID, ItemID = ohObj.ItemID };
                         await models.UpdateToListingRemove(obj);
