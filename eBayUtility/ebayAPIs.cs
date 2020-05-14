@@ -184,7 +184,7 @@ namespace eBayUtility
             catch (Exception exc)
             {
                 string msg = dsutil.DSUtil.ErrMsg("GetOrdersByDate", exc);
-                dsutil.DSUtil.WriteFile(_logfile, msg, "nousername");
+                dsutil.DSUtil.WriteFile(_logfile, msg, settings.UserName);
                 throw;
             }
         }
