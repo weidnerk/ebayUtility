@@ -16,11 +16,17 @@ namespace Utility
         /// </summary>
         /// <param name="itemid"></param>
         /// <returns></returns>
-        public static bool LookupItemid(UserSettingsView settings, string itemid)
+        public static Listing LookupItemid(UserSettingsView settings, string itemid)
         {
-            var result = db.Listings.Where(x => x.ListedItemID == itemid && x.StoreID == settings.StoreID).ToList();
-            if (result.Count == 0) return false;
-            return true;
+            var result = db.Listings.Where(x => x.ListedItemID == itemid && x.StoreID == settings.StoreID).SingleOrDefault();
+            if (result != null)
+            {
+                return result;
+            }
+            else
+            {
+                return null;
+            }
         }
 
         /// <summary>
@@ -28,9 +34,10 @@ namespace Utility
         /// </summary>
         /// <param name="totalListed"></param>
         /// <returns></returns>
-        public static List<string> DBIsMissingItems(UserSettingsView settings, ref ItemTypeCollection storeItems)
+        public static List<string> DBIsMissingItems_notused(UserSettingsView settings, ref ItemTypeCollection storeItems)
         {
             var items = new List<string>();
+            /*
             int cnt = 0;
             if (storeItems.Count == 0)
             {
@@ -53,6 +60,7 @@ namespace Utility
                     }
                 }
             }
+            */
             return items;
         }
         public static StoreAnalysis Analysis(UserSettingsView settings, ref ItemTypeCollection storeItems)
@@ -71,16 +79,19 @@ namespace Utility
                 // scan each item in store - is it in db?
                 foreach (ItemType oItem in storeItems)
                 {
-                    if (oItem.Quantity > 0)
-                    {
-                        qtyMismatch.Add(oItem.Title);
-                        ++qtyMismatchCnt;
-                    }
-                    bool r = Utility.StoreCheck.LookupItemid(settings, oItem.ItemID);
-                    if (!r)
+                    var listing = Utility.StoreCheck.LookupItemid(settings, oItem.ItemID);
+                    if (listing == null)
                     {
                         items.Add(oItem.Title);
                         ++cnt;
+                    }
+                    else
+                    {
+                        if (listing.Qty != (oItem.Quantity - oItem.SellingStatus.QuantitySold))
+                        {
+                            qtyMismatch.Add(oItem.Title);
+                            ++qtyMismatchCnt;
+                        }
                     }
                 }
                 analysis.DBIsMissingItems = items;

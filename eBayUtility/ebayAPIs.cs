@@ -314,11 +314,14 @@ namespace eBayUtility
             }
         }
 
-        // https://ebaydts.com/eBayKBDetails?KBid=475
-        //
-        // a variety of this is to use findCompletedItems
-        //
-        // I don't know how to filter this by completed items
+        /// <summary>
+        /// Get all items in the store
+        /// https://ebaydts.com/eBayKBDetails?KBid=475
+        /// a variety of this is to use findCompletedItems
+        /// </summary>
+        /// <param name="settings"></param>
+        /// <param name="errMsg"></param>
+        /// <returns></returns>
         public static ItemTypeCollection GetSellerList(UserSettingsView settings, out string errMsg)
         {
             // TODO: Add code to start application here
@@ -341,10 +344,12 @@ namespace eBayUtility
             oContext.Site = eBay.Service.Core.Soap.SiteCodeType.US;
 
             // very important, let's setup the logging
+            /*
             ApiLogManager oLogManager = new ApiLogManager();
             oLogManager.ApiLoggerList.Add(new eBay.Service.Util.FileLogger("logebay.txt", false, false, false));
             oLogManager.EnableLogging = true;
             oContext.ApiLogManager = oLogManager;
+            */
 
             // the WSDL Version used for this SDK build
             oContext.Version = "459";
@@ -757,7 +762,7 @@ namespace eBayUtility
       
         // Purpose of GetSingleItem is to fetch properties such as a listing's description and photos
         // it is used when performing an auto-listing
-        public static async Task<SellerListing> GetSingleItem(UserSettingsView settings, string itemID)
+        public static async Task<SellerListing> GetSingleItem(UserSettingsView settings, string itemID, bool includeItemSpecifics)
         {
             string errMsg = null;
             StringReader sr;
@@ -775,7 +780,14 @@ namespace eBayUtility
 
                 // docs for IncludeSelector
                 // https://developer.ebay.com/devzone/shopping/docs/callref/getsingleitem.html
-                svc.Url = string.Format("http://open.api.ebay.com/shopping?callname=GetSingleItem&IncludeSelector=Details,TextDescription,ItemSpecifics,Variations&appid={0}&version=515&ItemID={1}", settings.AppID, itemID);
+                if (includeItemSpecifics)
+                {
+                    svc.Url = string.Format("http://open.api.ebay.com/shopping?callname=GetSingleItem&IncludeSelector=Details,TextDescription,ItemSpecifics,Variations&appid={0}&version=515&ItemID={1}", settings.AppID, itemID);
+                }
+                else
+                {
+                    svc.Url = string.Format("http://open.api.ebay.com/shopping?callname=GetSingleItem&IncludeSelector=Details,TextDescription,Variations&appid={0}&version=515&ItemID={1}", settings.AppID, itemID);
+                }
                 // create a new request type
                 GetSingleItemRequestType request = new GetSingleItemRequestType();
                 // put in your own item number

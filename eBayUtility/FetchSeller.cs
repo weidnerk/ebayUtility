@@ -821,7 +821,7 @@ namespace eBayUtility
                         {
                             listing.MPN = mpn.ItemValue;
                         }
-                        var si = await eBayUtility.ebayAPIs.GetSingleItem(settings, listing.ItemID);
+                        var si = await eBayUtility.ebayAPIs.GetSingleItem(settings, listing.ItemID, true);
                         listing.PrimaryCategoryID = si.PrimaryCategoryID;
                         listing.PrimaryCategoryName = si.PrimaryCategoryName;
                         

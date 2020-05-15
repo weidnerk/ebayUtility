@@ -1155,7 +1155,7 @@ namespace Utility
         public async static Task RefreshItemSpecifics(UserSettingsView settings, int ID)
         {
             var listing = db.Listings.Where(p => p.ID == ID).SingleOrDefault();
-            var sellerListing = await ebayAPIs.GetSingleItem(settings, listing.ItemID);
+            var sellerListing = await ebayAPIs.GetSingleItem(settings, listing.ItemID, true);
 
             var sellerListingdb = db.SellerListings.Find(sellerListing.ItemID);
             sellerListingdb.ItemSpecifics.ForEach(c => c.Updated = DateTime.Now);
