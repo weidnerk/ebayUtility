@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using System.Web;
 using System.Web.Services.Protocols;
 using System.Xml.Linq;
 
@@ -323,6 +324,9 @@ namespace Utility
             }
             return policies;
         }
+
+      
+
         /// <summary>
         /// 
         /// </summary>
@@ -346,7 +350,18 @@ namespace Utility
                         output.Add("ERROR: PictureURL is null");
                         return output;
                     }
+
                     List<string> pictureURLs = dsutil.DSUtil.DelimitedToList(listing.PictureURL, ';');
+
+                    // ----------------------------------------------------------------
+                    // new
+                    // ----------------------------------------------------------------
+                    string path = HttpContext.Current.Request.PhysicalApplicationPath + @"productimages\";
+                    var localURLs = dsutil.DSUtil.DownloadImages(pictureURLs, path);
+                 
+                    // ----------------------------------------------------------------
+                    // end
+                    // ----------------------------------------------------------------
 
                     string verifyItemID = null;
 
@@ -354,15 +369,11 @@ namespace Utility
                     string paymentProfile = settings.PaymentProfile;
                     string returnProfile = settings.ReturnProfile;
 
-                    //shippingProfile = "Flat:Economy Shippi(Free),4 business days";
-                    //paymentProfile = "PayPal:Immediate pay#0";
-                    //returnProfile = "Returns Accepted,Buyer,30 Days,Money Back";
-
                     verifyItemID = eBayItem.VerifyAddItemRequest(settings, listing.ListingTitle,
                         listing.Description,
                         listing.PrimaryCategoryID,
                         (double)listing.ListingPrice,
-                        pictureURLs,
+                        localURLs,
                         ref output,
                         listing.Qty,
                         listing,
