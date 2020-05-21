@@ -8,7 +8,7 @@ using eBayUtility;
 
 namespace Utility
 {
-    public static class StoreCheck
+    public class StoreCheck
     {
         static DataModelsDB db = new DataModelsDB();
         /// <summary>
@@ -96,8 +96,14 @@ namespace Utility
                 }
                 analysis.DBIsMissingItems = items;
                 analysis.QtyMismatch = qtyMismatch;
+                analysis.InActive = GetInactive(settings.StoreID);
             }
             return analysis;
+        }
+        protected static int GetInactive(int storeID)
+        {
+            var ret = db.GetListings(storeID, false, true).Where(p => p.InActive).Count();
+            return ret;
         }
     }
 }

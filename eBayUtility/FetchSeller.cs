@@ -863,17 +863,37 @@ namespace eBayUtility
             return ret;
         }
 
-        public static decimal CalcProfit(SalesOrder salesOrder)
+        public static decimal CalcProfitOnSalesOrder(SalesOrder salesOrder)
         {
             var revenue = salesOrder.SubTotal + salesOrder.ShippingCost;
             var expenses = salesOrder.FinalValueFee + salesOrder.PayPalFee + salesOrder.I_Paid;
             var profit = revenue - expenses;
             return profit;
         }
-        public static double CalcProfitMargin(SalesOrder salesOrder)
+        public static double CalcProfitMarginOnSalesOrder(SalesOrder salesOrder)
         {
             var profit = (salesOrder.Profit / salesOrder.Total) * 100;
             return (double)profit;
+        }
+
+        /// <summary>
+        /// Want to make at least 1$
+        /// </summary>
+        /// <param name="item"></param>
+        /// <returns></returns>
+        public static decimal CalcProfit(SupplierItem item, Listing listing)
+        {
+            decimal finalValueFee = listing.ListingPrice * 0.0915m;
+            decimal payPalFee = listing.ListingPrice * 0.029m + 0.30m;
+            decimal netFromeBay = listing.ListingPrice - finalValueFee - payPalFee;
+
+            decimal finalSupplierPrice = 0.0m;
+            if (item.SupplierPrice.Value < 35.0m)
+            {
+                finalSupplierPrice = item.SupplierPrice.Value + 5.99m;
+            }
+            decimal netProfit = netFromeBay - finalSupplierPrice;
+            return netProfit;
         }
     }
 }
