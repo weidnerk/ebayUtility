@@ -357,7 +357,7 @@ namespace Utility
                     // new
                     // ----------------------------------------------------------------
                     string path = HttpContext.Current.Request.PhysicalApplicationPath + @"productimages\";
-                    var localURLs = dsutil.DSUtil.DownloadImages(pictureURLs, path);
+                    var localImgURLs = dsutil.DSUtil.DownloadImages(pictureURLs, path);
                  
                     // ----------------------------------------------------------------
                     // end
@@ -373,14 +373,23 @@ namespace Utility
                         listing.Description,
                         listing.PrimaryCategoryID,
                         (double)listing.ListingPrice,
-                        localURLs,
+                        localImgURLs,
                         ref output,
                         listing.Qty,
                         listing,
                         shippingProfile,
                         returnProfile,
                         paymentProfile);
-                 
+
+                    // Convert local image URLs to file names so we can remove them
+                    foreach (var f in localImgURLs)
+                    {
+                        Uri uri = new Uri(f);
+                        string filename = System.IO.Path.GetFileName(uri.LocalPath);
+                        string fullpath = path + filename;
+                        File.Delete(fullpath);
+                    }
+
                     // at this point, 'output' will be populated with errors if any occurred
 
                     if (!string.IsNullOrEmpty(verifyItemID))
