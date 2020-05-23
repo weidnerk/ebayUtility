@@ -881,16 +881,16 @@ namespace eBayUtility
         /// </summary>
         /// <param name="item"></param>
         /// <returns></returns>
-        public static decimal CalcProfit(SupplierItem item, Listing listing)
+        public static decimal CalcProfit(Listing listing)
         {
             decimal finalValueFee = listing.ListingPrice * 0.0915m;
             decimal payPalFee = listing.ListingPrice * 0.029m + 0.30m;
             decimal netFromeBay = listing.ListingPrice - finalValueFee - payPalFee;
 
-            decimal finalSupplierPrice = 0.0m;
-            if (item.SupplierPrice.Value < 35.0m)
+            decimal finalSupplierPrice = listing.SupplierItem.SupplierPrice.Value;
+            if (listing.SupplierItem.SupplierPrice.Value < 35.0m)
             {
-                finalSupplierPrice = item.SupplierPrice.Value + 5.99m;
+                finalSupplierPrice += 5.99m;
             }
             decimal netProfit = netFromeBay - finalSupplierPrice;
             return netProfit;
