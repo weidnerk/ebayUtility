@@ -570,6 +570,7 @@ namespace Utility
                 StringCollection valueCol1 = new StringCollection();
                 StringCollection valueCol2 = new StringCollection();
 
+                /*
                 if (!ItemSpecificExists(listing.ItemSpecifics, "Brand"))
                 {
                     nv1.Name = "Brand";
@@ -584,6 +585,7 @@ namespace Utility
                     nv2.Value = valueCol2;
                     ItemSpecs.Add(nv2);
                 }
+                */
 
                 var revisedItemSpecs = ModifyItemSpecific(listing.ItemSpecifics);
                 foreach (var i in revisedItemSpecs)
