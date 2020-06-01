@@ -21,6 +21,7 @@ using System.Data.Entity;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Services.Protocols;
@@ -384,7 +385,9 @@ namespace Utility
                     // Convert local image URLs to file names so we can remove them
                     // Well, this might be too fast to remove since I tried but eBay complained it doesn't have image.
                     // Might try something like a single process to delete anything older than today.
-                    /*
+                    // 05.30.2020 First attempt at pausing 4 seconds worked - let's see how it goes.
+                    Thread.Sleep(4000);
+
                     foreach (var f in localImgURLs)
                     {
                         Uri uri = new Uri(f);
@@ -392,7 +395,6 @@ namespace Utility
                         string fullpath = path + filename;
                         File.Delete(fullpath);
                     }
-                    */
 
                     // at this point, 'output' will be populated with errors if any occurred
 
