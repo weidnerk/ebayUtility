@@ -386,6 +386,9 @@ namespace Utility
                     // Well, this might be too fast to remove since I tried but eBay complained it doesn't have image.
                     // Might try something like a single process to delete anything older than today.
                     // 05.30.2020 First attempt at pausing 4 seconds worked - let's see how it goes.
+                    // 06.03.2020 nope, was working but just had case where images did not make it to eBay
+
+                    /*
                     Thread.Sleep(4000);
 
                     foreach (var f in localImgURLs)
@@ -395,6 +398,7 @@ namespace Utility
                         string fullpath = path + filename;
                         File.Delete(fullpath);
                     }
+                    */
 
                     // at this point, 'output' will be populated with errors if any occurred
 
