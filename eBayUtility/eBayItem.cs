@@ -431,7 +431,7 @@ namespace Utility
                     var log = new ListingLog();
                     log.UserID = settings.UserID;
                     log.MsgID = 800;
-                    log.Note = "revised listing by " + settings.UserName;
+                    log.Note = string.Format("Qty: {0} Price: {1} Revised listing by {2}", listing.Qty, listing.ListingPrice, settings.UserName);
                     log.ListingID = listing.ID;
                     await db.ListingLogAdd(log);
                     if (output.Count > 0)
