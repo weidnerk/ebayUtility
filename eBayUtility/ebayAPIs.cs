@@ -170,12 +170,14 @@ namespace eBayUtility
                     response.BuyerState = ShippingAddress.StateOrProvince;
                     response.FinalValueFee = (response.SubTotal + response.ShippingCost) * 0.0915m;
                     response.PayPalFee = (response.Total * 0.029m) + 0.30m;
+                    response.OrderID = r.OrderID;
 
                     // orderID is returned as a hyphenated string like:
                     // 223707436249-2329703153012
                     // first number is the itemID
                     var orderID = r.OrderID;
                     response.ListedItemID = GetItemIDFromGetOrders(orderID);
+                    response.OrderID = GetOrderIDFromGetOrders(orderID);
                     response.OrderStatus = r.OrderStatus.ToString();
                     eBayOrders.Add(response);
                 }
@@ -192,6 +194,12 @@ namespace eBayUtility
         {
             int pos = orderID.IndexOf("-");
             string ret = orderID.Substring(0, pos);
+            return ret;
+        }
+        protected static string GetOrderIDFromGetOrders(string orderID)
+        {
+            int pos = orderID.IndexOf("-");
+            string ret = orderID.Substring(pos + 1, orderID.Length - (pos + 1));
             return ret;
         }
         public static void GetOrderTransactions(UserSettingsView settings, string itemID)
