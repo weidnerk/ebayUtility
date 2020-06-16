@@ -878,13 +878,15 @@ namespace eBayUtility
 
         /// <summary>
         /// Want to make at least 1$
+        ///  
+        /// Called by client when user clicks 'Calculate profit' on listing but we don't have an order so approx sales tax at 7%
         /// </summary>
         /// <param name="item"></param>
         /// <returns></returns>
-        public static decimal CalcProfit(decimal listingPrice, decimal supplierPrice)
+        public static decimal CalcProfit(decimal listingPrice, decimal supplierPrice, double salesTaxPct)
         {
             decimal finalValueFee = listingPrice * 0.0915m;
-            decimal payPalFee = listingPrice * 0.029m + 0.30m;
+            decimal payPalFee = (listingPrice * (decimal)(1.0 + (salesTaxPct * 0.01))) * 0.029m + 0.30m;
             decimal netFromeBay = listingPrice - finalValueFee - payPalFee;
 
             decimal finalSupplierPrice = supplierPrice;
