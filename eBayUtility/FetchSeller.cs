@@ -489,7 +489,8 @@ namespace eBayUtility
                     loopItemID = row.ItemID;
                     bool tryAgain = false;
                     WalmartSearchProdIDResponse response;
-                    var walitem = new SupplierItem();
+                    //var walitem = new SupplierItem();
+                    SupplierItem walitem;
                     if (row.SellerUPC != null)
                     {
                         response = wallib.wmUtility.SearchProdID(row.SellerUPC);
@@ -659,7 +660,7 @@ namespace eBayUtility
                     {
                         var stop = 999;
                     }
-                    var walitem = new SupplierItem();
+                    SupplierItem walitem;
                     string descr = row.Description;
                     found = false;
 
