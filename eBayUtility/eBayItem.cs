@@ -370,12 +370,12 @@ namespace Utility
                     string paymentProfile = settings.PaymentProfile;
                     string returnProfile = settings.ReturnProfile;
 
-                    verifyItemID = eBayItem.VerifyAddItemRequest(settings, listing.ListingTitle,
+                    verifyItemID = await eBayItem.VerifyAddItemRequest(settings, listing.ListingTitle,
                         listing.Description,
                         listing.PrimaryCategoryID,
                         (double)listing.ListingPrice,
                         localImgURLs,
-                        ref output,
+                        output,
                         listing.Qty,
                         listing,
                         shippingProfile,
@@ -496,19 +496,20 @@ namespace Utility
         ///     FREE shipping
         ///     buyer pays for return shipping
         /// </summary>
-        public static string VerifyAddItemRequest(UserSettingsView settings,
+        public async static Task<string> VerifyAddItemRequest(UserSettingsView settings,
             string title,
             string description,
             string categoryID,
             double price,
             List<string> pictureURLs,
-            ref List<string> errors,
+            List<string> errors,
             int qtyToList,
             Listing listing,
             string shippingProfile,
             string returnProfile,
             string paymentProfile)
         {
+            int itemSpecificLim = 45;
             //errors = null;
             string listedItemID = null;
             try
@@ -594,13 +595,26 @@ namespace Utility
                 */
 
                 var revisedItemSpecs = ModifyItemSpecific(listing.ItemSpecifics);
+                int itemSpecificIndex = 0;
                 foreach (var i in revisedItemSpecs)
                 {
-                    var n = AddItemSpecifics(i);
-                    ItemSpecs.Add(n);
+                    if (++itemSpecificIndex <= itemSpecificLim)
+                    {
+                        var n = AddItemSpecifics(i);
+                        ItemSpecs.Add(n);
+                    }
                 }
                 item.ItemSpecifics = ItemSpecs;
 
+                // Log fact that seller's item specifics goes over 45 limit
+                if (revisedItemSpecs.Count > itemSpecificLim)
+                {
+                    var log = new ListingLog();
+                    log.MsgID = 1600;
+                    log.UserID = settings.UserID;
+                    log.ListingID = listing.ID;
+                    await db.ListingLogAdd(log);
+                }
                 var pd = new ProductListingDetailsType();
                 //var brand = new BrandMPNType();
                 //brand.Brand = "Unbranded";
