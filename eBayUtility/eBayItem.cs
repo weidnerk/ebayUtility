@@ -665,13 +665,26 @@ namespace Utility
 
                 request.Item = item;
 
+                /*
+                 * Attempt at listing into eBay Motors
+                 *
+                if (request.Item.PrimaryCategory.CategoryID == "179511")
+                {
+                    request.Item.Site = SiteCodeType.eBayMotors;
+                }
+                */
                 VerifyAddItemResponseType response = service.VerifyAddItem(request);
                 Console.WriteLine("ItemID: {0}", response.ItemID);
 
                 // If item is verified, the item will be added.
                 if (response.ItemID == "0")
                 {
-                    listedItemID = AddItemRequest(settings, item, ref errors, "0");
+                    string siteID = "0";
+                    //if (categoryID == "179511")
+                    //{
+                    //    siteID = "100";
+                    //}
+                    listedItemID = AddItemRequest(settings, item, ref errors, siteID);
                 }
                 else
                 {
