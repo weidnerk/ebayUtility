@@ -884,9 +884,9 @@ namespace eBayUtility
         /// </summary>
         /// <param name="item"></param>
         /// <returns></returns>
-        public static decimal CalcProfit(decimal listingPrice, decimal supplierPrice, double salesTaxPct)
+        public static decimal CalcProfit(decimal listingPrice, decimal supplierPrice, double salesTaxPct, double finalValueFeePct)
         {
-            decimal finalValueFee = listingPrice * 0.0915m;
+            decimal finalValueFee = listingPrice * (decimal)finalValueFeePct;
             decimal payPalFee = (listingPrice * (decimal)(1.0 + (salesTaxPct * 0.01))) * 0.029m + 0.30m;
             decimal netFromeBay = listingPrice - finalValueFee - payPalFee;
 

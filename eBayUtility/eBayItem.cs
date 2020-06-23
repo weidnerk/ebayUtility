@@ -514,7 +514,9 @@ namespace Utility
             string listedItemID = null;
             try
             {
-                eBayAPIInterfaceService service = EbayCalls.eBayServiceCall(settings, "VerifyAddItem");
+                // https://developer.ebay.com/devzone/guides/features-guide/content/Development/Sites-eBayMotors.html
+                // Test with car lift using eBay Motors category id 179511
+                eBayAPIInterfaceService service = EbayCalls.eBayServiceCall(settings, "VerifyAddItem", "0");
                 
                 VerifyAddItemRequestType request = new VerifyAddItemRequestType();
                 request.Version = "949";
@@ -669,7 +671,7 @@ namespace Utility
                 // If item is verified, the item will be added.
                 if (response.ItemID == "0")
                 {
-                    listedItemID = AddItemRequest(settings, item, ref errors);
+                    listedItemID = AddItemRequest(settings, item, ref errors, "0");
                 }
                 else
                 {
@@ -711,7 +713,7 @@ namespace Utility
             string listedItemID = null;
             try
             {
-                eBayAPIInterfaceService service = EbayCalls.eBayServiceCall(settings, "VerifyAddItem");
+                eBayAPIInterfaceService service = EbayCalls.eBayServiceCall(settings, "VerifyAddItem", "0");
 
                 VerifyAddItemRequestType request = new VerifyAddItemRequestType();
                 request.Version = "949";
@@ -834,7 +836,7 @@ namespace Utility
                 // If item is verified, the item will be added.
                 if (response.ItemID == "0")
                 {
-                    listedItemID = AddItemRequest(settings, item, ref errors);
+                    listedItemID = AddItemRequest(settings, item, ref errors, "0");
                 }
                 else
                 {
@@ -930,9 +932,9 @@ namespace Utility
         /// Add item to eBay. Once verified.
         /// </summary>
         /// <param name="item">Accepts ItemType object from VerifyAddItem method.</param>
-        public static string AddItemRequest(UserSettingsView settings, ItemType item, ref List<string> errors)
+        public static string AddItemRequest(UserSettingsView settings, ItemType item, ref List<string> errors, string siteID)
         {
-            eBayAPIInterfaceService service = EbayCalls.eBayServiceCall(settings, "AddItem");
+            eBayAPIInterfaceService service = EbayCalls.eBayServiceCall(settings, "AddItem", siteID);
 
             AddItemRequestType request = new AddItemRequestType();
             request.Version = "949";

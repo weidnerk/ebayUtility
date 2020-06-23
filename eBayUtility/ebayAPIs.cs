@@ -95,9 +95,9 @@ namespace eBayUtility
             return eBayOrder;
         }
 
-        public static List<SalesOrder> GetOrdersByDate(UserSettingsView settings, string itemID, DateTime fromDate, DateTime toDate)
+        public static List<SalesOrder> GetOrdersByDate(UserSettingsView settings, string itemID, DateTime fromDate, DateTime toDate, double finalValueFeePct)
         {
-            var orders = ebayAPIs.GetOrdersByDate(settings, fromDate, toDate);
+            var orders = ebayAPIs.GetOrdersByDate(settings, fromDate, toDate, finalValueFeePct);
             var eBayOrders = new List<SalesOrder>();
             foreach (var order in orders)
             {
@@ -108,7 +108,7 @@ namespace eBayUtility
             }
             return eBayOrders;
         }
-        public static List<SalesOrder> GetOrdersByDate(UserSettingsView settings, DateTime fromDate, DateTime toDate)
+        public static List<SalesOrder> GetOrdersByDate(UserSettingsView settings, DateTime fromDate, DateTime toDate, double finalValueFeePct)
         {
             var eBayOrders = new List<SalesOrder>();
             ApiContext context = new ApiContext();
@@ -168,7 +168,7 @@ namespace eBayUtility
                     response.Total = (decimal)Total.Value;
                     response.BuyerPaid = (decimal)r.AmountPaid.Value;
                     response.BuyerState = ShippingAddress.StateOrProvince;
-                    response.FinalValueFee = (response.SubTotal + response.ShippingCost) * 0.0915m;
+                    response.FinalValueFee = (response.SubTotal + response.ShippingCost) * (decimal)finalValueFeePct;
                     response.PayPalFee = (response.Total * 0.029m) + 0.30m;
                     response.OrderID = r.OrderID;
 
@@ -1381,9 +1381,9 @@ namespace eBayUtility
         /// Retrieve item details.
         /// </summary>
         /// <param name="ItemID">eBay Item ID</param>
-        public static void GetItemRequest(UserSettingsView settings, string ItemID)
+        public static void GetItemRequest(UserSettingsView settings, string ItemID, string siteID)
         {
-            eBayAPIInterfaceService service = EbayCalls.eBayServiceCall(settings, "GetItem");
+            eBayAPIInterfaceService service = EbayCalls.eBayServiceCall(settings, "GetItem", siteID);
 
             GetItemRequestType request = new GetItemRequestType();
             request.Version = "949";

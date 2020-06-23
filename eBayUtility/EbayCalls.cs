@@ -12,10 +12,10 @@ namespace Utility
     public class EbayCalls
     {
 
-        public static eBayAPIInterfaceService eBayServiceCall(UserSettingsView settings, string CallName)
+        public static eBayAPIInterfaceService eBayServiceCall(UserSettingsView settings, string CallName, string siteID)
         {
             string endpoint = "https://api.ebay.com/wsapi";
-            string siteId = "0";
+            //string siteId = "0";
             string appId = settings.AppID;
             string devId = settings.DevID;
             string certId = settings.CertID;
@@ -23,7 +23,7 @@ namespace Utility
             // Build the request URL
             string requestURL = endpoint
             + "?callname=" + CallName
-            + "&siteid=" + siteId
+            + "&siteid=" + siteID
             + "&appid=" + appId
             + "&version=" + version
             + "&routing=default";
