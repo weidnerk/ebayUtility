@@ -97,7 +97,7 @@ namespace eBayUtility
 
         public static List<SalesOrder> GetOrdersByDate(UserSettingsView settings, string itemID, DateTime fromDate, DateTime toDate, double finalValueFeePct)
         {
-            var orders = ebayAPIs.GetOrdersByDate(settings, fromDate, toDate, finalValueFeePct);
+            var orders = ebayAPIs.GetOrdersByDate(settings, fromDate, toDate, finalValueFeePct, "");
             var eBayOrders = new List<SalesOrder>();
             foreach (var order in orders)
             {
@@ -108,7 +108,7 @@ namespace eBayUtility
             }
             return eBayOrders;
         }
-        public static List<SalesOrder> GetOrdersByDate(UserSettingsView settings, DateTime fromDate, DateTime toDate, double finalValueFeePct)
+        public static List<SalesOrder> GetOrdersByDate(UserSettingsView settings, DateTime fromDate, DateTime toDate, double finalValueFeePct, string orderStatus)
         {
             var eBayOrders = new List<SalesOrder>();
             ApiContext context = new ApiContext();
@@ -132,10 +132,11 @@ namespace eBayUtility
                 foreach (var r in call.ApiResponse.OrderArray.ToArray())
                 {
                     var response = new SalesOrder();
-                    if (r.TransactionArray.Count == 1) {                                // i'm not expecting a value other than 1 here
+                    if (r.TransactionArray.Count == 1)
+                    {                                // i'm not expecting a value other than 1 here
                         response.Qty = r.TransactionArray[0].QuantityPurchased;
                         response.DatePurchased = r.TransactionArray[0].CreatedDate;     // there are various dates to use - let's see how close this one is
-                        //r.TransactionArray[0].Taxes.TotalTaxAmount;
+                                                                                        //r.TransactionArray[0].Taxes.TotalTaxAmount;
                         response.SalesTax = (decimal)r.TransactionArray[0].Taxes.TotalTaxAmount.Value;
 
                         if (r.TransactionArray[0].ShippingDetails.ShipmentTrackingDetails.Count > 0)
@@ -179,7 +180,18 @@ namespace eBayUtility
                     response.ListedItemID = GetItemIDFromGetOrders(orderID);
                     response.OrderID = GetOrderIDFromGetOrders(orderID);
                     response.OrderStatus = r.OrderStatus.ToString();
-                    eBayOrders.Add(response);
+
+                    if (!string.IsNullOrEmpty(orderStatus))
+                    {
+                        if (orderStatus == response.OrderStatus)
+                        {
+                            eBayOrders.Add(response);
+                        }
+                    }
+                    else
+                    {
+                        eBayOrders.Add(response);
+                    }
                 }
                 return eBayOrders;
             }
