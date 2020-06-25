@@ -154,6 +154,17 @@ namespace eBayUtility
                     }
                     //var x = r.RefundAmount.Value;
                     response.BuyerHandle = r.BuyerUserID;     // customer eBay handle
+
+                    var rs = r.TransactionArray[0].Status.ReturnStatus;
+                    string rsname = Enum.GetName(typeof(ReturnStatusCodeType), rs);
+                    if (rsname != "NotApplicable")
+                    {
+                        int stop = 99;
+                    }
+                    if (response.BuyerHandle == "jvanhoey")
+                    {
+                        int stop = 99;
+                    }
                     response.DatePurchased = r.PaidTime;
                     var ShippingAddress = r.ShippingAddress;
                     // Name
