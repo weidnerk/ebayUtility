@@ -108,6 +108,15 @@ namespace eBayUtility
             }
             return eBayOrders;
         }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="settings"></param>
+        /// <param name="fromDate"></param>
+        /// <param name="toDate"></param>
+        /// <param name="finalValueFeePct"></param>
+        /// <param name="orderStatus">Pass 'Cancelled' or 'RETURN'</param>
+        /// <returns></returns>
         public static List<SalesOrder> GetOrdersByDate(UserSettingsView settings, DateTime fromDate, DateTime toDate, double finalValueFeePct, string orderStatus)
         {
             var eBayOrders = new List<SalesOrder>();
@@ -157,14 +166,8 @@ namespace eBayUtility
 
                     var rs = r.TransactionArray[0].Status.ReturnStatus;
                     string rsname = Enum.GetName(typeof(ReturnStatusCodeType), rs);
-                    if (rsname != "NotApplicable")
-                    {
-                        int stop = 99;
-                    }
-                    if (response.BuyerHandle == "jvanhoey")
-                    {
-                        int stop = 99;
-                    }
+                    response.ReturnStatus = rsname;
+                  
                     response.DatePurchased = r.PaidTime;
                     var ShippingAddress = r.ShippingAddress;
                     // Name
@@ -192,11 +195,24 @@ namespace eBayUtility
                     response.OrderID = GetOrderIDFromGetOrders(orderID);
                     response.OrderStatus = r.OrderStatus.ToString();
 
+                    string csname = Enum.GetName(typeof(CancelStatusCodeType), r.CancelStatus);
+                    response.CancelStatus = csname;
+
                     if (!string.IsNullOrEmpty(orderStatus))
                     {
-                        if (orderStatus == response.OrderStatus)
+                        if (orderStatus == "RETURN")
                         {
-                            eBayOrders.Add(response);
+                            if (rsname != "NotApplicable")
+                            {
+                                eBayOrders.Add(response);
+                            }
+                        }
+                        else
+                        {
+                            if (orderStatus == response.OrderStatus)
+                            {
+                                eBayOrders.Add(response);
+                            }
                         }
                     }
                     else
