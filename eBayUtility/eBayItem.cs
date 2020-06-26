@@ -335,7 +335,8 @@ namespace Utility
         /// <returns></returns>
         public static async Task<List<string>> ListingCreateAsync(
             UserSettingsView settings, 
-            int listingID)
+            int listingID,
+            bool reviseUploadImages)
         {
             var output = new List<string>();
             var listing = db.ListingGet(listingID);     // item has to be stored before it can be listed
@@ -426,12 +427,26 @@ namespace Utility
                 else
                 {
                     string response = null;
-                    output = ReviseItem(token,
-                                        listing.ListedItemID,
-                                        qty: listing.Qty,
-                                        price: Convert.ToDouble(listing.ListingPrice),
-                                        title: listing.ListingTitle,
-                                        description: listing.Description);
+                    if (!reviseUploadImages)
+                    {
+                        output = ReviseItem(token,
+                                            listing.ListedItemID,
+                                            qty: listing.Qty,
+                                            price: Convert.ToDouble(listing.ListingPrice),
+                                            title: listing.ListingTitle,
+                                            description: listing.Description);
+                    }
+                    else
+                    {
+                        List<string> pictureURLs = dsutil.DSUtil.DelimitedToList(listing.PictureURL, ';');
+                        output = ReviseItem(token,
+                                            listing.ListedItemID,
+                                            qty: listing.Qty,
+                                            price: Convert.ToDouble(listing.ListingPrice),
+                                            title: listing.ListingTitle,
+                                            description: listing.Description,
+                                            pictureURLs: pictureURLs);
+                    }
                     var log = new ListingLog();
                     log.UserID = settings.UserID;
                     log.MsgID = 800;
@@ -1055,7 +1070,8 @@ namespace Utility
             int? qty = null,
             double? price = null,
             string title = null,
-            string description = null)
+            string description = null,
+            List<string> pictureURLs = null)
         {
             var response = new List<string>();
             try
@@ -1085,7 +1101,9 @@ namespace Utility
                 item.ItemID = listedItemID;
 
                 if (qty.HasValue)
+                {
                     item.Quantity = qty.Value;
+                }
 
                 if (price.HasValue)
                 {
@@ -1102,6 +1120,12 @@ namespace Utility
                 if (!string.IsNullOrEmpty(description))
                 {
                     item.Description = description;
+                }
+                if (pictureURLs != null)
+                {
+                    item.PictureDetails = new PictureDetailsType();
+                    item.PictureDetails.PictureURL = new StringCollection();
+                    item.PictureDetails.PictureURL.AddRange(pictureURLs.ToArray());
                 }
 
                 #region sample_code
