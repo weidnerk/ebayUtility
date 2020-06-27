@@ -688,6 +688,10 @@ namespace Utility
                     request.Item.Site = SiteCodeType.eBayMotors;
                 }
                 */
+                if (request.Item.PrimaryCategory.CategoryID == "50069")
+                {
+                    request.Item.Site = SiteCodeType.eBayMotors;
+                }
                 VerifyAddItemResponseType response = service.VerifyAddItem(request);
                 Console.WriteLine("ItemID: {0}", response.ItemID);
 
@@ -695,10 +699,17 @@ namespace Utility
                 if (response.ItemID == "0")
                 {
                     string siteID = "0";
+
+                    // eBay motors categories
+
                     //if (categoryID == "179511")
                     //{
                     //    siteID = "100";
                     //}
+                    if (categoryID == "50069")
+                    {
+                        siteID = "100";
+                    }
                     listedItemID = AddItemRequest(settings, item, ref errors, siteID);
                 }
                 else
