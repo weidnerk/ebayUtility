@@ -115,7 +115,7 @@ namespace eBayUtility
         /// <param name="fromDate"></param>
         /// <param name="toDate"></param>
         /// <param name="finalValueFeePct"></param>
-        /// <param name="orderStatus">Pass 'Cancelled' or 'RETURN'</param>
+        /// <param name="orderStatus">Pass 'Cancelled' or 'RETURN' or 'ReturnRequestPending'</param>
         /// <returns></returns>
         public static List<SalesOrder> GetOrdersByDate(UserSettingsView settings, DateTime fromDate, DateTime toDate, double finalValueFeePct, string orderStatus)
         {
@@ -163,7 +163,10 @@ namespace eBayUtility
                     }
                     //var x = r.RefundAmount.Value;
                     response.BuyerHandle = r.BuyerUserID;     // customer eBay handle
-
+                    //if (response.BuyerHandle == "sunnydawn65")
+                    //{
+                    //    int stop = 99;
+                    //}
                     var rs = r.TransactionArray[0].Status.ReturnStatus;
                     string rsname = Enum.GetName(typeof(ReturnStatusCodeType), rs);
                     response.ReturnStatus = rsname;
@@ -203,6 +206,13 @@ namespace eBayUtility
                         if (orderStatus == "RETURN")
                         {
                             if (rsname != "NotApplicable")
+                            {
+                                eBayOrders.Add(response);
+                            }
+                        }
+                        else if (orderStatus == "ReturnRequestPending")
+                        {
+                            if (rsname == "ReturnRequestPending")
                             {
                                 eBayOrders.Add(response);
                             }
