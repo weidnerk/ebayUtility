@@ -169,7 +169,7 @@ namespace eBayUtility
         /// </summary>
         /// <param name="html"></param>
         /// <returns></returns>
-        public static List<OrderHistoryDetail> GetTransactionsFromPage(string html, string itemID)
+        public static List<OrderHistoryDetail> GetTransactionsFromPage(string html)
         {
             string dateSold = null;
             var transactions = new List<OrderHistoryDetail>();
@@ -217,7 +217,7 @@ namespace eBayUtility
                         var variationNode = secondTable.SelectNodes("//td[@class='variationContentValueFont']");
                         if (variationNode != null)
                         {
-                            AddVariations(variationNode, transactions, itemID);
+                            AddVariations(variationNode, transactions);
                         }
                     }
                 }
@@ -226,7 +226,7 @@ namespace eBayUtility
             catch (Exception exc)
             {
                 string msg = dsutil.DSUtil.ErrMsg("GetTransactionsFromPage", exc);
-                dsutil.DSUtil.WriteFile(_logfile, itemID + ": " + msg, "");
+                dsutil.DSUtil.WriteFile(_logfile, msg, "");
                 return null;
             }
         }
@@ -249,7 +249,7 @@ namespace eBayUtility
             return databaseUtcTime;
         }
 
-        private static void AddVariations(HtmlNodeCollection variationNode, List<OrderHistoryDetail> transactions, string itemID)
+        private static void AddVariations(HtmlNodeCollection variationNode, List<OrderHistoryDetail> transactions)
         {
             try
             {
@@ -282,7 +282,7 @@ namespace eBayUtility
             catch (Exception exc)
             {
                 string msg = dsutil.DSUtil.ErrMsg("AddVariations", exc);
-                dsutil.DSUtil.WriteFile(_logfile, itemID + ": " + msg, "");
+                dsutil.DSUtil.WriteFile(_logfile, msg, "");
             }
         }
         /// <summary>
@@ -898,5 +898,54 @@ namespace eBayUtility
             decimal netProfit = netFromeBay - finalSupplierPrice;
             return netProfit;
         }
+        public static async Task<List<string>> ScanSoldItems(string URL)
+        {
+            var URLs = new List<string>();
+            using (HttpClient client = new HttpClient())
+            using (HttpResponseMessage response = await client.GetAsync(URL))
+            using (HttpContent content = response.Content)
+            {
+                // ... Read the string.
+                string html = await content.ReadAsStringAsync();
+                if (response.IsSuccessStatusCode)
+                {
+                    HtmlDocument doc = new HtmlDocument();
+                    doc.LoadHtml(html);
+
+                    var nodes = doc.DocumentNode.SelectNodes("//a[@class='vip']");
+                    if (nodes != null)
+                    {
+                        foreach(var x in nodes)
+                        {
+                            var h = x.GetAttributeValue("href", "");
+                            URLs.Add(h);
+                        }
+                    }
+                }
+            }
+            return URLs;
+        }
+        public static string GetItemIDFromeBayURL(string URL)
+        {
+            int pos = URL.LastIndexOf("/");
+            string itemID = URL.Substring(pos + 1, URL.Length - pos - 1);
+            return itemID;
+        }
+
+        public static List<string> GetItemDescriptionWarnings(Listing listing)
+        {
+            var warning = new List<string>();
+
+            foreach(var itemSpecific in listing.ItemSpecifics)
+            {
+                int pos = itemSpecific.ItemName.ToUpper().IndexOf("TAX");
+                if (pos > -1)
+                {
+                    warning.Add("contains TAX");
+                }
+            }
+            return warning;
+        }
+
     }
 }
