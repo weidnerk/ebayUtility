@@ -942,6 +942,10 @@ namespace eBayUtility
                         }
                         var a = r.Shipping;
 
+                        if (!string.IsNullOrEmpty(variationName))
+                        {
+                            sellerListing.Variation = true;
+                        }
                         sellerListing.VariationName = variationName;
                         sellerListing.ItemSpecifics = itemSpecifics.ToList();
                         sellerListing.Variations = variationList;
