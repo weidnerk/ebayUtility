@@ -30,7 +30,7 @@ namespace eBayUtility
     public static class FetchSeller
     {
         readonly static string _logfile = "log.txt";
-        static dsmodels.DataModelsDB models = new dsmodels.DataModelsDB();
+        static IRepository _repository = new dsmodels.Repository();
 
         /// <summary>
         /// GetCompletedItems(service, request, currentPageNumber) returns a FindCompletedItemsResponse which has property, searchResult
@@ -396,8 +396,8 @@ namespace eBayUtility
                 {
                     sh.ID = rptNumber;
                     sh.CalculateMatch = DateTime.Now;
-                    models.SearchHistoryUpdate(sh, "CalculateMatch");
-                    models.ClearOrderHistory(rptNumber);
+                    _repository.SearchHistoryUpdate(sh, "CalculateMatch");
+                    _repository.ClearOrderHistory(rptNumber);
 
                     await UPCMatch(settings, rptNumber, minSold, daysBack, minPrice, maxPrice, activeStatusOnly, isSellerVariation, itemID, pctProfit, wmShipping, wmFreeShippingMin, eBayPct, imgLimit);
                     
@@ -406,14 +406,14 @@ namespace eBayUtility
                 }
                 else if (storeID > 0)   // Used by CalculateMatch console app to run entire store
                 {
-                    var sellers = models.GetSellers();
+                    var sellers = _repository.GetSellers();
                     bool runScan = false;
                     foreach (var seller in sellers)
                     {
                         Console.WriteLine(seller.Seller);
                      
                         runScan = false;
-                        var sellerProfile = await models.SellerProfileGet(seller.Seller);
+                        var sellerProfile = await _repository.SellerProfileGet(seller.Seller);
                         if (sellerProfile == null)
                         {
                             runScan = true;
@@ -427,7 +427,7 @@ namespace eBayUtility
                         }
                         if (runScan)
                         {
-                            int? latest = models.LatestRptNumber(seller.Seller);
+                            int? latest = _repository.LatestRptNumber(seller.Seller);
                             var tgtSearchHistory = seller.SearchHistory.Where(p => p.ID == latest).SingleOrDefault();
                             if (tgtSearchHistory != null) 
                             {
@@ -436,7 +436,7 @@ namespace eBayUtility
                                     sh.CalculateMatch = DateTime.Now;
                                     sh.Updated = DateTime.Now;
                                     sh.ID = tgtSearchHistory.ID;
-                                    models.SearchHistoryUpdate(sh, "CalculateMatch", "Updated");
+                                    _repository.SearchHistoryUpdate(sh, "CalculateMatch", "Updated");
                                     
                                     await UPCMatch(settings, tgtSearchHistory.ID, minSold, daysBack, minPrice, maxPrice, activeStatusOnly, isSellerVariation, itemID, pctProfit, wmShipping, wmFreeShippingMin, eBayPct, imgLimit);
                                     
@@ -505,7 +505,7 @@ namespace eBayUtility
                             {
                                 walitem.UPC = row.SellerUPC;
                                 walitem.Updated = DateTime.Now;
-                                models.SupplierItemUpdateByProdID(row.SellerUPC, "", walitem,
+                                _repository.SupplierItemUpdateByProdID(row.SellerUPC, "", walitem,
                                     "Updated",
                                     "ItemURL",
                                     "SoldAndShippedBySupplier",
@@ -525,11 +525,11 @@ namespace eBayUtility
                                 {
                                     var p = wallib.wmUtility.wmNewPrice(walitem.SupplierPrice.Value, pctProfit, wmShipping, wmFreeShippingMin, eBayPct);
                                     oh.ProposePrice = p.ProposePrice;
-                                    models.OrderHistoryUpdate(oh, "ProposePrice", "MatchType", "MatchCount", "SourceID", "SupplierItemID");
+                                    _repository.OrderHistoryUpdate(oh, "ProposePrice", "MatchType", "MatchCount", "SourceID", "SupplierItemID");
                                 }
                                 else
                                 {
-                                    models.OrderHistoryUpdate(oh, "MatchType", "MatchCount", "SourceID", "SupplierItemID");
+                                    _repository.OrderHistoryUpdate(oh, "MatchType", "MatchCount", "SourceID", "SupplierItemID");
                                 }
                             }
                         }
@@ -558,7 +558,7 @@ namespace eBayUtility
                                 {
                                     walitem.MPN = row.SellerMPN;
                                     walitem.Updated = DateTime.Now;
-                                    models.SupplierItemUpdateByProdID("", row.SellerMPN, walitem,
+                                    _repository.SupplierItemUpdateByProdID("", row.SellerMPN, walitem,
                                         "Updated",
                                         "ItemURL",
                                         "SoldAndShippedBySupplier",
@@ -576,7 +576,7 @@ namespace eBayUtility
                                         itemSpecific.ItemName = "UPC";
                                         itemSpecific.ItemValue = walitem.UPC;
                                         itemSpecific.Flags = true;
-                                        models.OrderHistoryItemSpecificUpdate(itemSpecific);
+                                        _repository.OrderHistoryItemSpecificUpdate(itemSpecific);
                                     }
 
                                     if (walitem.SupplierPrice.HasValue)
@@ -589,7 +589,7 @@ namespace eBayUtility
                                         oh.MatchType = 1;
                                         oh.SourceID = walitem.SourceID;
                                         oh.SupplierItemID = walitem.ID;
-                                        models.OrderHistoryUpdate(oh, "ProposePrice", "MatchType", "MatchCount", "SourceID", "SupplierItemID");
+                                        _repository.OrderHistoryUpdate(oh, "ProposePrice", "MatchType", "MatchCount", "SourceID", "SupplierItemID");
                                     }
                                 }
                             }
@@ -612,7 +612,7 @@ namespace eBayUtility
             DateTime ModTimeFrom = ModTimeTo.AddDays(-daysBack);
 
             itemID = (itemID == "null") ? null : itemID;
-            var x = models.GetSalesData(rptNumber, ModTimeFrom, settings.StoreID, itemID);
+            var x = _repository.GetSalesData(rptNumber, ModTimeFrom, settings.StoreID, itemID);
 
             // filter by min and max price
             if (minPrice.HasValue)
@@ -693,7 +693,7 @@ namespace eBayUtility
                                             {
                                                 found = true;
                                                 walitem.Updated = DateTime.Now;
-                                                models.SupplierItemUpdateByID(walitem,
+                                                _repository.SupplierItemUpdateByID(walitem,
                                                     "Updated",
                                                     "ItemURL",
                                                     "SoldAndShippedBySupplier",
@@ -713,11 +713,11 @@ namespace eBayUtility
                                                 {
                                                     var p = wallib.wmUtility.wmNewPrice(walitem.SupplierPrice.Value, pctProfit, wmShipping, wmFreeShippingMin, eBayPct);
                                                     oh.ProposePrice = p.ProposePrice;
-                                                    models.OrderHistoryUpdate(oh, "ProposePrice", "MatchType", "MatchCount", "SourceID", "SupplierItemID");
+                                                    _repository.OrderHistoryUpdate(oh, "ProposePrice", "MatchType", "MatchCount", "SourceID", "SupplierItemID");
                                                 }
                                                 else
                                                 {
-                                                    models.OrderHistoryUpdate(oh, "MatchType", "MatchCount", "SourceID", "SupplierItemID");
+                                                    _repository.OrderHistoryUpdate(oh, "MatchType", "MatchCount", "SourceID", "SupplierItemID");
                                                 }
                                             }
                                         }
@@ -784,16 +784,16 @@ namespace eBayUtility
             int copiedRecords = 0;
             try
             {
-                var recs = models.UpdateToListing.AsNoTracking().Where(p => p.StoreID == storeID && p.ToListing).ToList();
+                var recs = _repository.UpdateToListing.AsNoTracking().Where(p => p.StoreID == storeID && p.ToListing).ToList();
                 foreach (var updateToList in recs)
                 {
-                    var oh = models.OrderHistory.AsNoTracking().Where(p => p.ItemID == updateToList.ItemID).SingleOrDefault();
+                    var oh = _repository.OrderHistory.AsNoTracking().Where(p => p.ItemID == updateToList.ItemID).SingleOrDefault();
 
-                    var ohObj = models.OrderHistory.AsNoTracking().Include("ItemSpecifics").AsNoTracking().Where(p => p.ItemID == updateToList.ItemID).SingleOrDefault();
+                    var ohObj = _repository.OrderHistory.AsNoTracking().Include("ItemSpecifics").AsNoTracking().Where(p => p.ItemID == updateToList.ItemID).SingleOrDefault();
 
                     var UPC = ohObj.ItemSpecifics.Where(p => p.ItemName == "UPC").Select(q => q.ItemValue).FirstOrDefault();
                     var MPN = ohObj.ItemSpecifics.Where(p => p.ItemName == "MPN").Select(q => q.ItemValue).FirstOrDefault();
-                    string foundResult = models.ProdIDExists(UPC, MPN, storeID);
+                    string foundResult = _repository.ProdIDExists(UPC, MPN, storeID);
                     if (foundResult == null)
                     {
                         var listing = new Listing();
@@ -803,21 +803,21 @@ namespace eBayUtility
                         {
                             listing.ListingPrice = ohObj.ProposePrice.Value;
                         }
-                        var supplierItem = models.GetSupplierItem(oh.SupplierItemID.Value);
+                        var supplierItem = _repository.GetSupplierItem(oh.SupplierItemID.Value);
                         listing.SupplierID = supplierItem.ID;
                         listing.Profit = 0;
                         listing.ProfitMargin = 0;
                         listing.StoreID = storeID;
                         var descr = supplierItem.Description;
                         listing.Description = descr;
-                        var upc = models.OrderHistoryItemSpecifics.AsNoTracking().Where(i => i.SellerItemID == ohObj.ItemID && i.ItemName == "UPC").SingleOrDefault();
+                        var upc = _repository.OrderHistoryItemSpecifics.AsNoTracking().Where(i => i.SellerItemID == ohObj.ItemID && i.ItemName == "UPC").SingleOrDefault();
                         if (upc != null)
                         {
                             listing.UPC = upc.ItemValue;
                         }
 
                         // MPN may have been collected twice - which one to use?  For now, pick first one.
-                        var mpn = models.OrderHistoryItemSpecifics.AsNoTracking().Where(i => i.SellerItemID == ohObj.ItemID && i.ItemName == "MPN").FirstOrDefault();
+                        var mpn = _repository.OrderHistoryItemSpecifics.AsNoTracking().Where(i => i.SellerItemID == ohObj.ItemID && i.ItemName == "MPN").FirstOrDefault();
                         if (mpn != null)
                         {
                             listing.MPN = mpn.ItemValue;
@@ -826,7 +826,7 @@ namespace eBayUtility
                         listing.PrimaryCategoryID = si.PrimaryCategoryID;
                         listing.PrimaryCategoryName = si.PrimaryCategoryName;
                         
-                        if (models.GetSellerListing(ohObj.ItemID) == null)
+                        if (_repository.GetSellerListing(ohObj.ItemID) == null)
                         {
                             var sellerListing = new SellerListing();
                             sellerListing.ItemID = ohObj.ItemID;
@@ -840,13 +840,13 @@ namespace eBayUtility
                             sellerListing.PictureURL = si.PictureURL;
                             sellerListing.SellerPrice = si.SellerPrice;
                             sellerListing.Updated = DateTime.Now;
-                            sellerListing.ItemSpecifics = dsmodels.DataModelsDB.CopyFromOrderHistory(ohObj.ItemSpecifics);
+                            sellerListing.ItemSpecifics = dsmodels.Repository.CopyFromOrderHistory(ohObj.ItemSpecifics);
                             //listing.SellerListing = sellerListing;
                         }
-                        await models.ListingSaveAsync(settings, listing, true);
+                        await _repository.ListingSaveAsync(settings, listing, true);
 
                         var obj = new UpdateToListing() { StoreID = storeID, ItemID = ohObj.ItemID };
-                        await models.UpdateToListingRemove(obj);
+                        await _repository.UpdateToListingRemove(obj);
                         ++copiedRecords;
                         ret = "Copied records: " + copiedRecords.ToString();
                     }

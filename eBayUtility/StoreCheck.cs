@@ -10,7 +10,7 @@ namespace Utility
 {
     public class StoreCheck
     {
-        static DataModelsDB db = new DataModelsDB();
+        static IRepository _repository = new Repository();
         /// <summary>
         /// does listing id exist in the db?
         /// </summary>
@@ -18,7 +18,7 @@ namespace Utility
         /// <returns></returns>
         public static Listing LookupItemid(UserSettingsView settings, string itemid)
         {
-            var result = db.Listings.Where(x => x.ListedItemID == itemid && x.StoreID == settings.StoreID).SingleOrDefault();
+            var result = _repository.Listings.Where(x => x.ListedItemID == itemid && x.StoreID == settings.StoreID).SingleOrDefault();
             if (result != null)
             {
                 return result;
@@ -106,7 +106,7 @@ namespace Utility
         }
         protected static int GetInactive(int storeID)
         {
-            var ret = db.GetListings(storeID, false, true).Where(p => p.InActive).Count();
+            var ret = _repository.GetListings(storeID, false, true).Where(p => p.InActive).Count();
             return ret;
         }
     }

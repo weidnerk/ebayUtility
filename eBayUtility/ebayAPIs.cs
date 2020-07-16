@@ -36,7 +36,7 @@ namespace eBayUtility
     {
         readonly static string _logfile = "log.txt";
         //dsmodels.DataModelsDB db = new dsmodels.DataModelsDB();
-        static DataModelsDB models = new DataModelsDB();
+        static IRepository _repository = new Repository();
 
         /// <summary>
         /// GetSellerTransactions
@@ -50,7 +50,7 @@ namespace eBayUtility
             ApiContext context = new ApiContext();
             try
             {
-                string token = models.GetToken(settings);
+                string token = _repository.GetToken(settings);
                 context.ApiCredential.eBayToken = token;
 
                 // set the server url
@@ -123,7 +123,7 @@ namespace eBayUtility
             ApiContext context = new ApiContext();
             try
             {
-                string token = models.GetToken(settings);
+                string token = _repository.GetToken(settings);
                 context.ApiCredential.eBayToken = token;
 
                 // set the server url
@@ -256,7 +256,7 @@ namespace eBayUtility
             //create the context
             ApiContext context = new ApiContext();
 
-            string token = models.GetToken(settings);
+            string token = _repository.GetToken(settings);
             context.ApiCredential.eBayToken = token;
 
             // set the server url
@@ -501,7 +501,6 @@ namespace eBayUtility
         // https://developer.ebay.com/DevZone/XML/Docs/Reference/ebay/GetSellerTransactions.html
         public static TransactionTypeCollection GetItemTransactions(UserSettingsView settings, string itemID, DateTime ModTimeFrom, DateTime ModTimeTo)
         {
-            dsmodels.DataModelsDB db = new dsmodels.DataModelsDB();
 
             // var profile = db.GetUserProfile(user.Id);
             ApiContext oContext = new ApiContext();
@@ -510,7 +509,7 @@ namespace eBayUtility
             oContext.ApiCredential.ApiAccount.Developer = settings.DevID;
             oContext.ApiCredential.ApiAccount.Application = settings.AppID;
             oContext.ApiCredential.ApiAccount.Certificate = settings.CertID;
-            oContext.ApiCredential.eBayToken = db.GetToken(settings);
+            oContext.ApiCredential.eBayToken = _repository.GetToken(settings);
 
             oContext.SoapApiServerUrl = "https://api.ebay.com/wsapi";
 
@@ -563,9 +562,7 @@ namespace eBayUtility
         {
             try
             {
-                dsmodels.DataModelsDB db = new dsmodels.DataModelsDB();
-                // var setting = db.UserSettings.Find(user.Id, 1);
-                // var profile = db.GetUserProfile(user.Id);
+                
                 ApiContext oContext = new ApiContext();
 
                 //set the dev,app,cert information
@@ -606,9 +603,6 @@ namespace eBayUtility
         {
             try
             {
-                dsmodels.DataModelsDB db = new dsmodels.DataModelsDB();
-                // var setting = db.UserSettings.Find(user.Id, 1);
-                // var profile = db.GetUserProfile(user.Id);
                 ApiContext oContext = new ApiContext();
 
                 //set the dev,app,cert information
@@ -659,7 +653,6 @@ namespace eBayUtility
         {
             try
             {
-                dsmodels.DataModelsDB db = new dsmodels.DataModelsDB();
                 ApiContext oContext = new ApiContext();
 
                 //set the dev,app,cert information
@@ -830,8 +823,6 @@ namespace eBayUtility
 
             try
             {
-                DataModelsDB db = new DataModelsDB();
-
                 Shopping svc = new Shopping();
                 // set the URL and it's parameters
 
@@ -1011,8 +1002,6 @@ namespace eBayUtility
         // ended up with GetSingleItem() instead
         public static FindItemsAdvancedResponse FindByKeyword(UserSettingsView settings)
         {
-            dsmodels.DataModelsDB db = new dsmodels.DataModelsDB();
-
             // Setting the required proterty value
 
             CustomFindAdvanced service = new CustomFindAdvanced();

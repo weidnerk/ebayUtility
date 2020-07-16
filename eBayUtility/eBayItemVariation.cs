@@ -17,7 +17,7 @@ namespace Utility
 {
     public class eBayItemVariation
     {
-        static dsmodels.DataModelsDB db = new dsmodels.DataModelsDB();
+        static IRepository _repository = new dsmodels.Repository();
 
         /// <summary>
         /// TEST CODE
@@ -29,7 +29,7 @@ namespace Utility
             ApiContext context = new ApiContext();
 
             //set the User token
-            string token = db.GetToken(settings);
+            string token = _repository.GetToken(settings);
             context.ApiCredential.eBayToken = token;
 
             //set the server url
@@ -418,7 +418,7 @@ namespace Utility
             ApiContext context = new ApiContext();
 
             //set the User token
-            string token = db.GetToken(settings);
+            string token = _repository.GetToken(settings);
             context.ApiCredential.eBayToken = token;
 
             //set the server url
@@ -671,7 +671,7 @@ namespace Utility
             ApiContext context = new ApiContext();
 
             //set the User token
-            string token = db.GetToken(settings);
+            string token = _repository.GetToken(settings);
             context.ApiCredential.eBayToken = token;
 
             //set the server url
@@ -886,7 +886,7 @@ namespace Utility
             ApiContext context = new ApiContext();
 
             //set the User token
-            string token = db.GetToken(settings);
+            string token = _repository.GetToken(settings);
             context.ApiCredential.eBayToken = token;
 
             //set the server url
@@ -1250,7 +1250,7 @@ namespace Utility
             ApiContext context = new ApiContext();
 
             //set the User token
-            var token = db.GetToken(settings);
+            var token = _repository.GetToken(settings);
             context.ApiCredential.eBayToken = token;
 
             //set the server url

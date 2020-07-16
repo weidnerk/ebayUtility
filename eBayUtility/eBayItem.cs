@@ -41,7 +41,7 @@ namespace Utility
     }
     public class eBayItem
     {
-        static dsmodels.DataModelsDB db = new dsmodels.DataModelsDB();
+        static IRepository _repository = new dsmodels.Repository();
         const int _qtyToList = 2;
         const string _logfile = "log.txt";
 
@@ -53,7 +53,7 @@ namespace Utility
         /// <returns></returns>
         public static eBayUser GeteBayUser(int storeID, string userID)
         {
-            string token = db.GetToken(storeID, userID);
+            string token = _repository.GetToken(storeID, userID);
             var eBayUser = GeteBayUser(token);
             return eBayUser;
         }
@@ -67,7 +67,7 @@ namespace Utility
 
         public static eBayUser GetUser(int storeID, string userID)
         {
-            string token = db.GetToken(storeID, userID);
+            string token = _repository.GetToken(storeID, userID);
             return GetUser(token);
         }
 
@@ -111,7 +111,7 @@ namespace Utility
         }
         public static eBayUser GetUserPreferences(int storeID, string userID)
         {
-            string token = db.GetToken(storeID, userID);
+            string token = _repository.GetToken(storeID, userID);
             return GetUserPreferences(token);
         }
         /// <summary>
@@ -155,7 +155,7 @@ namespace Utility
         }
         public static eBayStore GetStore(int storeID, string userID)
         {
-            string token = db.GetToken(storeID, userID);
+            string token = _repository.GetToken(storeID, userID);
             return GetStore(token);     // if get null here, means no subscription
         }
         /// <summary>
@@ -339,8 +339,8 @@ namespace Utility
             bool reviseUploadImages)
         {
             var output = new List<string>();
-            var listing = db.ListingGet(listingID);     // item has to be stored before it can be listed
-            var token = db.GetToken(settings);
+            var listing = _repository.ListingGet(listingID);     // item has to be stored before it can be listed
+            var token = _repository.GetToken(settings);
 
             if (listing != null)
             {
@@ -413,7 +413,7 @@ namespace Utility
                             listing.Listed = DateTime.Now;
                         }
                         var response = FlattenList(output);
-                        await db.ListedItemIDUpdate(listing, verifyItemID, settings.UserID, true, response);
+                        await _repository.ListedItemIDUpdate(listing, verifyItemID, settings.UserID, true, response);
                     }
                     else
                     {
@@ -452,13 +452,13 @@ namespace Utility
                     log.MsgID = 800;
                     log.Note = string.Format("Qty: {0} Price: {1} Revised listing by {2}", listing.Qty, listing.ListingPrice, settings.UserName);
                     log.ListingID = listing.ID;
-                    await db.ListingLogAdd(log);
+                    await _repository.ListingLogAdd(log);
                     if (output.Count > 0)
                     {
                         response = FlattenList(output);
                     }
                     // update the 'updatedby' fields
-                    await db.ListedItemIDUpdate(listing, listing.ListedItemID, settings.UserID, true, response, updated: DateTime.Now);
+                    await _repository.ListedItemIDUpdate(listing, listing.ListedItemID, settings.UserID, true, response, updated: DateTime.Now);
                     output.Insert(0, listing.ListedItemID);
 
                     if (output.Count > 0)
@@ -479,7 +479,7 @@ namespace Utility
                 log.Note = output;
                 log.UserID = settings.UserID;
                 log.ListingID = listing.ID;
-                await db.ListingLogAdd(log);
+                await _repository.ListingLogAdd(log);
             }
             catch
             {
@@ -630,7 +630,7 @@ namespace Utility
                     log.MsgID = 1600;
                     log.UserID = settings.UserID;
                     log.ListingID = listing.ID;
-                    await db.ListingLogAdd(log);
+                    await _repository.ListingLogAdd(log);
                 }
                 var pd = new ProductListingDetailsType();
                 //var brand = new BrandMPNType();
@@ -1027,7 +1027,7 @@ namespace Utility
                 ApiContext context = new ApiContext();
 
                 //set the User token
-                string token = db.GetToken(settings);
+                string token = _repository.GetToken(settings);
                 context.ApiCredential.eBayToken = token;
 
                 //set the server url
@@ -1223,7 +1223,7 @@ namespace Utility
             ApiContext context = new ApiContext();
 
             //set the User token
-            var token = db.GetToken(settings);
+            var token = _repository.GetToken(settings);
             context.ApiCredential.eBayToken = token;
 
             //enable logging
@@ -1265,13 +1265,13 @@ namespace Utility
         }
         public async static Task RefreshItemSpecifics(IUserSettingsView settings, int ID)
         {
-            var listing = db.Listings.Where(p => p.ID == ID).SingleOrDefault();
+            var listing = _repository.Listings.Where(p => p.ID == ID).SingleOrDefault();
             var sellerListing = await ebayAPIs.GetSingleItem(settings, listing.ItemID, true);
 
-            var sellerListingdb = db.SellerListings.Find(sellerListing.ItemID);
+            var sellerListingdb = _repository.SellerListings.Find(sellerListing.ItemID);
             sellerListingdb.ItemSpecifics.ForEach(c => c.Updated = DateTime.Now);
             //listing.SellerListing = sellerListingdb;
-            await db.SellerListingItemSpecificSave(sellerListing);
+            await _repository.SellerListingItemSpecificSave(sellerListing);
             ReviseItemSpecifics(settings, listing);
         }
 
