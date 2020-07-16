@@ -880,7 +880,7 @@ namespace Utility
         /// <param name="storeID"></param>
         /// <param name="sellerListing"></param>
         /// <returns></returns>
-        public static string AddFPItemWithVariations_potspans(UserSettingsView settings, int storeID, SellerListing sellerListing)
+        public static string AddFPItemWithVariations_potspans(IUserSettingsView settings, int storeID, SellerListing sellerListing)
         {
             //create the context
             ApiContext context = new ApiContext();

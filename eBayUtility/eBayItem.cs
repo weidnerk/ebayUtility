@@ -334,7 +334,7 @@ namespace Utility
         /// <param name="itemID">ebay seller listing id</param>
         /// <returns></returns>
         public static async Task<List<string>> ListingCreateAsync(
-            UserSettingsView settings, 
+            IUserSettingsView settings, 
             int listingID,
             bool reviseUploadImages)
         {
@@ -469,7 +469,7 @@ namespace Utility
             }
             return output;
         }
-        protected static async Task LogListingResponse(UserSettingsView settings, Listing listing, List<string> response)
+        protected static async Task LogListingResponse(IUserSettingsView settings, Listing listing, List<string> response)
         {
             try
             {
@@ -511,7 +511,7 @@ namespace Utility
         ///     FREE shipping
         ///     buyer pays for return shipping
         /// </summary>
-        public async static Task<string> VerifyAddItemRequest(UserSettingsView settings,
+        public async static Task<string> VerifyAddItemRequest(IUserSettingsView settings,
             string title,
             string description,
             string categoryID,
@@ -723,12 +723,18 @@ namespace Utility
             }
             catch (SoapException exc)
             {
+                string msg = dsutil.DSUtil.ErrMsg("VerifyAddItemRequest", exc);
+                dsutil.DSUtil.WriteFile(_logfile, msg, settings.UserName);
+
                 string s = exc.Message;
                 errors.Add(exc.Detail.InnerText);
                 return null;
             }
             catch (Exception exc)
             {
+                string msg = dsutil.DSUtil.ErrMsg("VerifyAddItemRequest", exc);
+                dsutil.DSUtil.WriteFile(_logfile, msg, settings.UserName);
+
                 string s = exc.Message;
                 errors.Add(s);
                 return null;
@@ -971,24 +977,33 @@ namespace Utility
         /// Add item to eBay. Once verified.
         /// </summary>
         /// <param name="item">Accepts ItemType object from VerifyAddItem method.</param>
-        public static string AddItemRequest(UserSettingsView settings, ItemType item, ref List<string> errors, string siteID)
+        public static string AddItemRequest(IUserSettingsView settings, ItemType item, ref List<string> errors, string siteID)
         {
-            eBayAPIInterfaceService service = EbayCalls.eBayServiceCall(settings, "AddItem", siteID);
-
-            AddItemRequestType request = new AddItemRequestType();
-            request.Version = "949";
-            request.ErrorLanguage = "en_US";
-            request.WarningLevel = WarningLevelCodeType.High;
-            request.Item = item;
-
-            AddItemResponseType response = service.AddItem(request);
-            foreach (ErrorType e in response.Errors)
+            try
             {
-                errors.Add(e.LongMessage);
+                eBayAPIInterfaceService service = EbayCalls.eBayServiceCall(settings, "AddItem", siteID);
+
+                AddItemRequestType request = new AddItemRequestType();
+                request.Version = "949";
+                request.ErrorLanguage = "en_US";
+                request.WarningLevel = WarningLevelCodeType.High;
+                request.Item = item;
+
+                AddItemResponseType response = service.AddItem(request);
+                foreach (ErrorType e in response.Errors)
+                {
+                    errors.Add(e.LongMessage);
+                }
+                Console.WriteLine("Item Added");
+                Console.WriteLine("ItemID: {0}", response.ItemID); // Item ID
+                return response.ItemID;
             }
-            Console.WriteLine("Item Added");
-            Console.WriteLine("ItemID: {0}", response.ItemID); // Item ID
-            return response.ItemID;
+            catch (Exception exc)
+            {
+                string msg = dsutil.DSUtil.ErrMsg("AddItemRequest", exc);
+                dsutil.DSUtil.WriteFile(_logfile, msg, settings.UserName);
+                throw;
+            }
         }
 
         /// <summary>
@@ -1000,7 +1015,7 @@ namespace Utility
         /// <param name="settings"></param>
         /// <param name="listing"></param>
         /// <returns></returns>
-        public static string EndFixedPriceItem(UserSettingsView settings, Listing listing, out bool auctionWasEnded)
+        public static string EndFixedPriceItem(IUserSettingsView settings, Listing listing, out bool auctionWasEnded)
         {
             const string actionEndedMarker = "The auction has already been closed.";
 
@@ -1201,7 +1216,7 @@ namespace Utility
         /// </summary>
         /// <param name="listing"></param>
         /// <returns></returns>
-        public static List<string> ReviseItemSpecifics(UserSettingsView settings, Listing listing)
+        public static List<string> ReviseItemSpecifics(IUserSettingsView settings, Listing listing)
         {
             var response = new List<string>();
             //create the context
@@ -1248,7 +1263,7 @@ namespace Utility
             }
             return response;
         }
-        public async static Task RefreshItemSpecifics(UserSettingsView settings, int ID)
+        public async static Task RefreshItemSpecifics(IUserSettingsView settings, int ID)
         {
             var listing = db.Listings.Where(p => p.ID == ID).SingleOrDefault();
             var sellerListing = await ebayAPIs.GetSingleItem(settings, listing.ItemID, true);

@@ -12,7 +12,7 @@ namespace Utility
     public class EbayCalls
     {
 
-        public static eBayAPIInterfaceService eBayServiceCall(UserSettingsView settings, string CallName, string siteID)
+        public static eBayAPIInterfaceService eBayServiceCall(IUserSettingsView settings, string CallName, string siteID)
         {
             string endpoint = "https://api.ebay.com/wsapi";
             //string siteId = "0";

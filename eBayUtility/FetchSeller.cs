@@ -381,7 +381,7 @@ namespace eBayUtility
         /// <param name="pctProfit"></param>
         /// <param name="storeID">Pass storeID to run all sellers in store.</param>
         /// <returns></returns>
-        public static async Task<string> CalculateMatch(UserSettingsView settings, int rptNumber, int minSold, int daysBack, int? minPrice, int? maxPrice, bool? activeStatusOnly, bool? isSellerVariation, string itemID, double pctProfit, int storeID, decimal wmShipping, decimal wmFreeShippingMin, double eBayPct, int imgLimit, string supplierTag)
+        public static async Task<string> CalculateMatch(IUserSettingsView settings, int rptNumber, int minSold, int daysBack, int? minPrice, int? maxPrice, bool? activeStatusOnly, bool? isSellerVariation, string itemID, double pctProfit, int storeID, decimal wmShipping, decimal wmFreeShippingMin, double eBayPct, int imgLimit, string supplierTag)
         {
             string ret = null;
             try
@@ -476,7 +476,7 @@ namespace eBayUtility
         /// <param name="itemID"></param>
         /// <param name="pctProfit"></param>
         /// <returns></returns>
-        private static async Task UPCMatch(UserSettingsView settings, int rptNumber, int minSold, int daysBack, int? minPrice, int? maxPrice, bool? activeStatusOnly, bool? isSellerVariation, string itemID, double pctProfit, decimal wmShipping, decimal wmFreeShippingMin, double eBayPct, int imgLimit)
+        private static async Task UPCMatch(IUserSettingsView settings, int rptNumber, int minSold, int daysBack, int? minPrice, int? maxPrice, bool? activeStatusOnly, bool? isSellerVariation, string itemID, double pctProfit, decimal wmShipping, decimal wmFreeShippingMin, double eBayPct, int imgLimit)
         {
             string loopItemID = null;
             try
@@ -606,7 +606,7 @@ namespace eBayUtility
             }
         }
 
-        private static List<TimesSold> FilterMatch(UserSettingsView settings, int rptNumber, int minSold, int daysBack, int? minPrice, int? maxPrice, bool? activeStatusOnly, bool? isSellerVariation, string itemID)
+        private static List<TimesSold> FilterMatch(IUserSettingsView settings, int rptNumber, int minSold, int daysBack, int? minPrice, int? maxPrice, bool? activeStatusOnly, bool? isSellerVariation, string itemID)
         {
             DateTime ModTimeTo = DateTime.Now.ToUniversalTime();
             DateTime ModTimeFrom = ModTimeTo.AddDays(-daysBack);
@@ -778,7 +778,7 @@ namespace eBayUtility
         /// <param name="settings"></param>
         /// <param name="rptNumber"></param>
         /// <returns></returns>
-        public static async Task<string> StoreToListing(UserSettingsView settings, int storeID)
+        public static async Task<string> StoreToListing(IUserSettingsView settings, int storeID)
         {
             string ret = "Copied 0 records.";
             int copiedRecords = 0;
@@ -864,14 +864,14 @@ namespace eBayUtility
             return ret;
         }
 
-        public static decimal CalcProfitOnSalesOrder(SalesOrder salesOrder)
+        public static decimal CalcProfitOnSalesOrder(ISalesOrder salesOrder)
         {
             var revenue = salesOrder.SubTotal + salesOrder.ShippingCost;
             var expenses = salesOrder.FinalValueFee + salesOrder.PayPalFee + salesOrder.I_Paid;
             var profit = revenue - expenses;
             return profit;
         }
-        public static double CalcProfitMarginOnSalesOrder(SalesOrder salesOrder)
+        public static double CalcProfitMarginOnSalesOrder(ISalesOrder salesOrder)
         {
             var profit = (salesOrder.Profit / salesOrder.Total) * 100;
             return (double)profit;

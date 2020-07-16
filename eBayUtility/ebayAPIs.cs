@@ -43,7 +43,7 @@ namespace eBayUtility
         /// https://developer.ebay.com/DevZone/XML/Docs/Reference/ebay/GetSellerTransactions.html
         /// </summary>
         /// <param name="orderID">19-04026-11927</param>
-        public static GetOrdersResponse GetOrders(UserSettingsView settings, string orderID, out string msg)
+        public static GetOrdersResponse GetOrders(IUserSettingsView settings, string orderID, out string msg)
         {
             msg = null;
             var eBayOrder = new GetOrdersResponse();
@@ -95,7 +95,7 @@ namespace eBayUtility
             return eBayOrder;
         }
 
-        public static List<SalesOrder> GetOrdersByDate(UserSettingsView settings, string itemID, DateTime fromDate, DateTime toDate, double finalValueFeePct)
+        public static List<SalesOrder> GetOrdersByDate(IUserSettingsView settings, string itemID, DateTime fromDate, DateTime toDate, double finalValueFeePct)
         {
             var orders = ebayAPIs.GetOrdersByDate(settings, fromDate, toDate, finalValueFeePct, "");
             var eBayOrders = new List<SalesOrder>();
@@ -117,7 +117,7 @@ namespace eBayUtility
         /// <param name="finalValueFeePct"></param>
         /// <param name="orderStatus">Pass 'Cancelled' or 'RETURN' or 'ReturnRequestPending'</param>
         /// <returns></returns>
-        public static List<SalesOrder> GetOrdersByDate(UserSettingsView settings, DateTime fromDate, DateTime toDate, double finalValueFeePct, string orderStatus)
+        public static List<SalesOrder> GetOrdersByDate(IUserSettingsView settings, DateTime fromDate, DateTime toDate, double finalValueFeePct, string orderStatus)
         {
             var eBayOrders = new List<SalesOrder>();
             ApiContext context = new ApiContext();
@@ -602,7 +602,7 @@ namespace eBayUtility
         }
 
         // note below that GetApiAccessRules returns a collection but first item is CallName, ApplicationAggregate, which returns all
-        public static long GetTradingAPIUsage(UserSettingsView settings)
+        public static long GetTradingAPIUsage(IUserSettingsView settings)
         {
             try
             {
@@ -819,7 +819,7 @@ namespace eBayUtility
       
         // Purpose of GetSingleItem is to fetch properties such as a listing's description and photos
         // it is used when performing an auto-listing
-        public static async Task<SellerListing> GetSingleItem(UserSettingsView settings, string itemID, bool includeItemSpecifics)
+        public static async Task<SellerListing> GetSingleItem(IUserSettingsView settings, string itemID, bool includeItemSpecifics)
         {
             string errMsg = null;
             StringReader sr;
