@@ -1265,10 +1265,10 @@ namespace Utility
         }
         public async static Task RefreshItemSpecifics(IUserSettingsView settings, int ID)
         {
-            var listing = _repository.Listings.Where(p => p.ID == ID).SingleOrDefault();
+            var listing = _repository.Context.Listings.Where(p => p.ID == ID).SingleOrDefault();
             var sellerListing = await ebayAPIs.GetSingleItem(settings, listing.ItemID, true);
 
-            var sellerListingdb = _repository.SellerListings.Find(sellerListing.ItemID);
+            var sellerListingdb = _repository.Context.SellerListings.Find(sellerListing.ItemID);
             sellerListingdb.ItemSpecifics.ForEach(c => c.Updated = DateTime.Now);
             //listing.SellerListing = sellerListingdb;
             await _repository.SellerListingItemSpecificSave(sellerListing);

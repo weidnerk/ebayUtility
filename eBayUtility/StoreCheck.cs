@@ -18,7 +18,7 @@ namespace Utility
         /// <returns></returns>
         public static Listing LookupItemid(UserSettingsView settings, string itemid)
         {
-            var result = _repository.Listings.Where(x => x.ListedItemID == itemid && x.StoreID == settings.StoreID).SingleOrDefault();
+            var result = _repository.Context.Listings.Where(x => x.ListedItemID == itemid && x.StoreID == settings.StoreID).SingleOrDefault();
             if (result != null)
             {
                 return result;

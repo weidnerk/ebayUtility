@@ -784,12 +784,12 @@ namespace eBayUtility
             int copiedRecords = 0;
             try
             {
-                var recs = _repository.UpdateToListing.AsNoTracking().Where(p => p.StoreID == storeID && p.ToListing).ToList();
+                var recs = _repository.Context.UpdateToListing.AsNoTracking().Where(p => p.StoreID == storeID && p.ToListing).ToList();
                 foreach (var updateToList in recs)
                 {
-                    var oh = _repository.OrderHistory.AsNoTracking().Where(p => p.ItemID == updateToList.ItemID).SingleOrDefault();
+                    var oh = _repository.Context.OrderHistory.AsNoTracking().Where(p => p.ItemID == updateToList.ItemID).SingleOrDefault();
 
-                    var ohObj = _repository.OrderHistory.AsNoTracking().Include("ItemSpecifics").AsNoTracking().Where(p => p.ItemID == updateToList.ItemID).SingleOrDefault();
+                    var ohObj = _repository.Context.OrderHistory.AsNoTracking().Include("ItemSpecifics").AsNoTracking().Where(p => p.ItemID == updateToList.ItemID).SingleOrDefault();
 
                     var UPC = ohObj.ItemSpecifics.Where(p => p.ItemName == "UPC").Select(q => q.ItemValue).FirstOrDefault();
                     var MPN = ohObj.ItemSpecifics.Where(p => p.ItemName == "MPN").Select(q => q.ItemValue).FirstOrDefault();
@@ -810,14 +810,14 @@ namespace eBayUtility
                         listing.StoreID = storeID;
                         var descr = supplierItem.Description;
                         listing.Description = descr;
-                        var upc = _repository.OrderHistoryItemSpecifics.AsNoTracking().Where(i => i.SellerItemID == ohObj.ItemID && i.ItemName == "UPC").SingleOrDefault();
+                        var upc = _repository.Context.OrderHistoryItemSpecifics.AsNoTracking().Where(i => i.SellerItemID == ohObj.ItemID && i.ItemName == "UPC").SingleOrDefault();
                         if (upc != null)
                         {
                             listing.UPC = upc.ItemValue;
                         }
 
                         // MPN may have been collected twice - which one to use?  For now, pick first one.
-                        var mpn = _repository.OrderHistoryItemSpecifics.AsNoTracking().Where(i => i.SellerItemID == ohObj.ItemID && i.ItemName == "MPN").FirstOrDefault();
+                        var mpn = _repository.Context.OrderHistoryItemSpecifics.AsNoTracking().Where(i => i.SellerItemID == ohObj.ItemID && i.ItemName == "MPN").FirstOrDefault();
                         if (mpn != null)
                         {
                             listing.MPN = mpn.ItemValue;
