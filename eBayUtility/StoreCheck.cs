@@ -63,9 +63,9 @@ namespace Utility
             */
             return items;
         }
-        public static StoreAnalysis Analysis(UserSettingsView settings, ref ItemTypeCollection storeItems)
+        public static IStoreAnalysis Analysis(UserSettingsView settings, ref ItemTypeCollection storeItems)
         {
-            var analysis = new StoreAnalysis();
+            IStoreAnalysis analysis = new StoreAnalysis();
             var items = new List<string>();
             var qtyMismatch = new List<string>();
             int cnt = 0;
