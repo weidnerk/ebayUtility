@@ -30,8 +30,12 @@ namespace eBayUtility
     public static class FetchSeller
     {
         readonly static string _logfile = "log.txt";
-        static IRepository _repository = new dsmodels.Repository();
+        private static IRepository _repository;
 
+        public static void Init(IRepository repository)
+        {
+            _repository = repository;
+        }
         /// <summary>
         /// GetCompletedItems(service, request, currentPageNumber) returns a FindCompletedItemsResponse which has property, searchResult
         /// Iterate the seller's sold items, fetching sales history

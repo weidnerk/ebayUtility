@@ -32,12 +32,15 @@ namespace eBayUtility
         public string StatusStr { get; set; }
     }
 
-    public class ebayAPIs
+    public static class ebayAPIs
     {
         readonly static string _logfile = "log.txt";
-        //dsmodels.DataModelsDB db = new dsmodels.DataModelsDB();
-        static IRepository _repository = new Repository();
+        private static IRepository _repository;
 
+        public static void Init(IRepository repository)
+        {
+            _repository = repository;
+        }
         /// <summary>
         /// GetSellerTransactions
         /// https://developer.ebay.com/DevZone/XML/Docs/Reference/ebay/GetSellerTransactions.html
@@ -239,13 +242,13 @@ namespace eBayUtility
                 throw;
             }
         }
-        protected static string GetItemIDFromGetOrders(string orderID)
+        private static string GetItemIDFromGetOrders(string orderID)
         {
             int pos = orderID.IndexOf("-");
             string ret = orderID.Substring(0, pos);
             return ret;
         }
-        protected static string GetOrderIDFromGetOrders(string orderID)
+        private static string GetOrderIDFromGetOrders(string orderID)
         {
             int pos = orderID.IndexOf("-");
             string ret = orderID.Substring(pos + 1, orderID.Length - (pos + 1));
@@ -696,7 +699,7 @@ namespace eBayUtility
         // https://ebaydts.com/eBayKBDetails?KBid=1987
         //
         // 192369073559
-        protected static void GetItem(string itemId)
+        private static void GetItem(string itemId)
         {
             ApiContext oContext = new ApiContext();
 
@@ -977,7 +980,7 @@ namespace eBayUtility
             return sellerListing;
         }
 
-        protected static string GetSingleItemError(string output)
+        private static string GetSingleItemError(string output)
         {
             string errMsg = null;
             try
@@ -1127,7 +1130,7 @@ namespace eBayUtility
         }
 
         // uses operation 'findItemsAdvanced'
-        protected static FindItemsAdvancedResponse FindItems(UserSettingsView settings, string seller, int pageNumber, int daysBack)
+        private static FindItemsAdvancedResponse FindItems(UserSettingsView settings, string seller, int pageNumber, int daysBack)
         {
             StringBuilder strResult = new StringBuilder();
             try
@@ -1226,7 +1229,7 @@ namespace eBayUtility
         }
 
         // uses operation 'findItemsByKeywords'
-        protected static void SOAPSearch(string keyword)
+        private static void SOAPSearch(string keyword)
         {
             StringBuilder strResult = new StringBuilder();
             try

@@ -39,12 +39,18 @@ namespace Utility
         Standard,
         Economy
     }
-    public class eBayItem
+    public static class eBayItem
     {
-        static IRepository _repository = new dsmodels.Repository();
+        //static IRepository _repository = new dsmodels.Repository();
         const int _qtyToList = 2;
         const string _logfile = "log.txt";
 
+        private static IRepository _repository;
+
+        public static void Init(IRepository repository)
+        {
+            _repository = repository;
+        }
         /// <summary>
         /// Get both eBay user id and paypal address
         /// </summary>
@@ -469,7 +475,7 @@ namespace Utility
             }
             return output;
         }
-        protected static async Task LogListingResponse(IUserSettingsView settings, Listing listing, List<string> response)
+        private static async Task LogListingResponse(IUserSettingsView settings, Listing listing, List<string> response)
         {
             try
             {
@@ -486,7 +492,7 @@ namespace Utility
                 throw;
             }
         }
-        protected static string FlattenList(List<string> errors)
+        private static string FlattenList(List<string> errors)
         {
             string output = null;
             foreach (string s in errors)
@@ -869,7 +875,7 @@ namespace Utility
                     //RestockingFeeValue = "Percent_20",
                     //RestockingFeeValueOption = "Percent_20"
                 };
-                item.ShippingDetails = eBayUtility.ebayAPIs.GetShippingDetail(shippingService);
+                item.ShippingDetails = ebayAPIs.GetShippingDetail(shippingService);
                 
                 item.Site = SiteCodeType.US;
 
@@ -906,7 +912,7 @@ namespace Utility
                 return null;
             }
         }
-        protected static string ShippingCostPaidByToStr(ShippingCostPaidBy shippingCostPaidBy)
+        private static string ShippingCostPaidByToStr(ShippingCostPaidBy shippingCostPaidBy)
         {
             string shippingCostPaidByStr =  null;
             switch (shippingCostPaidBy)
@@ -921,7 +927,7 @@ namespace Utility
             }
             return shippingCostPaidByStr;
         }
-        protected static eBay.Service.Core.Soap.NameValueListType AddItemSpecifics(ListingItemSpecific item)
+        private static eBay.Service.Core.Soap.NameValueListType AddItemSpecifics(ListingItemSpecific item)
         {
             var nv2 = new eBay.Service.Core.Soap.NameValueListType();
             StringCollection valueCol2 = new StringCollection();
@@ -944,7 +950,7 @@ namespace Utility
             }
             return specifics;
         }
-        protected static bool ItemSpecificExists(List<ListingItemSpecific> itemSpecifics, string itemName)
+        private static bool ItemSpecificExists(List<ListingItemSpecific> itemSpecifics, string itemName)
         {
             foreach (var s in itemSpecifics)
             {
@@ -955,7 +961,7 @@ namespace Utility
             }
             return false;
         }
-        protected static bool OmitSpecific(string name)
+        private static bool OmitSpecific(string name)
         {
             if (name == "Restocking Fee")
                 return true;

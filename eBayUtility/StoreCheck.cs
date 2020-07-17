@@ -8,9 +8,14 @@ using eBayUtility;
 
 namespace Utility
 {
-    public class StoreCheck
+    public static class StoreCheck
     {
-        static IRepository _repository = new Repository();
+        private static IRepository _repository;
+
+        public static void Init(IRepository repository)
+        {
+            _repository = repository;
+        }
         /// <summary>
         /// does listing id exist in the db?
         /// </summary>
@@ -104,7 +109,7 @@ namespace Utility
             }
             return analysis;
         }
-        protected static int GetInactive(int storeID)
+        private static int GetInactive(int storeID)
         {
             var ret = _repository.GetListings(storeID, false, true).Where(p => p.InActive).Count();
             return ret;
