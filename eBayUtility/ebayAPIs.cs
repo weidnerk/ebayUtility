@@ -815,7 +815,7 @@ namespace eBayUtility
       
         // Purpose of GetSingleItem is to fetch properties such as a listing's description and photos
         // it is used when performing an auto-listing
-        public static async Task<SellerListing> GetSingleItem(IUserSettingsView settings, string itemID, bool includeItemSpecifics)
+        public static async Task<ISellerListing> GetSingleItem(IUserSettingsView settings, string itemID, bool includeItemSpecifics)
         {
             string errMsg = null;
             StringReader sr;

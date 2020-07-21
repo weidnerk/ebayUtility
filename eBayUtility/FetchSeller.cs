@@ -844,7 +844,7 @@ namespace eBayUtility
                             sellerListing.PictureURL = si.PictureURL;
                             sellerListing.SellerPrice = si.SellerPrice;
                             sellerListing.Updated = DateTime.Now;
-                            sellerListing.ItemSpecifics = dsmodels.Repository.CopyFromOrderHistory(ohObj.ItemSpecifics);
+                            sellerListing.ItemSpecifics = _repository.CopyFromOrderHistory(ohObj.ItemSpecifics);
                             //listing.SellerListing = sellerListing;
                         }
                         await _repository.ListingSaveAsync(settings, listing, true);

@@ -17,7 +17,12 @@ namespace Utility
 {
     public class eBayItemVariation
     {
-        static IRepository _repository = new dsmodels.Repository();
+        private static IRepository _repository;
+
+        public static void Init(IRepository repository)
+        {
+            _repository = repository;
+        }
 
         /// <summary>
         /// TEST CODE
@@ -880,7 +885,7 @@ namespace Utility
         /// <param name="storeID"></param>
         /// <param name="sellerListing"></param>
         /// <returns></returns>
-        public static string AddFPItemWithVariations_potspans(IUserSettingsView settings, int storeID, SellerListing sellerListing)
+        public static string AddFPItemWithVariations_potspans(IUserSettingsView settings, int storeID, ISellerListing sellerListing)
         {
             //create the context
             ApiContext context = new ApiContext();
