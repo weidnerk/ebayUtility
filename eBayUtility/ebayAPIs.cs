@@ -821,7 +821,7 @@ namespace eBayUtility
             StringReader sr;
             string output;
             string variationName = null;
-            var sellerListing = new SellerListing();
+            ISellerListing sellerListing = new SellerListing();
             const string notfound = "Invalid item ID.";
 
             try

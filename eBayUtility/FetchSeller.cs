@@ -51,7 +51,7 @@ namespace eBayUtility
                 foreach (SearchItem searchItem in result.item)
                 {
                     var listing = new Listing();
-                    var sellerListing = new SellerListing();
+                    ISellerListing sellerListing = new SellerListing();
 
                     sellerListing.Title = searchItem.title;
                     listing.ItemID = searchItem.itemId;
