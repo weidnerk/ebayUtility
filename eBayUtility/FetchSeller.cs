@@ -494,7 +494,7 @@ namespace eBayUtility
                     bool tryAgain = false;
                     WalmartSearchProdIDResponse response;
                     //var walitem = new SupplierItem();
-                    SupplierItem walitem;
+                    ISupplierItem walitem;
                     if (row.SellerUPC != null)
                     {
                         response = wallib.wmUtility.SearchProdID(row.SellerUPC);
@@ -509,7 +509,7 @@ namespace eBayUtility
                             {
                                 walitem.UPC = row.SellerUPC;
                                 walitem.Updated = DateTime.Now;
-                                _repository.SupplierItemUpdateByProdID(row.SellerUPC, "", walitem,
+                                _repository.SupplierItemUpdateByProdID(row.SellerUPC, "", walitem as SupplierItem,
                                     "Updated",
                                     "ItemURL",
                                     "SoldAndShippedBySupplier",
@@ -562,7 +562,7 @@ namespace eBayUtility
                                 {
                                     walitem.MPN = row.SellerMPN;
                                     walitem.Updated = DateTime.Now;
-                                    _repository.SupplierItemUpdateByProdID("", row.SellerMPN, walitem,
+                                    _repository.SupplierItemUpdateByProdID("", row.SellerMPN, walitem as SupplierItem,
                                         "Updated",
                                         "ItemURL",
                                         "SoldAndShippedBySupplier",
@@ -664,7 +664,7 @@ namespace eBayUtility
                     {
                         var stop = 999;
                     }
-                    SupplierItem walitem;
+                    ISupplierItem walitem;
                     string descr = row.Description;
                     found = false;
 
