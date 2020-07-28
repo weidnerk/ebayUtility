@@ -345,135 +345,127 @@ namespace Utility
             bool reviseUploadImages)
         {
             var output = new List<string>();
-            var listing = _repository.ListingGet(listingID);     // item has to be stored before it can be listed
-            var token = _repository.GetToken(settings);
 
-            if (listing != null)
+            try
             {
-                // if item is listed already, then revise
-                if (listing.Listed == null)
+                var listing = _repository.ListingGet(listingID);     // item has to be stored before it can be listed
+                var token = _repository.GetToken(settings);
+
+                if (listing != null)
                 {
-                    if (string.IsNullOrEmpty(listing.PictureURL))
+                    // if item is listed already, then revise
+                    if (listing.Listed == null)
                     {
-                        output.Add("ERROR: PictureURL is null");
-                        return output;
-                    }
-
-                    List<string> pictureURLs = dsutil.DSUtil.DelimitedToList(listing.PictureURL, ';');
-
-                    // ----------------------------------------------------------------
-                    // new
-                    // ----------------------------------------------------------------
-                    string path = HttpContext.Current.Request.PhysicalApplicationPath + @"productimages\";
-                    var localImgURLs = dsutil.DSUtil.DownloadImages(pictureURLs, path);
-                 
-                    // ----------------------------------------------------------------
-                    // end
-                    // ----------------------------------------------------------------
-
-                    string verifyItemID = null;
-
-                    string shippingProfile = settings.ShippingProfile;
-                    string paymentProfile = settings.PaymentProfile;
-                    string returnProfile = settings.ReturnProfile;
-
-                    verifyItemID = await eBayItem.VerifyAddItemRequest(settings, listing.ListingTitle,
-                        listing.Description,
-                        listing.PrimaryCategoryID,
-                        (double)listing.ListingPrice,
-                        localImgURLs,
-                        output,
-                        listing.Qty,
-                        listing,
-                        shippingProfile,
-                        returnProfile,
-                        paymentProfile);
-
-                    // Convert local image URLs to file names so we can remove them
-                    // Well, this might be too fast to remove since I tried but eBay complained it doesn't have image.
-                    // Might try something like a single process to delete anything older than today.
-                    // 05.30.2020 First attempt at pausing 4 seconds worked - let's see how it goes.
-                    // 06.03.2020 nope, was working but just had case where images did not make it to eBay
-
-                    /*
-                    Thread.Sleep(4000);
-
-                    foreach (var f in localImgURLs)
-                    {
-                        Uri uri = new Uri(f);
-                        string filename = System.IO.Path.GetFileName(uri.LocalPath);
-                        string fullpath = path + filename;
-                        File.Delete(fullpath);
-                    }
-                    */
-
-                    // at this point, 'output' will be populated with errors if any occurred
-
-                    if (!string.IsNullOrEmpty(verifyItemID))
-                    {
-                        // make sure listedItemID is first in list
-                        output.Insert(0, "Listed: YES");
-                        output.Insert(0, verifyItemID);
-                        if (!listing.Listed.HasValue)
+                        if (string.IsNullOrEmpty(listing.PictureURL))
                         {
-                            listing.Listed = DateTime.Now;
+                            output.Add("ERROR: PictureURL is null");
+                            return output;
                         }
-                        var response = FlattenList(output);
-                        await _repository.ListedItemIDUpdate(listing, verifyItemID, settings.UserID, true, response);
-                    }
-                    else
-                    {
-                        output.Add("Listing not created.");
-                    }
-                    if (output.Count > 0)
-                    {
-                        await LogListingResponse(settings, listing, output);
-                    }
-                }
-                else
-                {
-                    string response = null;
-                    if (!reviseUploadImages)
-                    {
-                        output = ReviseItem(token,
-                                            listing.ListedItemID,
-                                            qty: listing.Qty,
-                                            price: Convert.ToDouble(listing.ListingPrice),
-                                            title: listing.ListingTitle,
-                                            description: listing.Description);
-                    }
-                    else
-                    {
-                        List<string> pictureURLs = dsutil.DSUtil.DelimitedToList(listing.PictureURL, ';');
-                        output = ReviseItem(token,
-                                            listing.ListedItemID,
-                                            qty: listing.Qty,
-                                            price: Convert.ToDouble(listing.ListingPrice),
-                                            title: listing.ListingTitle,
-                                            description: listing.Description,
-                                            pictureURLs: pictureURLs);
-                    }
-                    var log = new ListingLog();
-                    log.UserID = settings.UserID;
-                    log.MsgID = 800;
-                    log.Note = string.Format("Qty: {0} Price: {1} Revised listing by {2}", listing.Qty, listing.ListingPrice, settings.UserName);
-                    log.ListingID = listing.ID;
-                    await _repository.ListingLogAdd(log);
-                    if (output.Count > 0)
-                    {
-                        response = FlattenList(output);
-                    }
-                    // update the 'updatedby' fields
-                    await _repository.ListedItemIDUpdate(listing, listing.ListedItemID, settings.UserID, true, response, updated: DateTime.Now);
-                    output.Insert(0, listing.ListedItemID);
 
-                    if (output.Count > 0)
+                        List<string> pictureURLs = dsutil.DSUtil.DelimitedToList(listing.PictureURL, ';');
+
+                        // ----------------------------------------------------------------
+                        // new
+                        // ----------------------------------------------------------------
+                        string path = HttpContext.Current.Request.PhysicalApplicationPath + @"productimages\";
+                        var localImgURLs = dsutil.DSUtil.DownloadImages(pictureURLs, path);
+
+                        // ----------------------------------------------------------------
+                        // end
+                        // ----------------------------------------------------------------
+
+                        string verifyItemID = null;
+
+                        string shippingProfile = settings.ShippingProfile;
+                        string paymentProfile = settings.PaymentProfile;
+                        string returnProfile = settings.ReturnProfile;
+
+                        verifyItemID = await eBayItem.VerifyAddItemRequest(settings, listing.ListingTitle,
+                            listing.Description,
+                            listing.PrimaryCategoryID,
+                            (double)listing.ListingPrice,
+                            localImgURLs,
+                            output,
+                            listing.Qty,
+                            listing,
+                            shippingProfile,
+                            returnProfile,
+                            paymentProfile);
+
+                        // at this point, 'output' will be populated with errors if any occurred
+
+                        if (!string.IsNullOrEmpty(verifyItemID))
+                        {
+                            // make sure listedItemID is first in list
+                            output.Insert(0, "Listed: YES");
+                            output.Insert(0, verifyItemID);
+                            if (!listing.Listed.HasValue)
+                            {
+                                listing.Listed = DateTime.Now;
+                            }
+                            var response = FlattenList(output);
+                            await _repository.ListedItemIDUpdate(listing, verifyItemID, settings.UserID, true, response);
+                        }
+                        else
+                        {
+                            output.Add("Listing not created.");
+                        }
+                        if (output.Count > 0)
+                        {
+                            await LogListingResponse(settings, listing, output);
+                        }
+                    }
+                    else
                     {
-                        await LogListingResponse(settings, listing, output);
+                        string response = null;
+                        if (!reviseUploadImages)
+                        {
+                            output = ReviseItem(token,
+                                                listing.ListedItemID,
+                                                qty: listing.Qty,
+                                                price: Convert.ToDouble(listing.ListingPrice),
+                                                title: listing.ListingTitle,
+                                                description: listing.Description);
+                        }
+                        else
+                        {
+                            List<string> pictureURLs = dsutil.DSUtil.DelimitedToList(listing.PictureURL, ';');
+                            output = ReviseItem(token,
+                                                listing.ListedItemID,
+                                                qty: listing.Qty,
+                                                price: Convert.ToDouble(listing.ListingPrice),
+                                                title: listing.ListingTitle,
+                                                description: listing.Description,
+                                                pictureURLs: pictureURLs);
+                        }
+                        var log = new ListingLog();
+                        log.UserID = settings.UserID;
+                        log.MsgID = 800;
+                        log.Note = string.Format("Qty: {0} Price: {1} Revised listing by {2}", listing.Qty, listing.ListingPrice, settings.UserName);
+                        log.ListingID = listing.ID;
+                        await _repository.ListingLogAdd(log);
+                        if (output.Count > 0)
+                        {
+                            response = FlattenList(output);
+                        }
+                        // update the 'updatedby' fields
+                        await _repository.ListedItemIDUpdate(listing, listing.ListedItemID, settings.UserID, true, response, updated: DateTime.Now);
+                        output.Insert(0, listing.ListedItemID);
+
+                        if (output.Count > 0)
+                        {
+                            await LogListingResponse(settings, listing, output);
+                        }
                     }
                 }
+                return output;
             }
-            return output;
+            catch (Exception exc)
+            {
+                string msg = dsutil.DSUtil.ErrMsg("ListingCreateAsync", exc);
+                dsutil.DSUtil.WriteFile(_logfile, msg, settings.UserName);
+                throw;
+            }
         }
         private static async Task LogListingResponse(IUserSettingsView settings, Listing listing, List<string> response)
         {
