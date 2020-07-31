@@ -404,7 +404,7 @@ namespace eBayUtility
                     _repository.ClearOrderHistory(rptNumber);
 
                     await UPCMatch(settings, rptNumber, minSold, daysBack, minPrice, maxPrice, activeStatusOnly, isSellerVariation, itemID, pctProfit, wmShipping, wmFreeShippingMin, eBayPct, imgLimit);
-                    
+
                     // 03.17.2020 currently not happy with accuracy
                     //await SearchEngineMatch(settings, rptNumber, minSold, daysBack, minPrice, maxPrice, activeStatusOnly, isSellerVariation, itemID, pctProfit, wmShipping, wmFreeShippingMin, eBayPct, imgLimit, supplierTag);
                 }
@@ -415,7 +415,7 @@ namespace eBayUtility
                     foreach (var seller in sellers)
                     {
                         Console.WriteLine(seller.Seller);
-                     
+
                         runScan = false;
                         var sellerProfile = await _repository.SellerProfileGet(seller.Seller);
                         if (sellerProfile == null)
@@ -433,7 +433,7 @@ namespace eBayUtility
                         {
                             int? latest = _repository.LatestRptNumber(seller.Seller);
                             var tgtSearchHistory = seller.SearchHistory.Where(p => p.ID == latest).SingleOrDefault();
-                            if (tgtSearchHistory != null) 
+                            if (tgtSearchHistory != null)
                             {
                                 if (tgtSearchHistory.CalculateMatch == null || tgtSearchHistory.CalculateMatch < tgtSearchHistory.Updated)
                                 {
@@ -441,9 +441,9 @@ namespace eBayUtility
                                     sh.Updated = DateTime.Now;
                                     sh.ID = tgtSearchHistory.ID;
                                     _repository.SearchHistoryUpdate(sh, "CalculateMatch", "Updated");
-                                    
+
                                     await UPCMatch(settings, tgtSearchHistory.ID, minSold, daysBack, minPrice, maxPrice, activeStatusOnly, isSellerVariation, itemID, pctProfit, wmShipping, wmFreeShippingMin, eBayPct, imgLimit);
-                                    
+
                                     //await SearchEngineMatch(settings, rptNumber, minSold, daysBack, minPrice, maxPrice, activeStatusOnly, isSellerVariation, itemID, pctProfit, wmShipping, wmFreeShippingMin, eBayPct, imgLimit, supplierTag);
 
                                     dsutil.DSUtil.WriteFile(_logfile, seller.Seller + ": Ran FillMatch", "");
@@ -539,7 +539,7 @@ namespace eBayUtility
                         }
                         else
                         {
-                            tryAgain = true;   
+                            tryAgain = true;
                         }
                     }
                     else
@@ -653,7 +653,7 @@ namespace eBayUtility
             {
                 var mv = new ModelViewTimesSold();
                 mv.TimesSoldRpt = FilterMatch(settings, rptNumber, minSold, daysBack, minPrice, maxPrice, activeStatusOnly, isSellerVariation, itemID);
-                
+
                 // Only search where MatchCount is null or does not equal 1
                 mv.TimesSoldRpt = mv.TimesSoldRpt.Where(p => !p.MatchCount.HasValue || (p.MatchCount.HasValue && p.MatchCount.Value != 1)).ToList();
 
@@ -675,7 +675,7 @@ namespace eBayUtility
                         if (!string.IsNullOrEmpty(section))
                         {
                             section = supplierTag + " " + section;
-                            
+
                             //var links = dsutil.DSUtil.BingSearch(section);
                             var links = dsutil.DSUtil.GoogleSearchSelenium(section);
 
@@ -754,7 +754,8 @@ namespace eBayUtility
             string section = null;
             int skip = 150;
             int sectionLen = 250;
-            try { 
+            try
+            {
                 int pos = skip * iteration;
                 if (pos < descr.Length)
                 {
@@ -768,7 +769,7 @@ namespace eBayUtility
                     }
                 }
             }
-             catch (Exception exc)
+            catch (Exception exc)
             {
                 string header = "GetDescrSection";
                 string msg = dsutil.DSUtil.ErrMsg(header, exc);
@@ -829,7 +830,7 @@ namespace eBayUtility
                         var si = await eBayUtility.ebayAPIs.GetSingleItem(settings, listing.ItemID, true);
                         listing.PrimaryCategoryID = si.PrimaryCategoryID;
                         listing.PrimaryCategoryName = si.PrimaryCategoryName;
-                        
+
                         if (_repository.GetSellerListing(ohObj.ItemID) == null)
                         {
                             var sellerListing = new SellerListing();
@@ -919,7 +920,7 @@ namespace eBayUtility
                     var nodes = doc.DocumentNode.SelectNodes("//a[@class='vip']");
                     if (nodes != null)
                     {
-                        foreach(var x in nodes)
+                        foreach (var x in nodes)
                         {
                             var h = x.GetAttributeValue("href", "");
                             URLs.Add(h);
@@ -940,7 +941,7 @@ namespace eBayUtility
         {
             var warning = new List<string>();
 
-            foreach(var itemSpecific in listing.ItemSpecifics)
+            foreach (var itemSpecific in listing.ItemSpecifics)
             {
                 int pos = itemSpecific.ItemName.ToUpper().IndexOf("TAX");
                 if (pos > -1)

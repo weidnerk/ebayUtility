@@ -88,7 +88,7 @@ namespace Utility
                 ApiContext context = new ApiContext();
 
                 //set the User token
-                
+
                 context.ApiCredential.eBayToken = token;
 
                 //set the version
@@ -283,7 +283,7 @@ namespace Utility
 
                         // RETURN POLICIES
                         qryRecords = from record in root.Elements("returnPolicyProfileList").Elements("ReturnPolicyProfile")
-                                         select record;
+                                     select record;
                         if (qryRecords.Count() == 0)
                         {
                             returnPolicies = null;
@@ -332,7 +332,7 @@ namespace Utility
             return policies;
         }
 
-      
+
 
         /// <summary>
         /// 
@@ -340,7 +340,7 @@ namespace Utility
         /// <param name="itemID">ebay seller listing id</param>
         /// <returns></returns>
         public static async Task<List<string>> ListingCreateAsync(
-            IUserSettingsView settings, 
+            IUserSettingsView settings,
             int listingID,
             bool reviseUploadImages)
         {
@@ -530,7 +530,7 @@ namespace Utility
                 // https://developer.ebay.com/devzone/guides/features-guide/content/Development/Sites-eBayMotors.html
                 // Test with car lift using eBay Motors category id 179511
                 eBayAPIInterfaceService service = EbayCalls.eBayServiceCall(settings, "VerifyAddItem", "0");
-                
+
                 VerifyAddItemRequestType request = new VerifyAddItemRequestType();
                 request.Version = "949";
                 request.ErrorLanguage = "en_US";
@@ -868,7 +868,7 @@ namespace Utility
                     //RestockingFeeValueOption = "Percent_20"
                 };
                 item.ShippingDetails = ebayAPIs.GetShippingDetail(shippingService);
-                
+
                 item.Site = SiteCodeType.US;
 
                 request.Item = item;
@@ -906,7 +906,7 @@ namespace Utility
         }
         private static string ShippingCostPaidByToStr(ShippingCostPaidBy shippingCostPaidBy)
         {
-            string shippingCostPaidByStr =  null;
+            string shippingCostPaidByStr = null;
             switch (shippingCostPaidBy)
             {
                 case ShippingCostPaidBy.Buyer:

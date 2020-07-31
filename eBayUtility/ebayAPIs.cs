@@ -173,7 +173,7 @@ namespace eBayUtility
                     var rs = r.TransactionArray[0].Status.ReturnStatus;
                     string rsname = Enum.GetName(typeof(ReturnStatusCodeType), rs);
                     response.ReturnStatus = rsname;
-                  
+
                     response.DatePurchased = r.PaidTime;
                     var ShippingAddress = r.ShippingAddress;
                     // Name
@@ -565,7 +565,7 @@ namespace eBayUtility
         {
             try
             {
-                
+
                 ApiContext oContext = new ApiContext();
 
                 //set the dev,app,cert information
@@ -804,7 +804,7 @@ namespace eBayUtility
                 using (HttpClient httpClient = new HttpClient())
                 {
                     string s = await httpClient.GetStringAsync(uri);
-                 
+
                 }
             }
             catch (Exception exc)
@@ -812,7 +812,7 @@ namespace eBayUtility
                 string msg = exc.Message;
             }
         }
-      
+
         // Purpose of GetSingleItem is to fetch properties such as a listing's description and photos
         // it is used when performing an auto-listing
         public static async Task<ISellerListing> GetSingleItem(IUserSettingsView settings, string itemID, bool includeItemSpecifics)
@@ -1415,7 +1415,7 @@ namespace eBayUtility
             var s = new DispatchTimeMaxDetailsType();
             s.DispatchTimeMax = 3;
 
-            
+
             sd.ShippingServiceOptions = new ShippingServiceOptionsTypeCollection(new[] { domesticShipping1 });
             sd.ShippingType = eBay.Service.Core.Soap.ShippingTypeCodeType.Flat;
 
