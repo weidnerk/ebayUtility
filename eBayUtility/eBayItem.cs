@@ -580,7 +580,7 @@ namespace Utility
                 item.PictureDetails.PictureURL = new StringCollection();
                 item.PictureDetails.PictureURL.AddRange(pictureURLs.ToArray());
                 // item.PostalCode = "33772";
-                item.Location = "Multiple locations";
+                item.Location = "33772";
                 item.Quantity = qtyToList;
 
                 item.ItemSpecifics = new NameValueListTypeCollection();
@@ -805,7 +805,7 @@ namespace Utility
                 item.PictureDetails.PictureURL = new StringCollection();
                 item.PictureDetails.PictureURL.AddRange(pictureURLs.ToArray());
                 // item.PostalCode = "33772";
-                item.Location = "Multiple locations";
+                item.Location = "33772";
                 item.Quantity = qtyToList;
 
                 item.ItemSpecifics = new NameValueListTypeCollection();
