@@ -246,7 +246,7 @@
       <Name>dsutil</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\wallib\wallib\wallib.csproj">
-      <Project>{CD20DFE3-8D85-435A-A129-9319BC47A348}</Project>
+      <Project>{cd20dfe3-8d85-435a-a129-9319bc47a348}</Project>
       <Name>wallib</Name>
     </ProjectReference>
   </ItemGroup>
